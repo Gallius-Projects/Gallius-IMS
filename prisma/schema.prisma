@@ -1,0 +1,194 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum status {
+  SPARE
+  DEPLOYED
+  DEFECTIVE
+  DONATED
+  DISPOSED
+}
+
+model userRoles {
+  id       Int        @id @default(autoincrement())
+  role     String     @unique
+  accounts accounts[]
+}
+
+model departments {
+  id            Int         @id @default(autoincrement())
+  name          String      @unique
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  updatedByUUID String?
+  updatedBy     accounts?   @relation("departmentUpdatedBy", fields: [updatedByUUID], references: [uuid])
+  accounts      accounts[]
+  positions     positions[]
+  employees     employees[]
+}
+
+model positions {
+  id            Int         @id @default(autoincrement())
+  name          String      @unique
+  departmentId  Int
+  departments   departments @relation(fields: [departmentId], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  updatedByUUID String?
+  updatedBy     accounts?   @relation("positionUpdatedBy", fields: [updatedByUUID], references: [uuid])
+  accounts      accounts[]
+  employees     employees[]
+}
+
+model accounts {
+  uuid              String           @id @default(uuid())
+  username          String           @unique
+  passwordHash      String
+  role              userRoles?       @relation(fields: [roleId], references: [id])
+  roleId            Int?
+  status            Boolean          @default(true)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  logs              logs[]
+  department        departments?     @relation(fields: [departmentId], references: [id])
+  departmentId      Int?
+  position          positions?       @relation(fields: [positionId], references: [id])
+  positionId        Int?
+  employeeId        Int              @unique
+  employee          employees        @relation(fields: [employeeId], references: [id])
+  updatedItems      inventoryItems[] @relation("updatedBy")
+  deployedItems     inventoryItems[] @relation("deployedBy")
+  brand             brands[]
+  supplier          suppliers[]
+  category          categories[]
+  location          locations[]
+  updatedByUUID     String?
+  departmentUpdates departments[]    @relation("departmentUpdatedBy")
+  positionUpdates   positions[]      @relation("positionUpdatedBy")
+  office            offices[]
+}
+
+model categories {
+  id             Int              @id @default(autoincrement())
+  name           String
+  quantity       Int?
+  abbreviation   String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  updatedByUUID  String?
+  updatedBy      accounts?        @relation(fields: [updatedByUUID], references: [uuid])
+  inventoryItems inventoryItems[]
+}
+
+model brands {
+  id             Int              @id @default(autoincrement())
+  name           String
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  updatedByUUID  String?
+  updatedBy      accounts?        @relation(fields: [updatedByUUID], references: [uuid])
+  inventoryItems inventoryItems[]
+}
+
+model suppliers {
+  id             Int              @id @default(autoincrement())
+  name           String
+  contactPerson  String?
+  contactNumber  String?
+  email          String?
+  address        String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  updatedByUUID  String?
+  updatedBy      accounts?        @relation(fields: [updatedByUUID], references: [uuid])
+  inventoryItems inventoryItems[]
+}
+
+model locations {
+  id             Int              @id @default(autoincrement())
+  name           String
+  abbreviation   String?
+  inventoryItems inventoryItems[]
+  accounts       accounts?        @relation(fields: [accountsUuid], references: [uuid])
+  accountsUuid   String?
+}
+
+model offices {
+  id             Int              @id @default(autoincrement())
+  name           String
+  status         Boolean          @default(true)
+  abbreviation   String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  updatedByUUID  String?
+  updatedBy      accounts?        @relation(fields: [updatedByUUID], references: [uuid])
+  inventoryItems inventoryItems[]
+  employees      employees[]
+}
+
+model inventoryItems {
+  id             Int        @id @default(autoincrement())
+  name           String
+  oldAssetTag    String?
+  newAssetTag    String?
+  serialNumber   String?
+  description    String?    @db.Text
+  hostname       String?
+  status         status
+  categoryId     Int
+  category       categories @relation(fields: [categoryId], references: [id])
+  locationId     Int
+  location       locations  @relation(fields: [locationId], references: [id])
+  brandId        Int
+  brand          brands     @relation(fields: [brandId], references: [id])
+  assignedTo     Int
+  assignedEmp    employees  @relation(fields: [assignedTo], references: [id])
+  officeId       Int
+  office         offices    @relation(fields: [officeId], references: [id])
+  updatedByUUID  String
+  updatedBy      accounts   @relation("updatedBy", fields: [updatedByUUID], references: [uuid])
+  deployedByUUID String?
+  deployedBy     accounts?  @relation("deployedBy", fields: [deployedByUUID], references: [uuid])
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  remarks        String     @db.Text
+  logs           logs[]
+  supplier       suppliers? @relation(fields: [supplierId], references: [id])
+  supplierId     Int?
+}
+
+model employees {
+  id             Int              @id @default(autoincrement())
+  employeeId     String?          @unique
+  firstName      String
+  lastName       String
+  middleName     String?
+  suffix         String?
+  office         offices?         @relation(fields: [officeId], references: [id])
+  officeId       Int?
+  department     departments      @relation(fields: [departmentId], references: [id])
+  departmentId   Int
+  position       positions        @relation(fields: [positionId], references: [id])
+  positionId     Int
+  status         Boolean          @default(true)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  inventoryItems inventoryItems[]
+  accounts       accounts?
+}
+
+model logs {
+  id             Int             @id @default(autoincrement())
+  activity       String          @db.Text
+  accounts       accounts        @relation(fields: [uuid], references: [uuid])
+  uuid           String
+  inventoryItems inventoryItems? @relation(fields: [inventoryId], references: [id])
+  inventoryId    Int?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
