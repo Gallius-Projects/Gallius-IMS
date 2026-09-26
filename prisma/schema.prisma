@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -14,10 +15,37 @@ enum status {
   DISPOSED
 }
 
-model userRoles {
-  id       Int        @id @default(autoincrement())
-  role     String     @unique
-  accounts accounts[]
+model sidebarLinks {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  path      String   @unique
+  icon      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  updatedBy     String?
+  updatedByUser accounts? @relation("updatedByUser", fields: [updatedBy], references: [uuid])
+
+  sidebarLinkRoles sidebarLinkRoles[]
+}
+
+model sidebarLinkRoles {
+  id            Int @id @default(autoincrement())
+  sidebarLinkId Int
+  roleId        Int
+
+  sidebarLink sidebarLinks @relation(fields: [sidebarLinkId], references: [id], onDelete: Cascade)
+  role        roles        @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([sidebarLinkId, roleId])
+}
+
+model roles {
+  id   Int    @id @default(autoincrement())
+  role String @unique
+
+  sidebarLinkRoles sidebarLinkRoles[]
+  accounts         accounts[]
 }
 
 model departments {
@@ -27,7 +55,6 @@ model departments {
   updatedAt     DateTime    @updatedAt
   updatedByUUID String?
   updatedBy     accounts?   @relation("departmentUpdatedBy", fields: [updatedByUUID], references: [uuid])
-  accounts      accounts[]
   positions     positions[]
   employees     employees[]
 }
@@ -41,7 +68,6 @@ model positions {
   updatedAt     DateTime    @updatedAt
   updatedByUUID String?
   updatedBy     accounts?   @relation("positionUpdatedBy", fields: [updatedByUUID], references: [uuid])
-  accounts      accounts[]
   employees     employees[]
 }
 
@@ -49,16 +75,12 @@ model accounts {
   uuid              String           @id @default(uuid())
   username          String           @unique
   passwordHash      String
-  role              userRoles?       @relation(fields: [roleId], references: [id])
+  role              roles?           @relation(fields: [roleId], references: [id])
   roleId            Int?
   status            Boolean          @default(true)
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
   logs              logs[]
-  department        departments?     @relation(fields: [departmentId], references: [id])
-  departmentId      Int?
-  position          positions?       @relation(fields: [positionId], references: [id])
-  positionId        Int?
   employeeId        Int              @unique
   employee          employees        @relation(fields: [employeeId], references: [id])
   updatedItems      inventoryItems[] @relation("updatedBy")
@@ -71,6 +93,7 @@ model accounts {
   departmentUpdates departments[]    @relation("departmentUpdatedBy")
   positionUpdates   positions[]      @relation("positionUpdatedBy")
   office            offices[]
+  sidebarLinks      sidebarLinks[]   @relation("updatedByUser")
 }
 
 model categories {
@@ -154,6 +177,8 @@ model inventoryItems {
   updatedBy      accounts   @relation("updatedBy", fields: [updatedByUUID], references: [uuid])
   deployedByUUID String?
   deployedBy     accounts?  @relation("deployedBy", fields: [deployedByUUID], references: [uuid])
+  invoiceNumber  String?
+  deploymentDate DateTime?
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
   remarks        String     @db.Text

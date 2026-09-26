@@ -49,6 +49,16 @@ export async function GET(req: Request) {
         office: true,
         supplier: true,
         assignedEmp: true,
+        updatedBy: {
+          include: {
+            employee: { select: { firstName: true, lastName: true } },
+          },
+        },
+        deployedBy: {
+          include: {
+            employee: { select: { firstName: true, lastName: true } },
+          },
+        },
       },
     });
 
@@ -77,7 +87,7 @@ export async function POST(req: Request) {
     const {
       name,
       oldAssetTag,
-      newAssetTag,
+      // newAssetTag,
       serialNumber,
       description,
       hostname,
@@ -101,34 +111,39 @@ export async function POST(req: Request) {
       );
     }
 
+    // const
+
     const lastCategoryItem = await prisma.inventoryItems.findFirst({
       where: {
         categoryId: parseInt(categoryId),
+        officeId: parseInt(officeId),
+        locationId: parseInt(locationId),
       },
       orderBy: { updatedAt: 'desc' },
     });
 
+    console.log(lastCategoryItem);
+
     let nextItemNumber = '0001';
 
     if (lastCategoryItem) {
-      const lastAssetTag = lastCategoryItem.oldAssetTag || '';
+      const lastAssetTag = lastCategoryItem?.oldAssetTag || '0001';
 
-      // Extract last 4 digits after '-PEZ'
       const lastFour = lastAssetTag.slice(-4);
 
       const nextNum = parseInt(lastFour) + 1;
       nextItemNumber = String(nextNum).padStart(4, '0');
     }
 
-    const slicedAssetTag = newAssetTag.slice(0, -5);
+    const slicedAssetTag = oldAssetTag.slice(0, -4);
 
     const generatedAssetTag = `${slicedAssetTag}${nextItemNumber}` || '';
 
     const newItem = await prisma.inventoryItems.create({
       data: {
         name,
-        oldAssetTag: oldAssetTag || '',
-        newAssetTag: generatedAssetTag || '',
+        oldAssetTag: generatedAssetTag || '',
+        // newAssetTag: generatedAssetTag || '',
         serialNumber: serialNumber || '',
         description: description || '',
         hostname: hostname || '',
