@@ -4,15 +4,21 @@ import { ChevronRight } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserContext } from '@/context/UserContext';
-import Sidebar from '../components/sidebar';
-import Header from '../components/header';
-import Footer from '../components/footer';
+import Sidebar from '../components/ui/sidebar';
+import Header from '../components/ui/header';
+import Footer from '../components/ui/footer';
 
 export default function InventoryLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  type Role = 'superadmin' | 'admin' | 'user';
+
+  const router = useRouter();
+  const { user, setUser, setIsAuthenticated } = useUserContext();
+
+  const userRole = user?.role as Role;
   const sideBarRef = useRef<HTMLDivElement>(null);
 
   // Sidebar state
@@ -35,9 +41,6 @@ export default function InventoryLayout({
     };
   }, []);
 
-  const router = useRouter();
-  const { setUser, setIsAuthenticated } = useUserContext();
-
   // Auth check
   useEffect(() => {
     const token = localStorage.getItem('auth_token');
@@ -54,7 +57,11 @@ export default function InventoryLayout({
   return (
     <div className="min-h-screen">
       {/* Sidebar */}
-      <Sidebar sideBarRef={sideBarRef} isSidebarExpanded={isSidebarExpanded} />
+      <Sidebar
+        sideBarRef={sideBarRef}
+        isSidebarExpanded={isSidebarExpanded}
+        userRole={userRole}
+      />
       <button
         type="button"
         aria-label="Open sidebar"

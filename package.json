@@ -9,18 +9,22 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@azure/msal-browser": "^5.22.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@prisma/adapter-mariadb": "^7.9.0",
     "@prisma/client": "^7.9.0",
     "axios": "^1.18.1",
     "bcryptjs": "^3.0.3",
+    "dayjs": "^1.11.23",
+    "flatpickr": "^4.6.13",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.26.0",
     "mariadb": "^3.5.3",
     "next": "^16.3.4",
     "next-auth": "^5.0.0-beta.32",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "react-flatpickr": "^4.0.11"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

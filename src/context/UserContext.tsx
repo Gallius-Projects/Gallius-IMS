@@ -3,16 +3,20 @@
 import { createContext, useContext, useState } from 'react';
 
 const UserContext = createContext<{
-  user: { id: string; username: string } | null;
-  setUser: (user: { id: string; username: string } | null) => void;
+  user: { id: string; username: string; role: string } | null;
+  setUser: (
+    user: { id: string; username: string; role: string } | null
+  ) => void;
   isAuthenticated: boolean;
   setIsAuthenticated: (isAuthenticated: boolean) => void;
 } | null>(null);
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<{ id: string; username: string } | null>(
-    null
-  );
+  const [user, setUser] = useState<{
+    id: string;
+    username: string;
+    role: Array<any>;
+  } | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   return (

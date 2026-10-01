@@ -24,6 +24,24 @@ export async function GET(
 
     const item = await prisma.inventoryItems.findUnique({
       where: { id: itemId },
+      include: {
+        brand: true,
+        category: true,
+        location: true,
+        office: true,
+        supplier: true,
+        assignedEmp: true,
+        updatedBy: {
+          include: {
+            employee: { select: { firstName: true, lastName: true } },
+          },
+        },
+        deployedBy: {
+          include: {
+            employee: { select: { firstName: true, lastName: true } },
+          },
+        },
+      },
     });
 
     if (!item) {
@@ -64,6 +82,7 @@ export async function PUT(
     const {
       name,
       oldAssetTag,
+      newAssetTag,
       serialNumber,
       description,
       hostname,
@@ -75,8 +94,10 @@ export async function PUT(
       officeId,
       supplierId,
       status,
-      updatedByUUID,
+      updatedBy,
     } = body;
+
+    console.log(body);
 
     if (!name) {
       return NextResponse.json(
@@ -90,6 +111,7 @@ export async function PUT(
       data: {
         name,
         oldAssetTag: oldAssetTag || '',
+        // newAssetTag: newAssetTag,
         serialNumber: serialNumber || '',
         description: description || '',
         hostname: hostname || '',
@@ -114,7 +136,7 @@ export async function PUT(
           connect: { id: parseInt(supplierId) },
         },
         updatedBy: {
-          connect: { uuid: updatedByUUID },
+          connect: { uuid: updatedBy },
         },
       },
     });

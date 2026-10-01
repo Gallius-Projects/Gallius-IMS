@@ -15,24 +15,14 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const search = searchParams.get('search') || '';
-    const name = searchParams.get('name') || '';
-    const quantity = searchParams.get('quantity') || '';
 
     // Build Prisma query filters
     const whereClause: any = {};
 
-    if (name) {
-      whereClause.name = name;
-    }
-
-    if (quantity) {
-      whereClause.quantity = parseInt(quantity);
-    }
-
     if (search) {
       whereClause.OR = [
         { name: { contains: search } },
-        { quantity: { contains: search } },
+        { abbreviation: { contains: search } },
       ];
     }
 

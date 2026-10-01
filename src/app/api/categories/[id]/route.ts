@@ -70,7 +70,7 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const { name, updatedBy } = body;
+    const { name, abbreviation, quantity, updatedBy } = body;
 
     if (!name) {
       return NextResponse.json(
@@ -83,6 +83,8 @@ export async function PUT(
       where: { id: categoryId },
       data: {
         name,
+        abbreviation,
+        quantity: parseInt(quantity),
         updatedBy: {
           connect: { uuid: updatedBy },
         },
