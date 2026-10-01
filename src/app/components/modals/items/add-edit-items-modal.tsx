@@ -4,6 +4,7 @@ import { AlertCircle, Loader2, X } from 'lucide-react';
 import Flatpickr from 'react-flatpickr';
 import 'flatpickr/dist/flatpickr.css';
 import dayjs from 'dayjs';
+import { useState } from 'react';
 
 interface AddEditItemsModalProps {
   formMode?: 'create' | 'edit';
@@ -150,8 +151,6 @@ export default function AddEditItemsModal({
 }: AddEditItemsModalProps) {
   const { user } = useUserContext();
   const [isNewAsset, setIsNewAsset] = useState(true);
-
-  return (
     <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
       <div className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
         {isSubmitting && (
@@ -843,7 +842,11 @@ export default function AddEditItemsModal({
                 <div className="relative w-full">
                   <Flatpickr
                     placeholder="Select Date"
+<<<<<<< HEAD
                     value={formData?.deploymentDate || ''}
+=======
+                    value={formData.deploymentDate}
+>>>>>>> a61ba6ee5e1412a9ba930f9e11ad645a274baf66
                     className="mr-0 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                     options={{
                       dateFormat: 'Y-m-d',

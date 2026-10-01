@@ -71,6 +71,22 @@ export default function PositionsPage() {
     }
   }, []);
 
+  // Fetch Employees
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      const response = await axiosInstance.get('/employees');
+      setEmployees(response.data);
+    };
+
+    fetchEmployees();
+  }, []);
+
+  const filteredEmployees = employees.filter((employee: any) => {
+    const fullName = `${employee.firstName} ${employee.lastName}`.toLowerCase();
+
+    return fullName.includes(employeeSearch.toLowerCase());
+  });
+
   // Open form for creation
   const handleCreateOpen = () => {
     setFormData({
@@ -415,7 +431,7 @@ export default function PositionsPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   {/* Name */}
-                  <div className="col-span-2">
+                  <div>
                     <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
                       Department Name *
                     </label>
