@@ -4,7 +4,10 @@ import { AlertCircle, Loader2, X } from 'lucide-react';
 import Flatpickr from 'react-flatpickr';
 import 'flatpickr/dist/flatpickr.css';
 import dayjs from 'dayjs';
-import { useState } from 'react';
+import SearchableDropdown from '../../ui-templates/searchable-dropdown';
+import axiosInstance from '@/lib/axiosInstance';
+import { useEffect, useRef, useState } from 'react';
+import Dropdown from '../../ui-templates/dropdown';
 
 interface AddEditItemsModalProps {
   formMode?: 'create' | 'edit';
@@ -24,9 +27,12 @@ interface AddEditItemsModalProps {
     office: { id: number; name: string } | null;
     status: string;
     assignedTo: number | null;
-    createdAt: string;
-    updatedAt: string;
     remarks: string;
+    datePurchased: Date | null;
+    dateDeployed: Date | null;
+    invoiceNo: string;
+    assetCondition: string;
+    isNew: boolean;
   };
   setFormData?: (formData: any) => void;
   formError?: string;
@@ -36,49 +42,12 @@ interface AddEditItemsModalProps {
   editNewAsset?: boolean;
   setEditNewAsset?: (editNewAsset: boolean) => void;
   handleGenerateAssetTag?: () => void;
-  modalRef?: React.RefObject<HTMLDivElement>;
-  categoryRef?: React.RefObject<HTMLDivElement>;
-  brandRef?: React.RefObject<HTMLDivElement>;
-  supplierRef?: React.RefObject<HTMLDivElement>;
-  locationRef?: React.RefObject<HTMLDivElement>;
-  officeRef?: React.RefObject<HTMLDivElement>;
-  employeeRef?: React.RefObject<HTMLDivElement>;
-  categorySearch?: string;
-  setCategorySearch?: (categorySearch: string) => void;
-  showCategories?: boolean;
-  setShowCategories?: (showCategories: boolean) => void;
-  filteredCategories?: any[];
-  brandSearch?: string;
-  setBrandSearch?: (brandSearch: string) => void;
-  showBrands?: boolean;
-  setShowBrands?: (showBrands: boolean) => void;
-  filteredBrands?: any[];
-  supplierSearch?: string;
-  setSupplierSearch?: (supplierSearch: string) => void;
-  showSuppliers?: boolean;
-  setShowSuppliers?: (showSuppliers: boolean) => void;
-  filteredSuppliers?: any[];
-  locationSearch?: string;
-  setLocationSearch?: (locationSearch: string) => void;
-  showLocations?: boolean;
-  setShowLocations?: (showLocations: boolean) => void;
-  filteredLocations?: any[];
-  officeSearch?: string;
-  setOfficeSearch?: (officeSearch: string) => void;
-  showOffices?: boolean;
-  setShowOffices?: (showOffices: boolean) => void;
-  filteredOffices?: any[];
-  employeeSearch?: string;
-  setEmployeeSearch?: (employeeSearch: string) => void;
-  showEmployees?: boolean;
-  setShowEmployees?: (showEmployees: boolean) => void;
-  filteredEmployees?: any[];
+  categories?: any;
   handleClose: () => void;
   handleFormSubmit: (e: React.FormEvent) => void;
 }
 
-export default function AddEditItemsModal({
-  formMode = 'create',
+export default function AddItemsModal({
   formData = {
     name: '',
     oldAssetTag: '',
@@ -95,64 +64,115 @@ export default function AddEditItemsModal({
     office: null,
     status: '',
     assignedTo: null,
-    createdAt: '',
-    updatedAt: '',
     remarks: '',
+    datePurchased: null,
+    dateDeployed: null,
+    invoiceNo: '',
+    assetCondition: '',
+    isNew: true,
   },
   setFormData = () => {},
   formError = '',
   isSubmitting = false,
   statuses,
   editNewAsset,
+  categories,
   setEditNewAsset,
   handleGenerateAssetTag = () => {},
-  modalRef,
-  categoryRef,
-  brandRef,
-  supplierRef,
-  locationRef,
-  officeRef,
-  employeeRef,
-  categorySearch,
-  setCategorySearch,
-  showCategories,
-  setShowCategories,
-  filteredCategories,
-  setCategoryAbbr,
-  brandSearch,
-  setBrandSearch,
-  showBrands,
-  setShowBrands,
-  filteredBrands,
-  supplierSearch,
-  setSupplierSearch,
-  showSuppliers,
-  setShowSuppliers,
-  filteredSuppliers,
-  locationSearch,
-  setLocationSearch,
-  showLocations,
-  setShowLocations,
-  filteredLocations,
-  setLocationAbbr,
-  officeSearch,
-  setOfficeSearch,
-  showOffices,
-  setShowOffices,
-  filteredOffices,
-  setOfficeAbbr,
-  employeeSearch,
-  setEmployeeSearch,
-  showEmployees,
-  setShowEmployees,
-  filteredEmployees,
   handleClose,
   handleFormSubmit,
 }: AddEditItemsModalProps) {
   const { user } = useUserContext();
-  const [isNewAsset, setIsNewAsset] = useState(true);
+
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  const [brands, setBrands] = useState([]);
+  const [locations, setLocations] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
+  const [offices, setOffices] = useState([]);
+  const [employees, setEmployees] = useState([]);
+
+  const [employeeSearch, setEmployeeSearch] = useState('');
+
+  const [deployedBySearch, setDeployedBySearch] = useState('');
+
+  const [categorySearch, setCategorySearch] = useState('');
+
+  const [brandSearch, setBrandSearch] = useState('');
+
+  const [supplierSearch, setSupplierSearch] = useState('');
+
+  const [officeSearch, setOfficeSearch] = useState('');
+
+  const [locationSearch, setLocationSearch] = useState('');
+
+  console.log(formData);
+
+  useEffect(() => {
+    const fetchBrands = async () => {
+      const response = await axiosInstance.get('/brands');
+      setBrands(response.data);
+    };
+
+    fetchBrands();
+  }, []);
+
+  useEffect(() => {
+    const fetchLocations = async () => {
+      const response = await axiosInstance.get('/locations');
+      setLocations(response.data);
+    };
+
+    fetchLocations();
+  }, []);
+
+  useEffect(() => {
+    const fetchOffices = async () => {
+      const response = await axiosInstance.get('/offices');
+      setOffices(response.data);
+    };
+
+    fetchOffices();
+  }, []);
+
+  useEffect(() => {
+    const fetchSuppliers = async () => {
+      const response = await axiosInstance.get('/suppliers');
+      setSuppliers(response.data);
+    };
+
+    fetchSuppliers();
+  }, []);
+
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      const response = await axiosInstance.get('/employees');
+      setEmployees(response.data);
+    };
+
+    fetchEmployees();
+  }, []);
+
+  const assetConditions = [
+    { id: 1, name: 'Excellent' },
+    { id: 2, name: 'Good' },
+    { id: 3, name: 'Fair' },
+    { id: 4, name: 'Poor' },
+    { id: 5, name: 'Broken' },
+  ];
+
+  useEffect(() => {
+    if (formError) {
+      modalRef.current?.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      });
+    }
+  }, [formError]);
+
+  return (
     <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
+      <div className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
         {isSubmitting && (
           <div className="absolute inset-0 z-100 h-full w-full bg-slate-800/50">
             <div className="flex h-full w-full items-center justify-center text-white">
@@ -164,9 +184,7 @@ export default function AddEditItemsModal({
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-slate-200/60 px-6 py-4 dark:border-slate-800/60">
           <h3 className="text-base font-bold text-slate-900 dark:text-white">
-            {formMode === 'create'
-              ? 'Add New Inventory Asset'
-              : 'Edit Inventory Asset'}
+            Add New Inventory Asset
           </h3>
           <button
             onClick={() => handleClose()}
@@ -207,539 +225,272 @@ export default function AddEditItemsModal({
               </div>
 
               {/* Category */}
-              <div ref={categoryRef}>
-                <div className="relative">
-                  <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                    Category *
-                  </label>
-
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={categorySearch}
-                      placeholder="Select Category"
-                      onFocus={() => setShowCategories(true)}
-                      onChange={(e) => {
-                        setCategorySearch(e.target.value);
-                        setShowCategories(true);
-                      }}
-                      required
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 pr-10 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                    />
-
-                    {/* Clear button */}
-                    {categorySearch && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCategorySearch('');
-                          setFormData({
-                            ...formData,
-                            categoryId: null,
-                          });
-                          setShowCategories(false);
-                        }}
-                        className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                        aria-label="Clear category"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-
-                  {showCategories && (
-                    <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-950">
-                      {filteredCategories.length > 0 ? (
-                        filteredCategories.map((category: any) => (
-                          <button
-                            key={category.id}
-                            type="button"
-                            onClick={() => {
-                              setFormData({
-                                ...formData,
-                                categoryId: category.id,
-                              });
-
-                              setCategorySearch(category.name);
-                              setShowCategories(false);
-                            }}
-                            className="block w-full px-3.5 py-2.5 text-left text-sm text-slate-900 hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800"
-                          >
-                            {category.name}
-                          </button>
-                        ))
-                      ) : (
-                        <div className="px-3.5 py-2.5 text-sm text-slate-500">
-                          No categories found
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
+              <SearchableDropdown
+                label="Category"
+                data={categories}
+                // ref={categoryRef}
+                search={categorySearch}
+                setSearch={setCategorySearch}
+                onChange={(value: any) => {
+                  setFormData({
+                    ...formData,
+                    categoryId: parseInt(value),
+                  });
+                }}
+                placeholder="Select Category"
+                required
+              />
 
               {/* Brand */}
-              <div ref={brandRef}>
-                <div className="relative">
-                  <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                    Brand *
-                  </label>
-
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={brandSearch}
-                      placeholder="Select Brand"
-                      onFocus={() => setShowBrands(true)}
-                      onChange={(e) => {
-                        setBrandSearch(e.target.value);
-                        setShowBrands(true);
-
-                        // Optional: clear current selection while searching
-                        setFormData({
-                          ...formData,
-                          brandId: parseInt(e.target.value),
-                        });
-                      }}
-                      required
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                    />
-
-                    {brandSearch && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setBrandSearch('');
-                          setFormData({
-                            ...formData,
-                            brandId: null,
-                          });
-                          setShowBrands(false);
-                        }}
-                        className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                        aria-label="Clear brand"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-
-                  {showBrands && (
-                    <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-950">
-                      {filteredBrands.length > 0 ? (
-                        filteredBrands.map((brand: any) => (
-                          <button
-                            key={brand.id}
-                            type="button"
-                            onClick={() => {
-                              setFormData({
-                                ...formData,
-                                brandId: brand.id,
-                              });
-
-                              setBrandSearch(brand.name);
-
-                              setShowBrands(false);
-                            }}
-                            className="block w-full cursor-pointer px-3.5 py-2.5 text-left text-sm text-slate-900 hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800"
-                          >
-                            {brand.name}
-                          </button>
-                        ))
-                      ) : (
-                        <div className="px-3.5 py-2.5 text-sm text-slate-500">
-                          No brands found
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
+              <SearchableDropdown
+                label="Brand"
+                data={brands}
+                // ref={brandRef}
+                search={brandSearch}
+                setSearch={setBrandSearch}
+                placeholder="Select Brand"
+                required
+                onChange={(value: any) => {
+                  setFormData({
+                    ...formData,
+                    brandId: parseInt(value),
+                  });
+                }}
+              />
 
               {/* Supplier */}
-              <div ref={supplierRef}>
-                <div className="relative">
-                  <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                    Supplier *
-                  </label>
-
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={supplierSearch}
-                      placeholder="Select Supplier"
-                      onFocus={() => setShowSuppliers(true)}
-                      onChange={(e) => {
-                        setSupplierSearch(e.target.value);
-                        setShowSuppliers(true);
-
-                        // Optional: clear current selection while searching
-                        setFormData({
-                          ...formData,
-                          supplierId: parseInt(e.target.value),
-                        });
-                      }}
-                      required
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                    />
-
-                    {supplierSearch && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSupplierSearch('');
-                          setFormData({
-                            ...formData,
-                            supplierId: null,
-                          });
-                          setShowSuppliers(false);
-                        }}
-                        className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                        aria-label="Clear supplier"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-
-                  {showSuppliers && (
-                    <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-950">
-                      {filteredSuppliers.length > 0 ? (
-                        filteredSuppliers.map((supplier: any) => (
-                          <button
-                            key={supplier.id}
-                            type="button"
-                            onClick={() => {
-                              setFormData({
-                                ...formData,
-                                supplierId: supplier.id,
-                              });
-
-                              setSupplierSearch(supplier.name);
-
-                              setShowSuppliers(false);
-                            }}
-                            className="block w-full px-3.5 py-2.5 text-left text-sm text-slate-900 hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800"
-                          >
-                            {supplier.name}
-                          </button>
-                        ))
-                      ) : (
-                        <div className="px-3.5 py-2.5 text-sm text-slate-500">
-                          No suppliers found
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
+              <SearchableDropdown
+                label="Supplier"
+                data={suppliers}
+                // ref={supplierRef}
+                search={supplierSearch}
+                setSearch={setSupplierSearch}
+                placeholder="Select Supplier"
+                required
+                onChange={(value: any) => {
+                  setFormData({
+                    ...formData,
+                    supplierId: parseInt(value),
+                  });
+                }}
+              />
 
               {/* Offices */}
-              <div ref={officeRef}>
-                <div className="relative">
-                  <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                    Offices *
-                  </label>
-
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={officeSearch}
-                      placeholder="Select Office"
-                      onFocus={() => setShowOffices(true)}
-                      onChange={(e) => {
-                        setOfficeSearch(e.target.value);
-                        setShowOffices(true);
-
-                        // Optional: clear current selection while searching
-                        setFormData({
-                          ...formData,
-                          officeId: parseInt(e.target.value),
-                        });
-                      }}
-                      required
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                    />
-
-                    {officeSearch && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setOfficeSearch('');
-                          setFormData({
-                            ...formData,
-                            officeId: null,
-                          });
-                          setShowOffices(false);
-                        }}
-                        className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                        aria-label="Clear office"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-
-                  {showOffices && (
-                    <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-950">
-                      {filteredOffices.length > 0 ? (
-                        filteredOffices.map((office: any) => (
-                          <button
-                            key={office.id}
-                            type="button"
-                            onClick={() => {
-                              setFormData({
-                                ...formData,
-                                officeId: office.id,
-                              });
-
-                              setOfficeSearch(office.name);
-
-                              setShowOffices(false);
-                            }}
-                            className="block w-full px-3.5 py-2.5 text-left text-sm text-slate-900 hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800"
-                          >
-                            {office.name}
-                          </button>
-                        ))
-                      ) : (
-                        <div className="px-3.5 py-2.5 text-sm text-slate-500">
-                          No offices found
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
+              <SearchableDropdown
+                label="Tenant"
+                data={offices}
+                // ref={officeRef}
+                search={officeSearch}
+                setSearch={setOfficeSearch}
+                placeholder="Select Tenant"
+                required
+                onChange={(value: any) => {
+                  setFormData({
+                    ...formData,
+                    officeId: parseInt(value),
+                  });
+                }}
+              />
 
               {/* Location */}
-              <div ref={locationRef}>
-                <div className="relative">
-                  <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                    Location *
-                  </label>
-
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={locationSearch}
-                      placeholder="Select Location"
-                      onFocus={() => setShowLocations(true)}
-                      onChange={(e) => {
-                        setLocationSearch(e.target.value);
-                        setShowLocations(true);
-
-                        // Optional: clear current selection while searching
-                        setFormData({
-                          ...formData,
-                          locationId: parseInt(e.target.value),
-                        });
-                      }}
-                      required
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                    />
-
-                    {locationSearch && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setLocationSearch('');
-                          setFormData({
-                            ...formData,
-                            locationId: null,
-                          });
-                          setShowLocations(false);
-                        }}
-                        className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                        aria-label="Clear location"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-
-                  {showLocations && (
-                    <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-950">
-                      {filteredLocations.length > 0 ? (
-                        filteredLocations.map((location: any) => (
-                          <button
-                            key={location.id}
-                            type="button"
-                            onClick={() => {
-                              setFormData({
-                                ...formData,
-                                locationId: location.id,
-                              });
-
-                              setLocationSearch(location.name);
-
-                              setShowLocations(false);
-                            }}
-                            className="block w-full px-3.5 py-2.5 text-left text-sm text-slate-900 hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800"
-                          >
-                            {location.name}
-                          </button>
-                        ))
-                      ) : (
-                        <div className="px-3.5 py-2.5 text-sm text-slate-500">
-                          No locations found
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
+              <SearchableDropdown
+                label="Location"
+                data={locations}
+                // ref={locationRef}
+                value={locationSearch}
+                placeholder="Select Location"
+                required
+                onChange={(value: any) => {
+                  setFormData({
+                    ...formData,
+                    locationId: parseInt(value),
+                  });
+                }}
+              />
 
               {/* Status */}
-              <div>
-                <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                  Status *
-                </label>
-                <select
-                  value={formData.status}
-                  onChange={(e) =>
-                    setFormData({ ...formData, status: e.target.value })
-                  }
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                >
-                  {statuses.map((s) => (
-                    <option key={s.value} value={s.value}>
-                      {s.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <Dropdown
+                label="Status"
+                data={statuses}
+                value={
+                  formData?.status
+                    ? statuses.find(
+                        (item) =>
+                          item.name.toLowerCase() ===
+                          formData?.status?.toLowerCase()
+                      )?.name
+                    : ''
+                }
+                onChange={(value: any) => {
+                  console.log(value);
+
+                  setFormData((prev: any) => ({
+                    ...prev,
+                    status: value ? value?.name?.toUpperCase() : '',
+                  }));
+                }}
+                placeholder="Select Status"
+                required
+              />
 
               {/* New/Old Indicator */}
-              <div className="col-span-2">
-                <div className="flex flex-row items-center justify-between gap-2">
-                  <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                    New / Old
-                  </label>
-                  <div>
-                    <div className="gap-2">
-                      <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                        New
-                      </label>
-                      <input
-                        type="checkbox"
-                        checked={isNewAsset}
-                        onChange={() => setIsNewAsset(!isNewAsset)}
-                        className="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                      />
-                    </div>
-                  </div>
+              <div className="col-span-2 rounded-2xl bg-slate-50 p-3 dark:bg-slate-800">
+                <label className="mb-2 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
+                  NEW / OLD
+                </label>
 
-                  <div>
-                    <div className="gap-2">
-                      <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                        Old
-                      </label>
-                      <input
-                        type="checkbox"
-                        checked={!isNewAsset}
-                        onChange={() => setIsNewAsset(!isNewAsset)}
-                        className="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Old Asset Tag */}
-              <div className="col-span-2">
-                <div className="flex flex-row items-center justify-between gap-2">
-                  <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                    Old Asset Tag
-                  </label>
-                </div>
-                <input
-                  type="text"
-                  placeholder="e.g. GS-OA-26-L0001"
-                  value={formData.oldAssetTag || ''}
-                  onChange={(e) => {
-                    if (
-                      (user?.role.includes('superadmin') ||
-                        user?.role.includes('admin')) &&
-                      editNewAsset
-                    ) {
+                <div className="flex rounded-xl bg-slate-200 p-1 dark:bg-slate-900">
+                  <button
+                    type="button"
+                    onClick={() => {
                       setFormData({
                         ...formData,
-                        oldAssetTag: e.target.value,
+                        isNew: true,
+                        oldAssetTag: '',
                       });
-                    }
-                  }}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                />
+                      handleGenerateAssetTag();
+                    }}
+                    aria-pressed={formData.isNew}
+                    className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-all duration-200 ${
+                      formData.isNew
+                        ? 'bg-violet-600 text-white shadow-sm'
+                        : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'
+                    }`}
+                  >
+                    New
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData({
+                        ...formData,
+                        isNew: false,
+                        newAssetTag: '',
+                      });
+                    }}
+                    aria-pressed={!formData.isNew}
+                    className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-all duration-200 ${
+                      !formData.isNew
+                        ? 'bg-violet-600 text-white shadow-sm'
+                        : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'
+                    }`}
+                  >
+                    Old
+                  </button>
+                </div>
               </div>
 
               {/* New Asset Tag */}
-              <div className="col-span-2">
-                <div className="flex flex-row items-center justify-between gap-2">
-                  <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                    NEW ASSET TAG
-                  </label>
+              {/* Old Asset Tag */}
+              {formData.isNew ? (
+                <div className="col-span-2">
+                  <div className="flex flex-row items-center justify-between gap-2">
+                    <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
+                      NEW ASSET TAG
+                    </label>
 
-                  {(user?.role.includes('superadmin') ||
-                    user?.role.includes('admin')) && (
-                    <div className="flex flex-row items-center gap-2">
-                      <button
+                    {(user?.role.includes('superadmin') ||
+                      user?.role.includes('admin')) && (
+                      <div className="flex flex-row items-center gap-2">
+                        <button
+                          type="button"
+                          className="cursor-pointer text-xs text-slate-500 hover:text-slate-600 hover:underline dark:text-slate-400 dark:hover:text-slate-200"
+                          onClick={() => handleGenerateAssetTag()}
+                        >
+                          Generate
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditNewAsset(!editNewAsset)}
+                          className="cursor-pointer text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                          title={`${editNewAsset ? 'Make uneditable' : 'Make editable'}`}
+                        >
+                          {editNewAsset ? 'Editable' : 'Uneditable'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Click 'Generate' to generate an asset tag"
+                      value={formData.newAssetTag || ''}
+                      disabled={!editNewAsset}
+                      onChange={(e) => {
+                        if (
+                          (user?.role.includes('superadmin') ||
+                            user?.role.includes('admin')) &&
+                          editNewAsset
+                        ) {
+                          setFormData({
+                            ...formData,
+                            newAssetTag: e.target.value,
+                          });
+                        }
+                      }}
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                    />
+
+                    <div className="absolute top-1/2 right-3 flex -translate-y-1/2 gap-2">
+                      {/* <button
                         type="button"
-                        className="cursor-pointer text-xs text-slate-500 hover:text-slate-600 hover:underline dark:text-slate-400 dark:hover:text-slate-200"
-                        onClick={() => handleGenerateAssetTag()}
+                        onClick={() => setEditNewAsset(!editNewAsset)}
+                        className="cursor-pointer text-sm text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                        title={`${editNewAsset ? 'Make uneditable' : 'Make editable'}`}
                       >
-                        Generate
-                      </button>
-                      <label className="text-xs text-slate-500 dark:text-slate-400">
-                        Editable?
-                      </label>
-                      <input
-                        type="checkbox"
-                        checked={editNewAsset}
-                        onChange={(e) => setEditNewAsset(e.target.checked)}
-                        className="cursor-pointer"
-                      />
-                    </div>
-                  )}
-                </div>
+                        {editNewAsset ? (
+                          <PencilOff className="h-4 w-4" />
+                        ) : (
+                          <Pencil className="h-4 w-4" />
+                        )}
+                      </button> */}
 
-                <div className="relative">
+                      {formData?.newAssetTag && editNewAsset && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData({
+                              ...formData,
+                              newAssetTag: '',
+                            });
+                          }}
+                          className="cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                          aria-label="Clear new asset tag"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="col-span-2">
+                  <div className="flex flex-row items-center justify-between gap-2">
+                    <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
+                      Old Asset Tag
+                    </label>
+                  </div>
                   <input
                     type="text"
-                    placeholder="Click 'Generate' to generate an asset tag"
-                    value={formData.newAssetTag || ''}
+                    placeholder="e.g. GS-OA-26-L0001"
+                    value={formData.oldAssetTag || ''}
                     onChange={(e) => {
                       if (
-                        (user?.role.includes('superadmin') ||
-                          user?.role.includes('admin')) &&
-                        editNewAsset
+                        user?.role.includes('superadmin') ||
+                        user?.role.includes('admin')
                       ) {
                         setFormData({
                           ...formData,
-                          newAssetTag: e.target.value,
+                          oldAssetTag: e.target.value,
                         });
                       }
                     }}
                     className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                   />
-
-                  {formData?.newAssetTag && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFormData({
-                          ...formData,
-                          newAssetTag: '',
-                        });
-                      }}
-                      className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                      aria-label="Clear new asset tag"
-                    >
-                      ✕
-                    </button>
-                  )}
                 </div>
-              </div>
+              )}
 
               {/* Hostname */}
               <div>
@@ -776,87 +527,64 @@ export default function AddEditItemsModal({
                 />
               </div>
 
-              <div ref={employeeRef}>
-                <div className="relative">
-                  <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                    Assigned to
-                  </label>
+              {/* Employee Select */}
+              <SearchableDropdown
+                label="Assigned to"
+                data={employees.map((emp: any) => ({
+                  ...emp,
+                  name: `${emp?.firstName} ${emp?.lastName}`,
+                }))}
+                // ref={employeeRef}
+                search={employeeSearch}
+                setSearch={setEmployeeSearch}
+                placeholder="Select Employee"
+                required
+                onChange={(value: any) => {
+                  setFormData({
+                    ...formData,
+                    assignedTo: parseInt(value),
+                  });
+                }}
+              />
 
-                  <input
-                    type="text"
-                    value={employeeSearch}
-                    placeholder="Select Employee"
-                    onFocus={() => setShowEmployees(true)}
-                    onChange={(e) => {
-                      setEmployeeSearch(e.target.value);
-                      setShowEmployees(true);
+              {/* Deployed By */}
+              <SearchableDropdown
+                label="Deployed by"
+                data={employees.map((emp: any) => ({
+                  ...emp,
+                  name: `${emp?.firstName} ${emp?.lastName}`,
+                }))}
+                // ref={deployedByRef}
+                value={deployedBySearch}
+                placeholder="Select Deployee"
+                required
+                onChange={(value: any) => {
+                  setFormData({
+                    ...formData,
+                    deployedBy: parseInt(value),
+                  });
+                }}
+              />
 
-                      // Optional: clear current selection while searching
-                      setFormData({
-                        ...formData,
-                        assignedTo: parseInt(e.target.value),
-                      });
-                    }}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                  />
-
-                  {showEmployees && (
-                    <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-950">
-                      {filteredEmployees.length > 0 ? (
-                        filteredEmployees.map((employee: any) => (
-                          <button
-                            key={employee.id}
-                            type="button"
-                            onClick={() => {
-                              setFormData({
-                                ...formData,
-                                assignedTo: employee.id,
-                              });
-
-                              setEmployeeSearch(
-                                `${employee?.firstName || ''} ${employee?.lastName || ''}`
-                              );
-
-                              setShowEmployees(false);
-                            }}
-                            className="block w-full px-3.5 py-2.5 text-left text-sm text-slate-900 hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800"
-                          >
-                            {employee.firstName} {employee.lastName}
-                          </button>
-                        ))
-                      ) : (
-                        <div className="px-3.5 py-2.5 text-sm text-slate-500">
-                          No employees found
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Deployment Date */}
+              {/*  Date Purchased */}
               <div>
                 <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                  Deployment Date
+                  Date Purchased
                 </label>
                 <div className="relative w-full">
                   <Flatpickr
                     placeholder="Select Date"
-<<<<<<< HEAD
-                    value={formData?.deploymentDate || ''}
-=======
-                    value={formData.deploymentDate}
->>>>>>> a61ba6ee5e1412a9ba930f9e11ad645a274baf66
+                    value={formData?.datePurchased || ''}
                     className="mr-0 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                     options={{
-                      dateFormat: 'Y-m-d',
+                      dateFormat: 'm-d-Y',
                       locale: 'en',
                       onChange(date) {
                         console.log(dayjs(date[0]).toISOString());
 
                         setFormData({
                           ...formData,
-                          deploymentDate: date
+                          datePurchased: date
                             ? dayjs(date[0]).toISOString()
                             : null,
                         });
@@ -864,13 +592,57 @@ export default function AddEditItemsModal({
                     }}
                   />
 
-                  {/* {formData.deploymentDate && (
+                  {formData.datePurchased && (
                     <button
                       type="button"
                       onClick={() => {
                         setFormData({
                           ...formData,
-                          deploymentDate: null,
+                          datePurchased: null,
+                        });
+                      }}
+                      className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                      aria-label="Clear date purchased"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Date Deployed */}
+              <div>
+                <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
+                  Date Deployed
+                </label>
+                <div className="relative w-full">
+                  <Flatpickr
+                    placeholder="Select Date"
+                    value={formData?.dateDeployed || ''}
+                    className="mr-0 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                    options={{
+                      dateFormat: 'm-d-Y',
+                      locale: 'en',
+                      onChange(date) {
+                        console.log(dayjs(date[0]).toISOString());
+
+                        setFormData({
+                          ...formData,
+                          dateDeployed: date
+                            ? dayjs(date[0]).toISOString()
+                            : null,
+                        });
+                      },
+                    }}
+                  />
+
+                  {formData.dateDeployed && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData({
+                          ...formData,
+                          dateDeployed: null,
                         });
                       }}
                       className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
@@ -878,7 +650,7 @@ export default function AddEditItemsModal({
                     >
                       ✕
                     </button>
-                  )} */}
+                  )}
                 </div>
               </div>
 
@@ -900,24 +672,30 @@ export default function AddEditItemsModal({
                     }}
                     className="mr-0 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                   />
-
-                  {/* {formData.deploymentDate && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFormData({
-                          ...formData,
-                          deploymentDate: null,
-                        });
-                      }}
-                      className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                      aria-label="Clear location"
-                    >
-                      ✕
-                    </button>
-                  )} */}
                 </div>
               </div>
+
+              <Dropdown
+                label="Asset Condition"
+                placeholder="Select Asset Condition"
+                data={assetConditions}
+                value={
+                  formData?.assetCondition
+                    ? assetConditions.find(
+                        (item) =>
+                          item.name?.toLowerCase() ===
+                          formData?.assetCondition?.toLowerCase()
+                      )?.name
+                    : ''
+                }
+                onChange={(value: any) => {
+                  setFormData((prev: any) => ({
+                    ...prev,
+                    assetCondition: value ? value?.name?.toUpperCase() : '',
+                  }));
+                }}
+                required
+              />
 
               {/* Description */}
               <div className="col-span-2">

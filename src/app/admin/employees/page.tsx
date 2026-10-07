@@ -6,13 +6,13 @@ import {
   Search,
   Trash2,
   AlertCircle,
-  X,
-  Loader2,
   LucideBuilding2,
 } from 'lucide-react';
 import axiosInstance from '@/lib/axiosInstance';
 import { useUserContext } from '@/context/UserContext';
 import TableTemplate from '@/app/components/ui-templates/table-template';
+import AddEditEmployee from '@/app/components/modals/employees/add-edit-employee';
+import AddEditAccountModal from '@/app/components/modals/employees/account/add-edit-account';
 
 interface Employee {
   id: number;
@@ -26,10 +26,15 @@ interface Employee {
   status: boolean;
 }
 
-export default function EmployeesPage() {
-  const departmentRef = useRef<HTMLDivElement>(null);
-  const positionRef = useRef<HTMLDivElement>(null);
+interface Account {
+  id: number;
+  username: string;
+  roleId: number;
+  employeeId: number;
+  status: boolean;
+}
 
+export default function EmployeesPage() {
   const { user, isAuthenticated } = useUserContext();
 
   const [search, setSearch] = useState('');
@@ -41,10 +46,14 @@ export default function EmployeesPage() {
 
   // Modal states
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isAccountFormOpen, setIsAccountFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   // Form states
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
+  const [accountFormMode, setAccountFormMode] = useState<'create' | 'edit'>(
+    'create'
+  );
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(
     null
   );
@@ -59,68 +68,23 @@ export default function EmployeesPage() {
     status: false,
   });
 
+  const [accountFormData, setAccountFormData] = useState({
+    username: '',
+    password: '',
+    roleId: '',
+    employeeId: '',
+    status: true,
+  });
+
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [accountFormError, setAccountFormError] = useState('');
 
   // Detail / Delete target state
   const [deletingEmployeeId, setDeletingEmployeeId] = useState<number | null>(
     null
   );
-
-  const [offices, setOffices] = useState([]);
-  const [departments, setDepartments] = useState([]);
-  const [positions, setPositions] = useState([]);
-
-  const [showDepartment, setShowDepartment] = useState(false);
-  const [departmentSearch, setDepartmentSearch] = useState('');
-
-  const [showPosition, setShowPosition] = useState(false);
-  const [positionSearch, setPositionSearch] = useState('');
-
-  const fetchDepartments = useCallback(async () => {
-    if (!localStorage.getItem('auth_token')) return;
-    setIsLoading(true);
-    setError('');
-    try {
-      const response = await axiosInstance.get('/departments');
-      setDepartments(response.data);
-    } catch (err: any) {
-      console.error('Fetch departments error:', err);
-      setError(
-        err.message ||
-          'Could not connect to the database. Make sure MySQL is running.'
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const fetchPositions = useCallback(async () => {
-    if (!localStorage.getItem('auth_token')) return;
-    setIsLoading(true);
-    setError('');
-    try {
-      const response = await axiosInstance.get('/positions');
-      setPositions(response.data);
-    } catch (err: any) {
-      console.error('Fetch positions error:', err);
-      setError(
-        err.message ||
-          'Could not connect to the database. Make sure MySQL is running.'
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (showDepartment) {
-      fetchDepartments();
-    }
-    if (showPosition) {
-      fetchPositions();
-    }
-  }, [showDepartment, showPosition]);
 
   // Fetch Departments callback
   const fetchEmployees = useCallback(async () => {
@@ -128,7 +92,12 @@ export default function EmployeesPage() {
     setIsLoading(true);
     setError('');
     try {
-      const response = await axiosInstance.get('/employees');
+      const response = await axiosInstance.get('/employees', {
+        params: { search },
+      });
+
+      // console.log(response.data);
+
       setEmployees(response.data);
     } catch (err: any) {
       console.error('Fetch employees error:', err);
@@ -139,7 +108,69 @@ export default function EmployeesPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [search]);
+
+  useEffect(() => {
+    fetchEmployees();
+  }, [fetchEmployees]);
+
+  // Open form for account creation
+  const handleCreateAccountOpen = () => {
+    setAccountFormData({
+      username: '',
+      password: '',
+      roleId: '',
+      employeeId: '',
+      status: true,
+    });
+    setAccountFormError('');
+    setAccountFormMode('create');
+    setIsAccountFormOpen(true);
+  };
+
+  // Open form for account editing
+  const handleEditAccountOpen = async (employee: Employee) => {
+    // console.log(employee);
+
+    const getOldAccount = await axiosInstance.get(`/accounts`, {
+      params: { accountId: employee?.accounts?.uuid },
+    });
+    const oldAccountData = getOldAccount.data;
+
+    setAccountFormMode('edit');
+    setSelectedEmployeeId(employee?.id);
+    setAccountFormData({
+      username: oldAccountData.username,
+      password: '',
+      roleId: oldAccountData.roleId,
+      employeeId: oldAccountData.employeeId,
+      status: oldAccountData.status,
+    });
+
+    // console.log({
+    //   username: oldAccountData.username,
+    //   password: '',
+    //   roleId: oldAccountData.roleId,
+    //   employeeId: oldAccountData.employeeId,
+    //   status: oldAccountData.status,
+    // });
+
+    setAccountFormError('');
+    setIsAccountFormOpen(true);
+  };
+
+  const handleAccountClose = () => {
+    setIsAccountFormOpen(false);
+    setAccountFormMode('create');
+    setAccountFormData({
+      username: '',
+      password: '',
+      roleId: '',
+      employeeId: '',
+      status: true,
+    });
+    setAccountFormError('');
+  };
 
   // Open form for creation
   const handleCreateOpen = () => {
@@ -159,7 +190,14 @@ export default function EmployeesPage() {
   };
 
   // Open form for editing
-  const handleEditOpen = (employee: Employee) => {
+  const handleEditOpen = async (employee: Employee) => {
+    const getOldEmployee = await axiosInstance.get(
+      `/employees/${employee?.id}`
+    );
+    const oldEmployeeData = getOldEmployee.data;
+
+    setOldEmployee(oldEmployeeData);
+
     setFormMode('edit');
     setSelectedEmployeeId(employee.id);
     setFormData({
@@ -172,6 +210,14 @@ export default function EmployeesPage() {
       positionId: employee.positionId,
       status: employee.status,
     });
+
+    setOfficeSearch(oldEmployeeData?.office?.name || employee?.office || '');
+    setDepartmentSearch(
+      oldEmployeeData?.department?.name || employee?.department || ''
+    );
+    setCategorySearch(
+      oldEmployeeData?.position?.name || employee?.position || ''
+    );
 
     setFormError('');
     setIsFormOpen(true);
@@ -254,10 +300,7 @@ export default function EmployeesPage() {
   // Trigger fetch when parameters change
   useEffect(() => {
     if (isAuthenticated) {
-      const delayDebounceFn = setTimeout(() => {
-        fetchEmployees();
-      }, 300); // Debounce search
-      return () => clearTimeout(delayDebounceFn);
+      fetchEmployees();
     }
   }, [fetchEmployees, isAuthenticated]);
 
@@ -268,24 +311,28 @@ export default function EmployeesPage() {
       dataType: 'string',
       fontStyle: 'bold',
       secondary: 'lastName',
+      emphasizeLevel: 'high',
     },
     {
       header: 'Department',
       accessor: 'department',
       dataType: 'object',
       fontStyle: 'normal',
+      emphasizeLevel: 'medium',
     },
     {
       header: 'Position',
       accessor: 'position',
       dataType: 'object',
       fontStyle: 'normal',
+      emphasizeLevel: 'medium',
     },
     {
       header: 'Status',
       accessor: 'status',
       dataType: 'boolean',
       fontStyle: 'normal',
+      emphasizeLevel: 'medium',
     },
     {
       header: 'Created At',
@@ -300,6 +347,9 @@ export default function EmployeesPage() {
       fontStyle: 'normal',
     },
   ];
+
+  // console.log(accountFormData);
+
   return (
     <div className="flex max-h-screen min-h-screen flex-col bg-slate-50/50 px-4 py-8 font-sans text-slate-900 transition-all duration-300 sm:px-6 lg:px-8 dark:bg-slate-950 dark:text-slate-100">
       <div className="mb-6 flex w-fit gap-2 border-b-2 border-slate-300 pr-2 pb-2 dark:border-slate-700">
@@ -367,250 +417,41 @@ export default function EmployeesPage() {
           columns={columns}
           tableName="Employees"
           isLoading={isLoading}
-          handleDetailOpen={() => {}}
+          handleCreateAccountOpen={handleCreateAccountOpen}
+          handleEditAccountOpen={handleEditAccountOpen}
           handleEditOpen={handleEditOpen}
           handleDeleteOpen={handleDeleteOpen}
-          canEdit
-          canDelete
+          canCreateAccount={user?.role === 'superadmin'}
+          canEditAccount={user?.role === 'superadmin'}
+          canEdit={user?.role === 'superadmin'}
+          canDelete={user?.role === 'superadmin'}
         />
       </main>
 
       {/* FORM MODAL (Add / Edit) */}
       {isFormOpen && (
-        <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-200/60 px-6 py-4 dark:border-slate-800/60">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                {formMode === 'create' ? 'Add New Employee' : 'Edit Employee'}
-              </h3>
-              <button
-                onClick={() => handleClose()}
-                className="cursor-pointer rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
-              >
-                <X className="h-4.5 w-4.5" />
-              </button>
-            </div>
+        <AddEditEmployee
+          formMode={formMode}
+          formData={formData}
+          setFormData={setFormData}
+          handleClose={handleClose}
+          handleFormSubmit={handleFormSubmit}
+          formError={formError}
+          isSubmitting={isSubmitting}
+        />
+      )}
 
-            {/* Modal Body / Form */}
-            <form onSubmit={handleFormSubmit}>
-              <div className="max-h-[70vh] space-y-4 overflow-y-auto p-6">
-                {formError && (
-                  <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-600 dark:border-red-900/30 dark:bg-red-950/20 dark:text-red-400">
-                    <AlertCircle className="h-4 w-4 shrink-0" />
-                    <span>{formError}</span>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Name */}
-                  <div>
-                    <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                      First Name *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. John"
-                      value={formData.firstName}
-                      onChange={(e) =>
-                        setFormData({ ...formData, firstName: e.target.value })
-                      }
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                      Last Name *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Doe"
-                      value={formData.lastName}
-                      onChange={(e) =>
-                        setFormData({ ...formData, lastName: e.target.value })
-                      }
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                      Middle Name
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. John"
-                      value={formData.middleName}
-                      onChange={(e) =>
-                        setFormData({ ...formData, middleName: e.target.value })
-                      }
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                      Suffix
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Jr."
-                      value={formData.suffix}
-                      onChange={(e) =>
-                        setFormData({ ...formData, suffix: e.target.value })
-                      }
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                    />
-                  </div>
-
-                  {/* Department */}
-                  <div ref={departmentRef}>
-                    <div className="relative">
-                      <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                        Department *
-                      </label>
-
-                      <div className="relative">
-                        <input
-                          type="text"
-                          value={departmentSearch}
-                          placeholder="Select Department"
-                          onFocus={() => setShowDepartment(true)}
-                          onChange={(e) => {
-                            setDepartmentSearch(e.target.value);
-                            setShowDepartment(true);
-                          }}
-                          required
-                          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 pr-10 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                        />
-
-                        {/* Clear button */}
-                        {departmentSearch && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setDepartmentSearch('');
-                              setFormData({
-                                ...formData,
-                                departmentId: null,
-                              });
-                              setShowDepartment(false);
-                            }}
-                            className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                            aria-label="Clear department"
-                          >
-                            ✕
-                          </button>
-                        )}
-                      </div>
-
-                      {showDepartment && (
-                        <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-950">
-                          {filteredDepartments.length > 0 ? (
-                            filteredDepartments.map((department: any) => (
-                              <button
-                                key={department.id}
-                                type="button"
-                                onClick={() => {
-                                  setFormData({
-                                    ...formData,
-                                    departmentId: department.id,
-                                  });
-
-                                  setDepartmentSearch(department.name);
-                                  setShowDepartment(false);
-                                }}
-                                className="block w-full px-3.5 py-2.5 text-left text-sm text-slate-900 hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800"
-                              >
-                                {department.name}
-                              </button>
-                            ))
-                          ) : (
-                            <div className="px-3.5 py-2.5 text-sm text-slate-500">
-                              No departments found
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div ref={positionRef}>
-                    <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                      Position *
-                    </label>
-
-                    <div className="relative">
-                      <input
-                        required
-                        value={positionSearch}
-                        onChange={(e) => {
-                          setPositionSearch(e.target.value);
-                          setShowPosition(true);
-                        }}
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                      />
-                    </div>
-
-                    {showPosition && (
-                      <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-950">
-                        {filteredPositions.length > 0 ? (
-                          filteredPositions.map((position: any) => (
-                            <button
-                              key={position.id}
-                              type="button"
-                              onClick={() => {
-                                setFormData({
-                                  ...formData,
-                                  positionId: position.id,
-                                });
-
-                                setPositionSearch(position.name);
-                                setShowPosition(false);
-                              }}
-                              className="block w-full px-3.5 py-2.5 text-left text-sm text-slate-900 hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800"
-                            >
-                              {position.name}
-                            </button>
-                          ))
-                        ) : (
-                          <div className="px-3.5 py-2.5 text-sm text-slate-500">
-                            No positions found
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Modal Footer */}
-              <div className="flex items-center justify-end gap-3 border-t border-slate-200/60 bg-slate-50 px-6 py-4 dark:border-slate-800/60 dark:bg-slate-900/50">
-                <button
-                  type="button"
-                  onClick={() => handleClose()}
-                  className="cursor-pointer rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 transition-all hover:bg-slate-100 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-md transition-all hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-75 dark:bg-indigo-500 dark:hover:bg-indigo-400"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    'Save Employee'
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {isAccountFormOpen && (
+        <AddEditAccountModal
+          accountFormMode={accountFormMode}
+          accountFormData={accountFormData}
+          setAccountFormData={setAccountFormData}
+          handleCreateAccountOpen={handleCreateAccountOpen}
+          handleClose={handleAccountClose}
+          accountFormError={accountFormError}
+          setAccountFormError={setAccountFormError}
+          isSubmitting={isSubmitting}
+        />
       )}
 
       {/* DELETE CONFIRMATION MODAL */}

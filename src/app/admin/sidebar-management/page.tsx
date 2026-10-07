@@ -126,6 +126,7 @@ export default function SidebarManagement() {
     setError('');
     try {
       const response = await axiosInstance.get('/sidebar-management');
+
       setSidebarLinks(response.data);
     } catch (err: any) {
       console.error('Fetch sidebar links error:', err);
@@ -259,10 +260,7 @@ export default function SidebarManagement() {
   // Trigger fetch when parameters change
   useEffect(() => {
     if (isAuthenticated) {
-      const delayDebounceFn = setTimeout(() => {
-        fetchSidebarLinks();
-      }, 300); // Debounce search
-      return () => clearTimeout(delayDebounceFn);
+      fetchSidebarLinks();
     }
   }, [fetchSidebarLinks, isAuthenticated]);
 
@@ -314,6 +312,8 @@ export default function SidebarManagement() {
 
   // Get manually typed icon
   const ManualIcon = icons[selectedIcon as keyof typeof icons];
+
+  console.log(sidebarLinks);
 
   return (
     <div className="flex max-h-screen min-h-screen flex-col bg-slate-50/50 px-4 py-8 font-sans text-slate-900 transition-all duration-300 sm:px-6 lg:px-8 dark:bg-slate-950 dark:text-slate-100">

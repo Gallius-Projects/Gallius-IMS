@@ -1,16 +1,19 @@
 'use client';
 
 import * as Lucide from 'lucide-react';
-import { Edit, Eye, Loader2, Trash2 } from 'lucide-react';
+import { Edit, Eye, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
 
 export default function TableTemplate({
   rows,
   columns,
   tableName,
   isLoading,
+  handleCreateAccountOpen = () => {},
+  handleEditAccountOpen = () => {},
   handleDetailOpen = () => {},
   handleEditOpen = () => {},
   handleDeleteOpen = () => {},
+  canCreateAccount = false,
   canView = false,
   canEdit = false,
   canDelete = false,
@@ -19,9 +22,12 @@ export default function TableTemplate({
   columns: any[];
   tableName: string;
   isLoading: boolean;
+  handleCreateAccountOpen?: (row: any) => void;
+  handleEditAccountOpen?: (row: any) => void;
   handleDetailOpen?: (row: any) => void;
   handleEditOpen?: (row: any) => void;
   handleDeleteOpen?: (id: number) => void;
+  canCreateAccount?: boolean;
   canView?: boolean;
   canEdit?: boolean;
   canDelete?: boolean;
@@ -69,7 +75,7 @@ export default function TableTemplate({
           ) : (
             rows.map((row) => (
               <tr
-                key={row.id}
+                key={row.id || row.uuid}
                 className="group transition-all hover:bg-slate-50/50 dark:hover:bg-slate-800/20"
               >
                 {columns.map((column, index) => {
@@ -125,6 +131,26 @@ export default function TableTemplate({
                 {(canView || canEdit || canDelete) && (
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-2">
+                      {canCreateAccount && !row?.accounts?.uuid && (
+                        <button
+                          onClick={() => handleCreateAccountOpen(row)}
+                          className="dark:hover:bg-slate-850 cursor-pointer rounded-lg border border-slate-200/50 bg-white p-1.5 text-slate-400 transition-all hover:bg-slate-50 hover:text-indigo-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500 dark:hover:text-indigo-400"
+                          title="Create Account"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+
+                      {canCreateAccount && row?.accounts?.uuid && (
+                        <button
+                          onClick={() => handleEditAccountOpen(row)}
+                          className="dark:hover:bg-slate-850 cursor-pointer rounded-lg border border-slate-200/50 bg-white p-1.5 text-slate-400 transition-all hover:bg-slate-50 hover:text-indigo-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500 dark:hover:text-indigo-400"
+                          title="Edit Account"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+
                       {canView && (
                         <button
                           onClick={() => handleDetailOpen(row)}

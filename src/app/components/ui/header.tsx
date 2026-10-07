@@ -52,13 +52,6 @@ export default function Header() {
           </span>
         </div>
         <div className="flex items-center gap-4">
-          <span className="hidden rounded-lg border border-slate-200/50 bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600 md:inline dark:border-slate-700/50 dark:bg-slate-800 dark:text-slate-300">
-            User:{' '}
-            <span className="font-bold text-slate-900 dark:text-white">
-              {user?.username}
-            </span>
-          </span>
-
           {/* Dark Mode Toggle */}
           <button
             onClick={toggleTheme}

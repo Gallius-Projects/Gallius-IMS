@@ -69,18 +69,18 @@ export async function GET(req: Request) {
     const suppliers = await prisma.suppliers.findMany({
       where: whereClause,
       include: {
-        updatedBy: {
-          select: {
-            employee: {
-              select: {
-                firstName: true,
-                lastName: true,
+        adminLogs: {
+          include: {
+            involvedUser: {
+              include: {
+                employee: { select: { firstName: true, lastName: true } },
               },
             },
           },
+          orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+          take: 1,
         },
       },
-      orderBy: { updatedAt: 'desc' },
     });
 
     return NextResponse.json(suppliers);
@@ -121,8 +121,17 @@ export async function POST(req: Request) {
         address,
         contactPerson,
         contactNumber,
-        updatedBy: {
-          connect: { uuid: user?.userId },
+      },
+    });
+
+    await prisma.adminLogs.create({
+      data: {
+        activity: `Supplier "${name}" created`,
+        updatedSupplier: {
+          connect: { id: newSupplier.id },
+        },
+        involvedUser: {
+          connect: { uuid: user.userId },
         },
       },
     });

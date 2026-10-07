@@ -24,6 +24,19 @@ export async function GET(
 
     const item = await prisma.roles.findUnique({
       where: { id: roleId },
+      include: {
+        accountLogs: {
+          include: {
+            involvedUser: {
+              include: {
+                employee: { select: { firstName: true, lastName: true } },
+              },
+            },
+          },
+          orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+          take: 1,
+        },
+      },
     });
 
     if (!item) {
@@ -70,14 +83,44 @@ export async function PUT(
       );
     }
 
-    const updatedItem = await prisma.roles.update({
+    const role = await prisma.roles.findUnique({
+      where: { id: roleId },
+    });
+
+    const changes = [];
+
+    if (name !== role?.name) {
+      changes.push({
+        field: 'name',
+        oldValue: role?.name,
+        newValue: name,
+      });
+    }
+
+    if (changes.length === 0) {
+      return NextResponse.json({ message: 'No changes to update', changes });
+    }
+
+    const updatedRole = await prisma.roles.update({
       where: { id: roleId },
       data: {
         name,
       },
     });
 
-    return NextResponse.json(updatedItem);
+    await prisma.accountLogs.create({
+      data: {
+        activity: `Updated role from ${role?.name} to ${name}`,
+        updatedRole: {
+          connect: { id: roleId },
+        },
+        involvedUser: {
+          connect: { uuid: user.userId },
+        },
+      },
+    });
+
+    return NextResponse.json({ updatedRole, changes });
   } catch (error: any) {
     console.error('Update role error:', error);
     return NextResponse.json(

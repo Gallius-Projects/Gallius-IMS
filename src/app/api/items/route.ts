@@ -41,7 +41,7 @@ export async function GET(req: Request) {
 
     const items = await prisma.inventoryItems.findMany({
       where: whereClause,
-      orderBy: { updatedAt: 'desc' },
+      // orderBy: { inventoryLogs: { updatedAt: 'desc' } },
       include: {
         category: true,
         brand: true,
@@ -49,10 +49,16 @@ export async function GET(req: Request) {
         office: true,
         supplier: true,
         assignedEmp: true,
-        updatedBy: {
+        inventoryLogs: {
           include: {
-            employee: { select: { firstName: true, lastName: true } },
+            involvedUser: {
+              include: {
+                employee: { select: { firstName: true, lastName: true } },
+              },
+            },
           },
+          orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+          take: 1,
         },
         deployedBy: {
           include: {
@@ -62,7 +68,22 @@ export async function GET(req: Request) {
       },
     });
 
-    return NextResponse.json(items);
+    const itemsWithLatestLog = items.map((item) => {
+      const latestLog = item?.inventoryLogs[0];
+
+      return {
+        ...item,
+        createdAt: latestLog?.createdAt,
+        updatedAt: latestLog?.updatedAt,
+        updatedBy: latestLog?.involvedUser?.employee
+          ? latestLog?.involvedUser?.employee.firstName +
+            ' ' +
+            latestLog?.involvedUser?.employee.lastName
+          : '--',
+      };
+    });
+
+    return NextResponse.json(itemsWithLatestLog);
   } catch (error: any) {
     console.error('Fetch items error:', error);
     return NextResponse.json(
@@ -89,21 +110,24 @@ export async function POST(req: Request) {
       oldAssetTag,
       newAssetTag,
       serialNumber,
-      description,
       hostname,
-      remarks,
-      brandId,
-      assignedTo,
+      status,
       categoryId,
+      brandId,
       locationId,
       officeId,
       supplierId,
-      deploymentDate,
-      status,
-      updatedBy,
+      datePurchased,
+      dateDeployed,
+      invoiceNo,
+      assetCondition,
+      isNew,
+      assignedTo,
+      description,
+      remarks,
     } = body;
 
-    // console.log(body);
+    console.log(body);
 
     if (!name) {
       return NextResponse.json(
@@ -122,7 +146,11 @@ export async function POST(req: Request) {
         hostname: hostname || '',
         remarks: remarks || '',
         status: status || 'SPARE',
-        deploymentDate: new Date(deploymentDate) || null,
+        datePurchased: datePurchased || null,
+        dateDeployed: dateDeployed || null,
+        invoiceNo: invoiceNo || '',
+        assetCondition: assetCondition || '',
+        isNew: isNew || true,
         brand: {
           connect: { id: parseInt(brandId) },
         },
@@ -141,8 +169,15 @@ export async function POST(req: Request) {
         assignedEmp: {
           connect: { id: parseInt(assignedTo) },
         },
-        updatedBy: {
-          connect: { uuid: updatedBy },
+      },
+    });
+
+    await prisma.inventoryLogs.create({
+      data: {
+        activity: `Item ${name} created`,
+        updatedItem: { connect: { id: newItem?.id } },
+        involvedUser: {
+          connect: { uuid: user.userId },
         },
       },
     });

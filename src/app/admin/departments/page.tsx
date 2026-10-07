@@ -205,6 +205,8 @@ export default function DepartmentsPage() {
     },
   ];
 
+  console.log(departments);
+
   return (
     <div className="flex max-h-screen min-h-screen flex-col bg-slate-50/50 px-4 py-8 font-sans text-slate-900 transition-all duration-300 sm:px-6 lg:px-8 dark:bg-slate-950 dark:text-slate-100">
       <div className="mb-6 flex w-fit gap-2 border-b-2 border-slate-300 pr-2 pb-2 dark:border-slate-700">
@@ -263,14 +265,7 @@ export default function DepartmentsPage() {
         </div>
 
         <TableTemplate
-          rows={departments.map((department) => ({
-            ...department,
-            updatedBy: department.updatedBy
-              ? department.updatedBy.employee.firstName +
-                ' ' +
-                department.updatedBy.employee.lastName
-              : '--',
-          }))}
+          rows={departments}
           columns={columns}
           isLoading={isLoading}
           tableName="Departments"

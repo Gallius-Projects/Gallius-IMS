@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { getAuthUser } from '@/lib/auth';
+import { getAuthUser, hashPassword } from '@/lib/auth';
 
-// GET: Retrieve a single employee
+// GET: Retrieve a single account
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ accountId: string }> }
 ) {
   try {
     const user = getAuthUser(req);
@@ -16,40 +16,32 @@ export async function GET(
       );
     }
 
-    const { id } = await params;
-    const employeeId = parseInt(id);
-    if (isNaN(employeeId)) {
-      return NextResponse.json(
-        { error: 'Invalid employee ID' },
-        { status: 400 }
-      );
-    }
+    const { accountId } = await params;
 
-    const employee = await prisma.employees.findUnique({
-      where: { id: employeeId },
+    console.log({ accountId });
+
+    const account = await prisma.accounts.findUnique({
+      where: { uuid: accountId },
     });
 
-    if (!employee) {
-      return NextResponse.json(
-        { error: 'Employee not found' },
-        { status: 404 }
-      );
+    if (!account) {
+      return NextResponse.json({ error: 'Account not found' }, { status: 404 });
     }
 
-    return NextResponse.json(employee);
+    return NextResponse.json(account);
   } catch (error: any) {
-    console.error('Fetch single employee error:', error);
+    console.error('Fetch single account error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch employee' },
+      { error: error.message || 'Failed to fetch account' },
       { status: 500 }
     );
   }
 }
 
-// PUT: Update an employee
+// PUT: Update an account
 export async function PUT(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ accountId: string }> }
 ) {
   try {
     const user = getAuthUser(req);
@@ -60,66 +52,44 @@ export async function PUT(
       );
     }
 
-    const { id } = await params;
-    const employeeId = parseInt(id);
-    if (isNaN(employeeId)) {
-      return NextResponse.json(
-        { error: 'Invalid employee ID' },
-        { status: 400 }
-      );
-    }
+    const { accountId } = await params;
 
     const body = await req.json();
-    const {
-      firstName,
-      lastName,
-      middleName,
-      suffix,
-      officeId,
-      tenantId,
-      departmentId,
-      positionId,
-      status,
-    } = body;
+    const { username, password, roleId, employeeId, status } = body;
 
-    if (!firstName || !lastName) {
+    if (!username) {
       return NextResponse.json(
-        { error: 'Employee name is required' },
+        { error: 'Account name is required' },
         { status: 400 }
       );
     }
 
-    const updatedEmployee = await prisma.employees.update({
-      where: { id: employeeId },
+    const updatedAccount = await prisma.accounts.update({
+      where: { id: accountId },
       data: {
-        firstName,
-        lastName,
-        middleName,
-        suffix,
-        office: {
-          connect: { id: officeId },
+        username,
+        passwordHash: hashPassword(password),
+        role: {
+          connect: { id: roleId },
         },
-        department: {
-          connect: { id: departmentId },
-        },
-        position: {
-          connect: { id: positionId },
+        employee: {
+          connect: { id: employeeId },
         },
         status,
       },
     });
 
-    return NextResponse.json(updatedEmployee);
+    return NextResponse.json(updatedAccount);
   } catch (error: any) {
-    console.error('Update employee error:', error);
+    console.error('Update account error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to update employee' },
+      { error: error.message || 'Failed to update account' },
       { status: 500 }
     );
   }
 }
 
-// DELETE: Delete an employee
+// DELETE: Delete an account
 export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -134,26 +104,26 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    const employeeId = parseInt(id);
-    if (isNaN(employeeId)) {
+    const accountId = parseInt(id);
+    if (isNaN(accountId)) {
       return NextResponse.json(
-        { error: 'Invalid employee ID' },
+        { error: 'Invalid account ID' },
         { status: 400 }
       );
     }
 
-    await prisma.employees.delete({
-      where: { id: employeeId },
+    await prisma.accounts.delete({
+      where: { id: accountId },
     });
 
     return NextResponse.json({
       success: true,
-      message: 'Employee deleted successfully',
+      message: 'Account deleted successfully',
     });
   } catch (error: any) {
-    console.error('Delete employee error:', error);
+    console.error('Delete account error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to delete employee' },
+      { error: error.message || 'Failed to delete account' },
       { status: 500 }
     );
   }

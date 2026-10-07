@@ -15,48 +15,15 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const search = searchParams.get('search') || '';
-    const name = searchParams.get('name') || '';
-    const path = searchParams.get('path') || '';
-    const icon = searchParams.get('icon') || '';
-    const access = searchParams.get('access') || '';
-    const createdAt = searchParams.get('createdAt') || '';
-    const updatedAt = searchParams.get('updatedAt') || '';
 
     // Build Prisma query filters
     const whereClause: any = {};
-
-    if (name) {
-      whereClause.name = name;
-    }
-
-    if (path) {
-      whereClause.path = path;
-    }
-
-    if (icon) {
-      whereClause.icon = icon;
-    }
-
-    if (access) {
-      whereClause.access = access;
-    }
-
-    if (updatedAt) {
-      whereClause.updatedAt = updatedAt;
-    }
-
-    if (createdAt) {
-      whereClause.createdAt = createdAt;
-    }
 
     if (search) {
       whereClause.OR = [
         { name: { contains: search } },
         { path: { contains: search } },
         { icon: { contains: search } },
-        { access: { contains: search } },
-        { createdAt: { contains: search } },
-        { updatedAt: { contains: search } },
       ];
     }
 
@@ -64,18 +31,23 @@ export async function GET(req: Request) {
       where: whereClause,
       include: {
         sidebarLinkRoles: { include: { role: true } },
-        updatedByUser: {
-          select: {
-            employee: {
-              select: {
-                firstName: true,
-                lastName: true,
+        adminLogs: {
+          include: {
+            involvedUser: {
+              include: {
+                employee: {
+                  select: {
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
               },
             },
           },
+          orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+          take: 1,
         },
       },
-      orderBy: { updatedAt: 'desc' },
     });
 
     return NextResponse.json(sidebarLinks);
@@ -114,13 +86,22 @@ export async function POST(req: Request) {
         name,
         path,
         icon,
-        updatedByUser: {
-          connect: { uuid: user?.userId },
-        },
         sidebarLinkRoles: {
           create: access.map((roleId: any) => ({
             roleId,
           })),
+        },
+      },
+    });
+
+    await prisma.adminLogs.create({
+      data: {
+        activity: `Sidebar link "${name}" created`,
+        updatedSidebarLink: {
+          connect: { id: newSidebarLink.id },
+        },
+        involvedUser: {
+          connect: { uuid: user.userId },
         },
       },
     });

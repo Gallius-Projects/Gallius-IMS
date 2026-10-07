@@ -27,6 +27,20 @@ export async function GET(
 
     const department = await prisma.departments.findUnique({
       where: { id: departmentId },
+      include: {
+        positions: true,
+        accountLogs: {
+          include: {
+            involvedUser: {
+              include: {
+                employee: { select: { firstName: true, lastName: true } },
+              },
+            },
+          },
+          orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+          take: 1,
+        },
+      },
     });
 
     if (!department) {
@@ -70,7 +84,7 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const { name, updatedBy } = body;
+    const { name } = body;
 
     if (!name) {
       return NextResponse.json(
@@ -79,12 +93,49 @@ export async function PUT(
       );
     }
 
+    const department = await prisma.departments.findUnique({
+      where: { id: departmentId },
+    });
+
+    if (!department) {
+      return NextResponse.json(
+        { error: 'Department not found' },
+        { status: 404 }
+      );
+    }
+
+    const changes = [];
+
+    if (name !== department.name) {
+      changes.push({
+        field: 'name',
+        oldValue: department.name,
+        newValue: name,
+      });
+    }
+
+    if (changes.length === 0) {
+      return NextResponse.json({
+        message: 'No changes to update',
+        changes,
+      });
+    }
+
     const updatedDepartment = await prisma.departments.update({
       where: { id: departmentId },
       data: {
         name,
-        updatedBy: {
-          connect: { uuid: updatedBy },
+      },
+    });
+
+    await prisma.accountLogs.create({
+      data: {
+        activity: `Department ${name} updated`,
+        updatedDepartment: {
+          connect: { id: updatedDepartment.id },
+        },
+        involvedUser: {
+          connect: { uuid: user.userId },
         },
       },
     });

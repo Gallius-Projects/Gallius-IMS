@@ -34,14 +34,36 @@ export async function GET(req: Request) {
     const departments = await prisma.departments.findMany({
       where: whereClause,
       include: {
-        updatedBy: {
-          select: { employee: { select: { firstName: true, lastName: true } } },
+        accountLogs: {
+          include: {
+            involvedUser: {
+              include: {
+                employee: { select: { firstName: true, lastName: true } },
+              },
+            },
+          },
+          orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+          take: 1,
         },
       },
-      orderBy: { updatedAt: 'desc' },
     });
 
-    return NextResponse.json(departments);
+    const departmentsWithLatestLog = departments.map((department) => {
+      const latestLog = department?.accountLogs[0];
+
+      return {
+        ...department,
+        createdAt: latestLog?.createdAt,
+        updatedAt: latestLog?.updatedAt,
+        updatedBy: latestLog?.involvedUser?.employee
+          ? latestLog?.involvedUser?.employee.firstName +
+            ' ' +
+            latestLog?.involvedUser?.employee.lastName
+          : '--',
+      };
+    });
+
+    return NextResponse.json(departmentsWithLatestLog);
   } catch (error: any) {
     console.error('Fetch departments error:', error);
     return NextResponse.json(

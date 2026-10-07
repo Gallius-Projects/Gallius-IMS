@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getAuthUser } from '@/lib/auth';
 
-// GET: Retrieve inventory items
+// GET: Retrieve employees
 export async function GET(req: Request) {
   try {
     const user = getAuthUser(req);
@@ -15,69 +15,60 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const search = searchParams.get('search') || '';
-    const firstName = searchParams.get('firstName') || '';
-    const lastName = searchParams.get('lastName') || '';
-    const middleName = searchParams.get('middleName') || '';
-    const employeeId = searchParams.get('employeeId') || '';
-    const departmentId = searchParams.get('departmentId') || '';
-    const positionId = searchParams.get('positionId') || '';
 
     // Build Prisma query filters
     const whereClause: any = {};
-
-    if (firstName) {
-      whereClause.firstName = firstName;
-    }
-
-    if (lastName) {
-      whereClause.lastName = lastName;
-    }
-
-    if (middleName) {
-      whereClause.middleName = middleName;
-    }
-
-    if (employeeId) {
-      whereClause.employeeId = parseInt(employeeId);
-    }
-
-    if (departmentId) {
-      whereClause.departmentId = parseInt(departmentId);
-    }
-
-    if (positionId) {
-      whereClause.positionId = parseInt(positionId);
-    }
 
     if (search) {
       whereClause.OR = [
         { firstName: { contains: search } },
         { lastName: { contains: search } },
         { middleName: { contains: search } },
-        { employeeId: { contains: search } },
-        { departmentId: { contains: search } },
-        { positionId: { contains: search } },
+        { suffix: { contains: search } },
+        { accounts: { username: { contains: search } } },
+        { involvedUser: { employee: { firstName: { contains: search } } } },
+        { involvedUser: { employee: { lastName: { contains: search } } } },
+        { involvedUser: { employee: { middleName: { contains: search } } } },
+        { involvedUser: { employee: { suffix: { contains: search } } } },
       ];
     }
 
     const employees = await prisma.employees.findMany({
       where: whereClause,
       include: {
-        position: {
-          select: {
-            name: true,
+        position: true,
+        department: true,
+        accounts: true,
+        accountLogs: {
+          include: {
+            involvedUser: {
+              include: {
+                employee: { select: { firstName: true, lastName: true } },
+              },
+            },
           },
-        },
-        department: {
-          select: {
-            name: true,
-          },
+          orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+          take: 1,
         },
       },
-      orderBy: { updatedAt: 'desc' },
     });
 
-    return NextResponse.json(employees);
+    const employeesWithLatestLog = employees.map((employee) => {
+      const latestLog = employee?.accountLogs[0];
+
+      return {
+        ...employee,
+        createdAt: latestLog?.createdAt,
+        updatedAt: latestLog?.updatedAt,
+        updatedBy: latestLog?.involvedUser?.employee
+          ? latestLog?.involvedUser?.employee.firstName +
+            ' ' +
+            latestLog?.involvedUser?.employee.lastName
+          : '--',
+      };
+    });
+
+    return NextResponse.json(employeesWithLatestLog);
   } catch (error: any) {
     console.error('Fetch employees error:', error);
     return NextResponse.json(
@@ -130,6 +121,18 @@ export async function POST(req: Request) {
         employeeId,
         departmentId: parseInt(departmentId),
         positionId: parseInt(positionId),
+      },
+    });
+
+    await prisma.accountLogs.create({
+      data: {
+        activity: `Employee ${firstName} ${lastName} ${middleName} created`,
+        updatedEmployee: {
+          connect: { id: newEmployee.id },
+        },
+        involvedUser: {
+          connect: { uuid: user.userId },
+        },
       },
     });
 

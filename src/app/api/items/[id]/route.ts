@@ -31,10 +31,16 @@ export async function GET(
         office: true,
         supplier: true,
         assignedEmp: true,
-        updatedBy: {
+        inventoryLogs: {
           include: {
-            employee: { select: { firstName: true, lastName: true } },
+            involvedUser: {
+              include: {
+                employee: { select: { firstName: true, lastName: true } },
+              },
+            },
           },
+          orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+          take: 1,
         },
         deployedBy: {
           include: {
@@ -111,7 +117,7 @@ export async function PUT(
       data: {
         name,
         oldAssetTag: oldAssetTag || '',
-        // newAssetTag: newAssetTag,
+        newAssetTag: newAssetTag || '',
         serialNumber: serialNumber || '',
         description: description || '',
         hostname: hostname || '',

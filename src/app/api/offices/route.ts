@@ -16,8 +16,6 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const search = searchParams.get('search') || '';
     const name = searchParams.get('name') || '';
-    const createdAt = searchParams.get('createdAt') || '';
-    const updatedAt = searchParams.get('updatedAt') || '';
 
     // Build Prisma query filters
     const whereClause: any = {};
@@ -26,43 +24,53 @@ export async function GET(req: Request) {
       whereClause.name = name;
     }
 
-    if (createdAt) {
-      whereClause.createdAt = createdAt;
-    }
-
-    if (updatedAt) {
-      whereClause.updatedAt = updatedAt;
-    }
-
     if (search) {
       whereClause.OR = [
         { name: { contains: search } },
         {
-          updatedBy: {
-            employee: {
-              OR: [
-                { firstName: { contains: search } },
-                { lastName: { contains: search } },
-              ],
-            },
+          adminlogs: {
+            OR: [
+              { createdAt: { contains: search } },
+              { updatedAt: { contains: search } },
+            ],
           },
         },
-        { createdAt: { contains: search } },
-        { updatedAt: { contains: search } },
       ];
     }
 
     const offices = await prisma.offices.findMany({
       where: whereClause,
       include: {
-        updatedBy: {
-          select: { employee: { select: { firstName: true, lastName: true } } },
+        adminLogs: {
+          include: {
+            involvedUser: {
+              include: {
+                employee: { select: { firstName: true, lastName: true } },
+              },
+            },
+          },
+          orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+          take: 1,
         },
       },
-      orderBy: { updatedAt: 'desc' },
     });
 
-    return NextResponse.json(offices);
+    const officesWithLatestLog = offices.map((office) => {
+      const latestLog = office?.adminLogs[0];
+
+      return {
+        ...office,
+        createdAt: latestLog?.createdAt,
+        updatedAt: latestLog?.updatedAt,
+        updatedBy: latestLog?.involvedUser?.employee
+          ? latestLog?.involvedUser?.employee.firstName +
+            ' ' +
+            latestLog?.involvedUser?.employee.lastName
+          : '--',
+      };
+    });
+
+    return NextResponse.json(officesWithLatestLog);
   } catch (error: any) {
     console.error('Fetch offices error:', error);
     return NextResponse.json(
@@ -96,8 +104,17 @@ export async function POST(req: Request) {
     const newOffice = await prisma.offices.create({
       data: {
         name,
-        updatedBy: {
-          connect: { uuid: user?.userId },
+      },
+    });
+
+    await prisma.adminLogs.create({
+      data: {
+        activity: `Office "${name}" created`,
+        updatedOffice: {
+          connect: { id: newOffice.id },
+        },
+        involvedUser: {
+          connect: { uuid: user.userId },
         },
       },
     });

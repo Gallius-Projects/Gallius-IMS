@@ -31,21 +31,36 @@ export async function GET(req: Request) {
     const brands = await prisma.brands.findMany({
       where: whereClause,
       include: {
-        updatedBy: {
-          select: {
-            employee: {
-              select: {
-                firstName: true,
-                lastName: true,
+        adminLogs: {
+          include: {
+            involvedUser: {
+              include: {
+                employee: { select: { firstName: true, lastName: true } },
               },
             },
           },
+          orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+          take: 1,
         },
       },
-      orderBy: { name: 'asc' },
     });
 
-    return NextResponse.json(brands);
+    const brandsWithLatestLog = brands.map((brand) => {
+      const latestLog = brand?.adminLogs[0];
+
+      return {
+        ...brand,
+        createdAt: latestLog?.createdAt,
+        updatedAt: latestLog?.updatedAt,
+        updatedBy: latestLog?.involvedUser?.employee
+          ? latestLog?.involvedUser?.employee.firstName +
+            ' ' +
+            latestLog?.involvedUser?.employee.lastName
+          : '--',
+      };
+    });
+
+    return NextResponse.json(brandsWithLatestLog);
   } catch (error: any) {
     console.error('Fetch brand error:', error);
     return NextResponse.json(
@@ -79,6 +94,18 @@ export async function POST(req: Request) {
     const newBrand = await prisma.brands.create({
       data: {
         name,
+      },
+    });
+
+    await prisma.adminLogs.create({
+      data: {
+        activity: `Brand ${name} created`,
+        updatedBrand: {
+          connect: { id: newBrand.id },
+        },
+        involvedUser: {
+          connect: { uuid: user.userId },
+        },
       },
     });
 

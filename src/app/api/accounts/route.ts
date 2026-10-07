@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getAuthUser } from '@/lib/auth';
 
-// GET: Retrieve inventory items
+// GET: Retrieve accounts
 export async function GET(req: Request) {
   try {
     const user = getAuthUser(req);

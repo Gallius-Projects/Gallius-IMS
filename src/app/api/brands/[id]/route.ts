@@ -24,6 +24,19 @@ export async function GET(
 
     const brand = await prisma.brands.findUnique({
       where: { id: brandId },
+      include: {
+        adminLogs: {
+          include: {
+            involvedUser: {
+              include: {
+                employee: { select: { firstName: true, lastName: true } },
+              },
+            },
+          },
+          orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+          take: 1,
+        },
+      },
     });
 
     if (!brand) {
@@ -61,7 +74,7 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const { name, updatedBy } = body;
+    const { name } = body;
 
     if (!name) {
       return NextResponse.json(
@@ -70,17 +83,51 @@ export async function PUT(
       );
     }
 
+    const brand = await prisma.brands.findUnique({
+      where: { id: brandId },
+    });
+
+    if (!brand) {
+      return NextResponse.json({ error: 'Brand not found' }, { status: 404 });
+    }
+
+    const changes = [];
+
+    if (name !== brand.name) {
+      changes.push({
+        field: 'name',
+        oldValue: brand.name,
+        newValue: name,
+      });
+    }
+
+    if (changes.length === 0) {
+      return NextResponse.json({
+        message: 'No changes to update',
+        changes,
+      });
+    }
+
     const updatedBrand = await prisma.brands.update({
       where: { id: brandId },
       data: {
         name,
-        updatedBy: {
-          connect: { uuid: updatedBy },
+      },
+    });
+
+    await prisma.adminLogs.create({
+      data: {
+        activity: `Brand ${brand.name} updated to ${name}`,
+        updatedBrand: {
+          connect: { id: updatedBrand.id },
+        },
+        involvedUser: {
+          connect: { uuid: user.userId },
         },
       },
     });
 
-    return NextResponse.json(updatedBrand);
+    return NextResponse.json({ updatedBrand, changes });
   } catch (error: any) {
     console.error('Update brand error:', error);
     return NextResponse.json(

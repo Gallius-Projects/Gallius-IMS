@@ -15,8 +15,6 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const search = searchParams.get('search') || '';
-    const name = searchParams.get('name') || '';
-    const abbreviation = searchParams.get('abbreviation') || '';
 
     // Build Prisma query filters
     const whereClause: any = {};
@@ -27,19 +25,40 @@ export async function GET(req: Request) {
         { abbreviation: { contains: search } },
       ];
     }
-    if (name) {
-      whereClause.name = name;
-    }
-    if (abbreviation) {
-      whereClause.abbreviation = abbreviation;
-    }
 
     const locations = await prisma.locations.findMany({
       where: whereClause,
-      orderBy: { name: 'asc' },
+      include: {
+        adminLogs: {
+          include: {
+            involvedUser: {
+              include: {
+                employee: { select: { firstName: true, lastName: true } },
+              },
+            },
+          },
+          orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+          take: 1,
+        },
+      },
     });
 
-    return NextResponse.json(locations);
+    const locationsWithLatestLog = locations.map((location) => {
+      const latestLog = location?.adminLogs[0];
+
+      return {
+        ...location,
+        createdAt: latestLog?.createdAt,
+        updatedAt: latestLog?.updatedAt,
+        updatedBy: latestLog?.involvedUser?.employee
+          ? latestLog?.involvedUser?.employee.firstName +
+            ' ' +
+            latestLog?.involvedUser?.employee.lastName
+          : '--',
+      };
+    });
+
+    return NextResponse.json(locationsWithLatestLog);
   } catch (error: any) {
     console.error('Fetch locations error:', error);
     return NextResponse.json(
@@ -74,6 +93,18 @@ export async function POST(req: Request) {
       data: {
         name,
         abbreviation,
+      },
+    });
+
+    await prisma.adminLogs.create({
+      data: {
+        activity: `Location "${name}" created`,
+        updatedLocation: {
+          connect: { id: newLocation.id },
+        },
+        involvedUser: {
+          connect: { uuid: user.userId },
+        },
       },
     });
 

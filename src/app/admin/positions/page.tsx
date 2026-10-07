@@ -16,8 +16,8 @@ import { useUserContext } from '@/context/UserContext';
 import TableTemplate from '@/app/components/ui-templates/table-template';
 
 interface Position {
-  id: number;
   name: string;
+  departmentId: number;
 }
 
 export default function PositionsPage() {
@@ -42,6 +42,7 @@ export default function PositionsPage() {
   );
   const [formData, setFormData] = useState({
     name: '',
+    departmentId: '',
   });
 
   const [formError, setFormError] = useState('');
@@ -51,6 +52,11 @@ export default function PositionsPage() {
   const [deletingPositionId, setDeletingPositionId] = useState<number | null>(
     null
   );
+
+  const [departments, setDepartments] = useState([]);
+  const [departmentSearch, setDepartmentSearch] = useState('');
+
+  const [oldPosition, setOldPosition] = useState<Position[]>([]);
 
   // Fetch Departments callback
   const fetchPositions = useCallback(async () => {
@@ -71,26 +77,27 @@ export default function PositionsPage() {
     }
   }, []);
 
-  // Fetch Employees
+  // Fetch Departments
   useEffect(() => {
-    const fetchEmployees = async () => {
-      const response = await axiosInstance.get('/employees');
-      setEmployees(response.data);
+    const fetchDepartments = async () => {
+      const response = await axiosInstance.get('/departments');
+      setDepartments(response.data);
     };
 
-    fetchEmployees();
+    fetchDepartments();
   }, []);
 
-  const filteredEmployees = employees.filter((employee: any) => {
-    const fullName = `${employee.firstName} ${employee.lastName}`.toLowerCase();
+  const filteredDepartments = departments.filter((department: any) => {
+    const departmentName = `${department.name}`.toLowerCase();
 
-    return fullName.includes(employeeSearch.toLowerCase());
+    return departmentName.includes(departmentSearch.toLowerCase());
   });
 
   // Open form for creation
   const handleCreateOpen = () => {
     setFormData({
       name: '',
+      departmentId: '',
     });
     setFormError('');
     setFormMode('create');
@@ -98,12 +105,22 @@ export default function PositionsPage() {
   };
 
   // Open form for editing
-  const handleEditOpen = (position: Position) => {
+  const handleEditOpen = async (position: Position) => {
     setFormMode('edit');
+
+    const getOldPosition = await axiosInstance.get(`/positions/${position.id}`);
+
+    const oldPositionData = getOldPosition.data;
+
+    setOldPosition(oldPositionData);
+
     setSelectedPositionId(position.id);
     setFormData({
       name: position.name,
+      departmentId: position.departmentId,
     });
+
+    setDepartmentSearch(oldPositionData?.department?.name);
 
     setFormError('');
     setIsFormOpen(true);
@@ -170,19 +187,18 @@ export default function PositionsPage() {
     setFormMode('create');
     setFormData({
       name: '',
+      departmentId: '',
     });
     setFormError('');
     setSelectedPositionId(null);
     setDeletingPositionId(null);
+    setOldPosition([]);
   };
 
   // Trigger fetch when parameters change
   useEffect(() => {
     if (isAuthenticated) {
-      const delayDebounceFn = setTimeout(() => {
-        fetchPositions();
-      }, 300); // Debounce search
-      return () => clearTimeout(delayDebounceFn);
+      fetchPositions();
     }
   }, [fetchPositions, isAuthenticated]);
 
@@ -220,6 +236,8 @@ export default function PositionsPage() {
       emphasizeLevel: 'normal',
     },
   ];
+
+  console.log(positions);
 
   return (
     <div className="flex max-h-screen min-h-screen flex-col bg-slate-50/50 px-4 py-8 font-sans text-slate-900 transition-all duration-300 sm:px-6 lg:px-8 dark:bg-slate-950 dark:text-slate-100">
@@ -281,10 +299,10 @@ export default function PositionsPage() {
         <TableTemplate
           rows={positions.map((position) => ({
             ...position,
-            updatedBy: position?.updatedBy
-              ? position?.updatedBy?.employee?.firstName +
+            updatedBy: position?.accountLogs
+              ? position?.accountLogs?.involvedUser?.employee?.firstName +
                 ' ' +
-                position?.updatedBy?.employee?.lastName
+                position?.accountLogs?.involvedUser?.employee?.lastName
               : '--',
           }))}
           columns={columns}

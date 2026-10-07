@@ -15,6 +15,8 @@ export default function ViewItemsModal({
     return null;
   }
 
+  console.log(viewingDetails);
+
   return (
     <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
       <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
@@ -48,22 +50,6 @@ export default function ViewItemsModal({
             </div>
             <div>
               <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                Brand
-              </span>
-              <span className="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
-                {viewingDetails?.brand?.name || '—'}
-              </span>
-            </div>
-            <div>
-              <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                Supplier
-              </span>
-              <span className="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
-                {viewingDetails?.supplier?.name || '—'}
-              </span>
-            </div>
-            <div>
-              <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
                 Hostname
               </span>
               <span className="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
@@ -88,18 +74,34 @@ export default function ViewItemsModal({
             </div>
             <div>
               <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                Location
+                Brand
               </span>
               <span className="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
-                {viewingDetails?.location?.name || '—'}
+                {viewingDetails?.brand?.name || '—'}
               </span>
             </div>
             <div>
               <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                Serial Number
+                Supplier
               </span>
               <span className="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
-                {viewingDetails.serialNumber || '—'}
+                {viewingDetails?.supplier?.name || '—'}
+              </span>
+            </div>
+            <div>
+              <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
+                Tenant
+              </span>
+              <span className="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
+                {viewingDetails.office?.name || '—'}
+              </span>
+            </div>
+            <div>
+              <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
+                Location
+              </span>
+              <span className="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
+                {viewingDetails?.location?.name || '—'}
               </span>
             </div>
             <div>
@@ -112,10 +114,52 @@ export default function ViewItemsModal({
             </div>
             <div>
               <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                Last Sync
+                Assigned To
               </span>
-              <span className="text-xs text-slate-500 dark:text-slate-400">
+              <span className="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
+                {viewingDetails.assignedEmp?.firstName +
+                  ' ' +
+                  viewingDetails.assignedEmp?.lastName || '—'}
+              </span>
+            </div>
+            <div>
+              <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
+                Serial Number
+              </span>
+              <span className="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
+                {viewingDetails.serialNumber || '—'}
+              </span>
+            </div>
+            <div>
+              <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
+                Date Purchased
+              </span>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                {new Date(viewingDetails.datePurchased).toLocaleDateString()}
+              </span>
+            </div>
+            <div>
+              <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
+                Date Deployed
+              </span>
+              <span className="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
+                {new Date(viewingDetails.dateDeployed).toLocaleDateString()}
+              </span>
+            </div>
+            <div>
+              <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
+                Last Updated
+              </span>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
                 {new Date(viewingDetails.updatedAt).toLocaleDateString()}
+              </span>
+            </div>
+            <div>
+              <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
+                Updated By
+              </span>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                {viewingDetails.updatedBy || '—'}
               </span>
             </div>
           </div>

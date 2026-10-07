@@ -1,13 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Plus,
   Search,
   Trash2,
   AlertCircle,
-  X,
-  Loader2,
   Filter,
   LucideMonitor,
 } from 'lucide-react';
@@ -16,6 +14,7 @@ import { useUserContext } from '@/context/UserContext';
 import TableTemplate from '@/app/components/ui-templates/table-template';
 import ViewItemsModal from '@/app/components/modals/items/view-items-modal';
 import AddEditItemsModal from '@/app/components/modals/items/add-edit-items-modal';
+import EditItemsModal from '@/app/components/modals/items/edit-items-modal';
 
 interface InventoryItem {
   id: number;
@@ -23,8 +22,8 @@ interface InventoryItem {
   oldAssetTag: string;
   newAssetTag: string;
   serialNumber: string;
-  description: string;
   hostname: string;
+  status: string;
   categoryId: number;
   category: { id: number; name: string } | null;
   brandId: number;
@@ -33,22 +32,17 @@ interface InventoryItem {
   location: { id: number; name: string } | null;
   officeId: number;
   office: { id: number; name: string } | null;
-  status: string;
+  invoiceNo?: string;
+  dateDeployed?: string;
+  datePurchased?: string;
+  assetCondition?: string;
+  isNew?: boolean;
   assignedTo: number;
-  createdAt: string;
-  updatedAt: string;
+  description: string;
   remarks: string;
 }
 
 export default function ItemsPage() {
-  const locationRef = useRef<HTMLDivElement>(null);
-  const employeeRef = useRef<HTMLDivElement>(null);
-  const categoryRef = useRef<HTMLDivElement>(null);
-  const brandRef = useRef<HTMLDivElement>(null);
-  const supplierRef = useRef<HTMLDivElement>(null);
-  const officeRef = useRef<HTMLDivElement>(null);
-  const modalRef = useRef<HTMLDivElement>(null);
-
   // Auth check
   const { user, isAuthenticated } = useUserContext();
 
@@ -63,7 +57,8 @@ export default function ItemsPage() {
   const [selectedStatus, setSelectedStatus] = useState('');
 
   // Modal states
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isFormCreateOpen, setIsFormCreateOpen] = useState(false);
+  const [isFormEditOpen, setIsFormEditOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
@@ -75,16 +70,20 @@ export default function ItemsPage() {
     oldAssetTag: '',
     newAssetTag: '',
     serialNumber: '',
-    description: '',
     hostname: '',
-    deploymentDate: null,
+    status: 'SPARE',
     categoryId: null,
     brandId: null,
     locationId: null,
     supplierId: null,
     officeId: null,
+    isNew: true,
+    datePurchased: null,
+    dateDeployed: null,
+    invoiceNo: '',
+    assetCondition: '',
     assignedTo: null,
-    status: 'SPARE',
+    description: '',
     remarks: '',
   });
 
@@ -97,148 +96,10 @@ export default function ItemsPage() {
   );
   const [deletingItemId, setDeletingItemId] = useState<number | null>(null);
 
-  const [categories, setCategories] = useState([]);
-  const [brands, setBrands] = useState([]);
-  const [locations, setLocations] = useState([]);
-  const [suppliers, setSuppliers] = useState([]);
-  const [offices, setOffices] = useState([]);
-  const [employees, setEmployees] = useState([]);
-
-  const [employeeSearch, setEmployeeSearch] = useState('');
-  const [showEmployees, setShowEmployees] = useState(false);
-
-  const [categorySearch, setCategorySearch] = useState('');
-  const [showCategories, setShowCategories] = useState(false);
-
-  const [brandSearch, setBrandSearch] = useState('');
-  const [showBrands, setShowBrands] = useState(false);
-
-  const [supplierSearch, setSupplierSearch] = useState('');
-  const [showSuppliers, setShowSuppliers] = useState(false);
-
-  const [officeSearch, setOfficeSearch] = useState('');
-  const [showOffices, setShowOffices] = useState(false);
-
-  const [locationSearch, setLocationSearch] = useState('');
-  const [showLocations, setShowLocations] = useState(false);
-
-  const [oldItem, setOldItem] = useState<any>(null);
+  const [itemToUpdate, setItemToUpdate] = useState<any>(null);
   const [editNewAsset, setEditNewAsset] = useState(false);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        locationRef.current &&
-        !locationRef.current.contains(event.target as Node)
-      ) {
-        setShowLocations(false);
-
-        if (!formData.locationId) {
-          setLocationSearch('');
-        }
-      }
-      if (
-        employeeRef.current &&
-        !employeeRef.current.contains(event.target as Node)
-      ) {
-        setShowEmployees(false);
-
-        if (!formData.assignedTo) {
-          setEmployeeSearch('');
-        }
-      }
-      if (
-        categoryRef.current &&
-        !categoryRef.current.contains(event.target as Node)
-      ) {
-        setShowCategories(false);
-
-        if (!formData.categoryId) {
-          setCategorySearch('');
-        }
-      }
-      if (
-        brandRef.current &&
-        !brandRef.current.contains(event.target as Node)
-      ) {
-        setShowBrands(false);
-
-        if (!formData.brandId) {
-          setBrandSearch('');
-        }
-      }
-      if (
-        supplierRef.current &&
-        !supplierRef.current.contains(event.target as Node)
-      ) {
-        setShowSuppliers(false);
-
-        if (!formData.supplierId) {
-          setSupplierSearch('');
-        }
-      }
-      if (
-        officeRef.current &&
-        !officeRef.current.contains(event.target as Node)
-      ) {
-        setShowOffices(false);
-
-        if (!formData.officeId) {
-          setOfficeSearch('');
-        }
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [
-    formData,
-    showEmployees,
-    showCategories,
-    showBrands,
-    showSuppliers,
-    showOffices,
-    showLocations,
-  ]);
-
-  const filteredEmployees = employees.filter((employee: any) => {
-    const fullName = `${employee.firstName} ${employee.lastName}`.toLowerCase();
-
-    return fullName.includes(employeeSearch.toLowerCase());
-  });
-
-  const filteredLocations = locations.filter((location: any) => {
-    const locationName = `${location.name}`.toLowerCase();
-
-    return locationName.includes(locationSearch.toLowerCase());
-  });
-
-  const filteredCategories = categories.filter((category: any) => {
-    const categoryName = `${category.name}`.toLowerCase();
-
-    return categoryName.includes(categorySearch.toLowerCase());
-  });
-
-  const filteredBrands = brands.filter((brand: any) => {
-    const brandName = `${brand.name}`.toLowerCase();
-
-    return brandName.includes(brandSearch.toLowerCase());
-  });
-
-  const filteredSuppliers = suppliers.filter((supplier: any) => {
-    const supplierName = `${supplier.name}`.toLowerCase();
-
-    return supplierName.includes(supplierSearch.toLowerCase());
-  });
-
-  const filteredOffices = offices.filter((office: any) => {
-    const officeName = `${office.name}`.toLowerCase();
-
-    return officeName.includes(officeSearch.toLowerCase());
-  });
+  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -249,80 +110,35 @@ export default function ItemsPage() {
     fetchCategories();
   }, []);
 
-  useEffect(() => {
-    const fetchBrands = async () => {
-      const response = await axiosInstance.get('/brands');
-      setBrands(response.data);
-    };
-
-    fetchBrands();
-  }, []);
-
-  useEffect(() => {
-    const fetchLocations = async () => {
-      const response = await axiosInstance.get('/locations');
-      setLocations(response.data);
-    };
-
-    fetchLocations();
-  }, []);
-
-  useEffect(() => {
-    const fetchOffices = async () => {
-      const response = await axiosInstance.get('/offices');
-      setOffices(response.data);
-    };
-
-    fetchOffices();
-  }, []);
-
-  useEffect(() => {
-    const fetchSuppliers = async () => {
-      const response = await axiosInstance.get('/suppliers');
-      setSuppliers(response.data);
-    };
-
-    fetchSuppliers();
-  }, []);
-
-  useEffect(() => {
-    const fetchEmployees = async () => {
-      const response = await axiosInstance.get('/employees');
-      setEmployees(response.data);
-    };
-
-    fetchEmployees();
-  }, []);
-
   // Statuses list
   const statuses = [
     {
       value: 'SPARE',
-      label: 'Spare',
+      name: 'Spare',
       color:
         'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-900/50',
     },
     {
       value: 'DEPLOYED',
-      label: 'Deployed',
+      name: 'Deployed',
       color:
         'bg-indigo-100 text-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-400 border border-indigo-200/50 dark:border-indigo-900/50',
     },
     {
       value: 'DEFECTIVE',
-      label: 'Defective',
+      name: 'Defective',
       color:
         'bg-slate-100 text-slate-800 dark:bg-slate-950/30 dark:text-slate-400 border border-slate-200/50 dark:border-slate-900/50',
     },
     {
       value: 'DONATED',
-      label: 'Donated',
+      name: 'Donated',
       color:
         'bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400 border border-amber-200/50 dark:border-amber-900/50',
     },
     {
       value: 'DISPOSED',
-      label: 'Disposed',
+      name: 'Disposed',
       color:
         'bg-rose-100 text-rose-800 dark:bg-rose-950/30 dark:text-rose-400 border border-rose-200/50 dark:border-rose-900/50',
     },
@@ -359,71 +175,53 @@ export default function ItemsPage() {
       oldAssetTag: '',
       newAssetTag: '',
       serialNumber: '',
-      description: '',
       hostname: '',
-      deploymentDate: null,
+      status: 'SPARE',
       categoryId: null,
       brandId: null,
       locationId: null,
-      officeId: null,
       supplierId: null,
+      officeId: null,
+      isNew: true,
+      datePurchased: null,
+      dateDeployed: null,
+      invoiceNo: '',
+      assetCondition: '',
       assignedTo: null,
-      status: 'SPARE',
+      description: '',
       remarks: '',
     });
     setFormError('');
     setFormMode('create');
-    setEditNewAsset(true);
-    setIsFormOpen(true);
+    // setEditNewAsset(true);
+    setIsFormCreateOpen(true);
   };
 
   // Open form for editing
   const handleEditOpen = async (item: InventoryItem) => {
-    const getOldItem = await axiosInstance.get(`/items/${item.id}`);
-    const oldItemData = getOldItem.data;
-
-    setOldItem(oldItemData);
-
     setFormMode('edit');
     setSelectedItemId(item.id);
 
-    setFormData({
-      name: oldItemData?.name || item?.name || '',
-      oldAssetTag: oldItemData?.oldAssetTag || item?.oldAssetTag || '',
-      newAssetTag: oldItemData?.newAssetTag || item?.newAssetTag || '',
-      serialNumber: oldItemData?.serialNumber || item?.serialNumber || '',
-      description: oldItemData?.description || item?.description || '',
-      hostname: oldItemData?.hostname || item?.hostname || '',
-      deploymentDate:
-        oldItemData?.deploymentDate || item?.deploymentDate || null,
-      remarks: oldItemData?.remarks || item?.remarks || '',
-      categoryId: oldItemData?.categoryId || item?.categoryId || null,
-      brandId: oldItemData?.brandId || item?.brandId || null,
-      locationId: oldItemData?.locationId || item?.locationId || null,
-      officeId: oldItemData?.officeId || item?.officeId || null,
-      supplierId: oldItemData?.supplierId || item?.supplierId || null,
-      assignedTo: oldItemData?.assignedTo || item?.assignedTo || null,
-      status: oldItemData ? oldItemData?.status.toUpperCase() : '',
-    });
+    console.log('WTF');
 
     // Set the displayed dropdown values
-    setCategorySearch(oldItemData?.category?.name || item?.category || '');
-    setBrandSearch(oldItemData?.brand?.name || item?.brand?.name || '');
-    setLocationSearch(
-      oldItemData?.location?.name || item?.location?.name || ''
-    );
-    setOfficeSearch(oldItemData?.office?.name || item?.office?.name || '');
-    setSupplierSearch(
-      oldItemData?.supplier?.name || item?.supplier?.name || ''
-    );
-    setEmployeeSearch(
-      `${oldItemData?.assignedEmp?.firstName} ${oldItemData?.assignedEmp?.lastName}` ||
-        `${item?.assignedEmp?.firstName} ${item?.assignedEmp?.lastName}` ||
-        ''
-    );
+    // setCategorySearch(oldItemData?.category?.name || item?.category || '');
+    // setBrandSearch(oldItemData?.brand?.name || item?.brand?.name || '');
+    // setLocationSearch(
+    //   oldItemData?.location?.name || item?.location?.name || ''
+    // );
+    // setOfficeSearch(oldItemData?.office?.name || item?.office?.name || '');
+    // setSupplierSearch(
+    //   oldItemData?.supplier?.name || item?.supplier?.name || ''
+    // );
+    // setEmployeeSearch(
+    //   `${oldItemData?.assignedEmp?.firstName} ${oldItemData?.assignedEmp?.lastName}` ||
+    //     `${item?.assignedEmp?.firstName} ${item?.assignedEmp?.lastName}` ||
+    //     ''
+    // );
 
     setFormError('');
-    setIsFormOpen(true);
+    setIsFormEditOpen(true);
   };
 
   // Open details modal
@@ -452,20 +250,12 @@ export default function ItemsPage() {
 
     try {
       if (formMode === 'create') {
-        await axiosInstance.post('/items', {
-          ...formData,
-          updatedBy: user?.id ?? '',
-        });
+        await axiosInstance.post('/items', formData);
+        setIsFormCreateOpen(false);
       } else {
-        await axiosInstance.put(`/items/${selectedItemId}`, {
-          ...formData,
-          newAssetTag: editNewAsset
-            ? formData.newAssetTag
-            : oldItem.newAssetTag,
-          updatedBy: user?.id ?? '',
-        });
+        await axiosInstance.put(`/items/${selectedItemId}`, formData);
+        setIsFormEditOpen(false);
       }
-      setIsFormOpen(false);
       fetchItems();
     } catch (err: any) {
       setFormError(err.message || 'Failed to save inventory item');
@@ -488,7 +278,8 @@ export default function ItemsPage() {
   };
 
   const handleClose = () => {
-    setIsFormOpen(false);
+    setIsFormCreateOpen(false);
+    setIsFormEditOpen(false);
     setFormMode('create');
     setFormData({
       name: '',
@@ -497,7 +288,6 @@ export default function ItemsPage() {
       serialNumber: '',
       hostname: '',
       status: '',
-      deploymentDate: null,
       categoryId: null,
       brandId: null,
       locationId: null,
@@ -505,33 +295,25 @@ export default function ItemsPage() {
       supplierId: null,
       description: '',
       assignedTo: null,
+      isNew: true,
+      datePurchased: null,
+      dateDeployed: null,
+      invoiceNo: '',
+      assetCondition: '',
       remarks: '',
     });
     setFormError('');
     setSelectedItemId(null);
-    setShowCategories(false);
-    setShowBrands(false);
-    setShowLocations(false);
-    setShowOffices(false);
-    setShowSuppliers(false);
-    setShowEmployees(false);
-    setCategorySearch('');
-    setBrandSearch('');
-    setLocationSearch('');
-    setOfficeSearch('');
-    setSupplierSearch('');
-    setEmployeeSearch('');
-    setOldItem(null);
+    setItemToUpdate(null);
   };
 
   const handleGenerateAssetTag = async () => {
     if (
-      user?.role.includes('superadmin') ||
-      user?.role.includes('admin') ||
-      editAsset
+      (user?.role.includes('superadmin') && formData.isNew && editNewAsset) ||
+      (user?.role.includes('admin') && formData.isNew)
     ) {
       if (!formData.categoryId || !formData.officeId || !formData.locationId) {
-        setFormError('Please select an office, category, and location');
+        setFormError('Please select an tenant, category, and location');
         setFormData((prev) => {
           return {
             ...prev,
@@ -540,37 +322,29 @@ export default function ItemsPage() {
         });
         setTimeout(() => {
           setFormError('');
-        }, 3000);
+        }, 8000);
         return;
       }
+      if (formData.categoryId && formData.officeId && formData.locationId) {
+        const params = {
+          officeId: formData.officeId,
+          categoryId: formData.categoryId,
+          locationId: formData.locationId,
+        };
 
-      const params = {
-        officeId: formData.officeId,
-        categoryId: formData.categoryId,
-        locationId: formData.locationId,
-      };
+        const response = await axiosInstance.get(`/items/generate-asset-tag`, {
+          params,
+        });
 
-      const response = await axiosInstance.get(`/items/generate-asset-tag`, {
-        params,
-      });
+        const generatedAssetTag = response.data;
 
-      const generatedAssetTag = response.data;
-
-      setFormData({
-        ...formData,
-        newAssetTag: generatedAssetTag,
-      });
+        setFormData({
+          ...formData,
+          newAssetTag: generatedAssetTag,
+        });
+      }
     }
   };
-
-  useEffect(() => {
-    if (formError) {
-      modalRef.current?.scrollTo({
-        top: 0,
-        behavior: 'smooth',
-      });
-    }
-  }, [formError]);
 
   // Trigger fetch when parameters change
   useEffect(() => {
@@ -588,6 +362,15 @@ export default function ItemsPage() {
       fontSize: 'sm',
       secondary: 'description',
       emphasizeLevel: 'high',
+    },
+    {
+      header: 'Asset Tag',
+      accessor: 'assetTag',
+      dataType: 'string',
+      fontStyle: 'bold',
+      fontSize: 'xs',
+      secondary: 'isNew',
+      emphasizeLevel: 'medium',
     },
     {
       header: 'Category',
@@ -620,7 +403,7 @@ export default function ItemsPage() {
     },
   ];
 
-  // console.log(formData.deploymentDate);
+  // console.log(formData);
   return (
     <div className="flex max-h-screen min-h-screen flex-col bg-slate-50/50 px-4 py-8 font-sans text-slate-900 transition-all duration-300 sm:px-6 lg:px-8 dark:bg-slate-950 dark:text-slate-100">
       <div className="mb-6 flex w-fit gap-2 border-b-2 border-slate-300 pr-2 pb-2 dark:border-slate-700">
@@ -694,7 +477,7 @@ export default function ItemsPage() {
                 <option value="">All Statuses</option>
                 {statuses.map((s) => (
                   <option key={s.value} value={s.value}>
-                    {s.label}
+                    {s.name}
                   </option>
                 ))}
               </select>
@@ -716,11 +499,13 @@ export default function ItemsPage() {
           rows={items.map((item) => ({
             ...item,
             category: item?.category?.name,
+            assetTag: item?.newAssetTag || item?.oldAssetTag || '',
+            isNew: item?.isNew ? 'New' : 'Old',
             status: (() => {
               const statusConfig = statuses.find(
                 (s) => s.value === item.status
               ) || {
-                label: item.status,
+                name: item.status,
                 color:
                   'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300',
               };
@@ -729,7 +514,7 @@ export default function ItemsPage() {
                 <span
                   className={`rounded-lg px-2 py-1 text-[10px] font-bold tracking-wider uppercase ${statusConfig.color}`}
                 >
-                  {statusConfig.label}
+                  {statusConfig.name}
                 </span>
               );
             })(),
@@ -747,7 +532,7 @@ export default function ItemsPage() {
       </main>
 
       {/* FORM MODAL (Add / Edit) */}
-      {isFormOpen && (
+      {isFormCreateOpen && (
         <AddEditItemsModal
           formMode={formMode}
           formData={formData}
@@ -759,45 +544,29 @@ export default function ItemsPage() {
           editNewAsset={editNewAsset}
           setEditNewAsset={setEditNewAsset}
           handleGenerateAssetTag={handleGenerateAssetTag}
-          modalRef={modalRef}
-          categoryRef={categoryRef}
-          brandRef={brandRef}
-          supplierRef={supplierRef}
-          locationRef={locationRef}
-          officeRef={officeRef}
-          employeeRef={employeeRef}
-          categorySearch={categorySearch}
-          setCategorySearch={setCategorySearch}
-          showCategories={showCategories}
-          setShowCategories={setShowCategories}
-          filteredCategories={filteredCategories}
-          brandSearch={brandSearch}
-          setBrandSearch={setBrandSearch}
-          showBrands={showBrands}
-          setShowBrands={setShowBrands}
-          filteredBrands={filteredBrands}
-          supplierSearch={supplierSearch}
-          setSupplierSearch={setSupplierSearch}
-          showSuppliers={showSuppliers}
-          setShowSuppliers={setShowSuppliers}
-          filteredSuppliers={filteredSuppliers}
-          locationSearch={locationSearch}
-          setLocationSearch={setLocationSearch}
-          showLocations={showLocations}
-          setShowLocations={setShowLocations}
-          filteredLocations={filteredLocations}
-          officeSearch={officeSearch}
-          setOfficeSearch={setOfficeSearch}
-          showOffices={showOffices}
-          setShowOffices={setShowOffices}
-          filteredOffices={filteredOffices}
-          employeeSearch={employeeSearch}
-          setEmployeeSearch={setEmployeeSearch}
-          showEmployees={showEmployees}
-          setShowEmployees={setShowEmployees}
-          filteredEmployees={filteredEmployees}
+          categories={categories}
           handleClose={handleClose}
           handleFormSubmit={handleFormSubmit}
+          itemToUpdate={itemToUpdate}
+        />
+      )}
+
+      {isFormEditOpen && (
+        <EditItemsModal
+          isOpen={isFormEditOpen}
+          formData={formData}
+          setFormData={setFormData}
+          formError={formError}
+          setFormError={setFormError}
+          isSubmitting={isSubmitting}
+          statuses={statuses}
+          editNewAsset={editNewAsset}
+          setEditNewAsset={setEditNewAsset}
+          handleGenerateAssetTag={handleGenerateAssetTag}
+          categories={categories}
+          handleClose={handleClose}
+          handleFormSubmit={handleFormSubmit}
+          itemToUpdate={itemToUpdate}
         />
       )}
 

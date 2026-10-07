@@ -24,14 +24,21 @@ export async function GET(req: Request) {
       );
     }
 
-    const lastRelatedItem = await prisma.inventoryItems.findFirst({
+    const lastLog = await prisma.inventoryLogs.findFirst({
       where: {
-        categoryId: parseInt(categoryId),
-        officeId: parseInt(officeId),
-        locationId: parseInt(locationId),
+        updatedItem: {
+          categoryId: parseInt(categoryId),
+          officeId: parseInt(officeId),
+          locationId: parseInt(locationId),
+        },
       },
-      orderBy: { updatedAt: 'desc' },
+      orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+      include: {
+        updatedItem: true,
+      },
     });
+
+    const lastRelatedItem = lastLog?.inventoryItem;
 
     const office = await prisma.offices.findUnique({
       where: { id: parseInt(officeId) },

@@ -29,18 +29,36 @@ export async function GET(req: Request) {
     const categories = await prisma.categories.findMany({
       where: whereClause,
       include: {
-        updatedBy: {
-          select: {
-            employee: {
-              select: { firstName: true, lastName: true },
+        adminLogs: {
+          include: {
+            involvedUser: {
+              include: {
+                employee: { select: { firstName: true, lastName: true } },
+              },
             },
           },
+          orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+          take: 1,
         },
       },
-      orderBy: { updatedAt: 'desc' },
     });
 
-    return NextResponse.json(categories);
+    const categoriesWithLatestLog = categories.map((category) => {
+      const latestLog = category?.adminLogs[0];
+
+      return {
+        ...category,
+        createdAt: latestLog?.createdAt,
+        updatedAt: latestLog?.updatedAt,
+        updatedBy: latestLog?.involvedUser?.employee
+          ? latestLog?.involvedUser?.employee.firstName +
+            ' ' +
+            latestLog?.involvedUser?.employee.lastName
+          : '--',
+      };
+    });
+
+    return NextResponse.json(categoriesWithLatestLog);
   } catch (error: any) {
     console.error('Fetch categories error:', error);
     return NextResponse.json(
@@ -75,6 +93,18 @@ export async function POST(req: Request) {
       data: {
         name,
         quantity: parseInt(quantity),
+      },
+    });
+
+    await prisma.adminLogs.create({
+      data: {
+        activity: `Category ${name} created`,
+        updatedCategory: {
+          connect: { id: newCategory.id },
+        },
+        involvedUser: {
+          connect: { uuid: user.userId },
+        },
       },
     });
 

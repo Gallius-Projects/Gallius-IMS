@@ -27,6 +27,19 @@ export async function GET(
 
     const category = await prisma.categories.findUnique({
       where: { id: categoryId },
+      include: {
+        adminLogs: {
+          include: {
+            involvedUser: {
+              include: {
+                employee: { select: { firstName: true, lastName: true } },
+              },
+            },
+          },
+          orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+          take: 1,
+        },
+      },
     });
 
     if (!category) {
@@ -70,7 +83,7 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const { name, abbreviation, quantity, updatedBy } = body;
+    const { name, abbreviation, quantity } = body;
 
     if (!name) {
       return NextResponse.json(
@@ -85,8 +98,17 @@ export async function PUT(
         name,
         abbreviation,
         quantity: parseInt(quantity),
-        updatedBy: {
-          connect: { uuid: updatedBy },
+      },
+    });
+
+    await prisma.adminLogs.create({
+      data: {
+        activity: `Category ${name} updated`,
+        updatedCategory: {
+          connect: { id: updatedCategory.id },
+        },
+        involvedUser: {
+          connect: { uuid: user.userId },
         },
       },
     });

@@ -27,6 +27,13 @@ export async function GET(
 
     const employee = await prisma.employees.findUnique({
       where: { id: employeeId },
+      include: {
+        accounts: {
+          include: {
+            role: { select: { role: true } },
+          },
+        },
+      },
     });
 
     if (!employee) {
@@ -76,7 +83,6 @@ export async function PUT(
       middleName,
       suffix,
       officeId,
-      tenantId,
       departmentId,
       positionId,
       status,
@@ -87,6 +93,29 @@ export async function PUT(
         { error: 'Employee name is required' },
         { status: 400 }
       );
+    }
+
+    const employee = await prisma.employees.findUnique({
+      where: { id: employeeId },
+    });
+
+    const changes = [];
+
+    for (const key of Object.keys(body)) {
+      if (body[key] !== employee[key]) {
+        changes.push({
+          field: key,
+          oldValue: employee[key],
+          newValue: body[key],
+        });
+      }
+    }
+
+    if (changes.length === 0) {
+      return NextResponse.json({
+        message: 'No changes to update',
+        changes,
+      });
     }
 
     const updatedEmployee = await prisma.employees.update({
@@ -109,7 +138,7 @@ export async function PUT(
       },
     });
 
-    return NextResponse.json(updatedEmployee);
+    return NextResponse.json({ updatedEmployee, changes });
   } catch (error: any) {
     console.error('Update employee error:', error);
     return NextResponse.json(

@@ -41,8 +41,6 @@ export async function POST(req: Request) {
       );
     }
 
-    let office;
-
     if (officesCount === 0) {
       const offices = [
         {
@@ -72,17 +70,24 @@ export async function POST(req: Request) {
       ];
 
       try {
-        office = await prisma.offices.createMany({
-          data: offices,
-        });
-      } catch (error: any) {
-        console.error('Office creation failed:', error);
-      }
-    } else {
-      try {
-        office = await prisma.offices.findFirst();
-      } catch (error: any) {
-        console.error('Office finding failed:', error);
+        for (const officeData of offices) {
+          const office = await prisma.offices.create({
+            data: officeData,
+          });
+
+          await prisma.adminLogs.create({
+            data: {
+              activity: `Office "${office.name}" created`,
+              updatedOffice: {
+                connect: {
+                  id: office.id,
+                },
+              },
+            },
+          });
+        }
+      } catch (error) {
+        console.error('Office seeding failed:', error);
       }
     }
 
@@ -92,170 +97,217 @@ export async function POST(req: Request) {
       const positionsCount = await prisma.positions.count();
       const rolesCount = await prisma.roles.count();
 
-      let department;
-
       if (departmentsCount === 0) {
-        try {
-          const departments = [
-            {
-              name: 'Information Technology',
-            },
-            {
-              name: 'Finance',
-            },
-            {
-              name: 'Human Resources',
-            },
-            {
-              name: 'Admin',
-            },
-            {
-              name: 'Operations',
-            },
-            {
-              name: 'Sales',
-            },
-            {
-              name: 'Marketing',
-            },
-            {
-              name: 'Customer Support',
-            },
-            {
-              name: 'Product Support',
-            },
-            {
-              name: 'Data Analytics',
-            },
-            {
-              name: 'Product Development',
-            },
-          ];
+        const departments = [
+          {
+            name: 'Information Technology',
+            abbreviation: 'IT',
+          },
+          {
+            name: 'Finance',
+            abbreviation: 'FN',
+          },
+          {
+            name: 'Human Resources',
+            abbreviation: 'HR',
+          },
+          {
+            name: 'Admin',
+            abbreviation: 'AD',
+          },
+          {
+            name: 'Sportsbooks',
+            abbreviation: 'SB',
+          },
+          {
+            name: 'Sales',
+            abbreviation: 'SD',
+          },
+          {
+            name: 'Customer Support',
+            abbreviation: 'CS',
+          },
+          {
+            name: 'Data Analytics',
+            abbreviation: 'CP',
+          },
+          {
+            name: 'Product Development',
+            abbreviation: 'PD',
+          },
+          {
+            name: 'Risk',
+            abbreviation: 'SB',
+          },
+          {
+            name: 'DCV',
+            abbreviation: 'SB',
+          },
+          {
+            name: 'ADO',
+            abbreviation: 'CB',
+          },
+          {
+            name: 'Quality Assurance',
+            abbreviation: 'QA',
+          },
+          {
+            name: 'Prematch',
+            abbreviation: 'SB',
+          },
+          {
+            name: 'Runningball',
+            abbreviation: 'SB',
+          },
+          {
+            name: 'eSports',
+            abbreviation: 'ST',
+          },
+          {
+            name: 'Integrations',
+            abbreviation: 'IN',
+          },
+          {
+            name: 'Other Sports',
+            abbreviation: 'OS',
+          },
+        ];
 
-          department = await prisma.departments.createMany({
-            data: departments,
-          });
+        try {
+          for (const departmentData of departments) {
+            const department = await prisma.departments.create({
+              data: departmentData,
+            });
+
+            await prisma.accountLogs.create({
+              data: {
+                activity: `Department "${department.name}" created`,
+                updatedDepartment: {
+                  connect: {
+                    id: department.id,
+                  },
+                },
+              },
+            });
+          }
         } catch (error: any) {
           console.error('Department creation failed:', error);
         }
-      } else {
-        try {
-          department = await prisma.departments.findFirst();
-        } catch (error: any) {
-          console.error('Department finding failed:', error);
-        }
       }
 
-      let position;
-
       if (positionsCount === 0) {
-        try {
-          const positions = [
-            {
-              name: 'IT Specialist',
-              departmentId: 1,
-            },
-            {
-              name: 'Senior IT Specialist',
-              departmentId: 1,
-            },
-            {
-              name: 'IT Manager',
-              departmentId: 1,
-            },
-            {
-              name: 'IT Supervisor',
-              departmentId: 1,
-            },
-            {
-              name: 'IT Assistant Team Leader',
-              departmentId: 1,
-            },
-            {
-              name: 'IT Assistant Supervisor',
-              departmentId: 1,
-            },
-            {
-              name: 'Infrastructure Engineer',
-              departmentId: 1,
-            },
-            {
-              name: 'Senior Supervisor',
-              departmentId: 1,
-            },
-            {
-              name: 'Sports Trader',
-              departmentId: 1,
-            },
-            {
-              name: 'Senior Quality Assurance Specialist',
-              departmentId: 1,
-            },
-            {
-              name: 'Team Leader',
-              departmentId: 1,
-            },
-            {
-              name: 'Product Support',
-              departmentId: 1,
-            },
-            {
-              name: 'Assistant Manager',
-              departmentId: 1,
-            },
-            {
-              name: 'Sportsbook Team Leader',
-              departmentId: 1,
-            },
-            {
-              name: 'Senior Sales Manager',
-              departmentId: 1,
-            },
-            {
-              name: 'Product Development Analyst',
-              departmentId: 1,
-            },
-            {
-              name: 'Admin Specialist',
-              departmentId: 1,
-            },
-            {
-              name: 'Human Resource Supervisor',
-              departmentId: 1,
-            },
-            {
-              name: 'Data Analyst',
-              departmentId: 1,
-            },
-            {
-              name: 'Senior Data Analyst',
-              departmentId: 1,
-            },
-            {
-              name: 'Data Analytics Team Leader',
-              departmentId: 1,
-            },
-            {
-              name: 'Senior Product Development Analyst',
-              departmentId: 1,
-            },
-          ];
+        const positions = [
+          {
+            name: 'IT Specialist',
+            departmentId: 1,
+          },
+          {
+            name: 'Senior IT Specialist',
+            departmentId: 1,
+          },
+          {
+            name: 'IT Manager',
+            departmentId: 1,
+          },
+          {
+            name: 'IT Supervisor',
+            departmentId: 1,
+          },
+          {
+            name: 'IT Assistant Team Leader',
+            departmentId: 1,
+          },
+          {
+            name: 'IT Assistant Supervisor',
+            departmentId: 1,
+          },
+          {
+            name: 'Infrastructure Engineer',
+            departmentId: 1,
+          },
+          {
+            name: 'Senior Supervisor',
+            departmentId: 1,
+          },
+          {
+            name: 'Sports Trader',
+            departmentId: 1,
+          },
+          {
+            name: 'Senior Quality Assurance Specialist',
+            departmentId: 1,
+          },
+          {
+            name: 'Team Leader',
+            departmentId: 1,
+          },
+          {
+            name: 'Product Support',
+            departmentId: 1,
+          },
+          {
+            name: 'Assistant Manager',
+            departmentId: 1,
+          },
+          {
+            name: 'Sportsbook Team Leader',
+            departmentId: 1,
+          },
+          {
+            name: 'Senior Sales Manager',
+            departmentId: 1,
+          },
+          {
+            name: 'Product Development Analyst',
+            departmentId: 1,
+          },
+          {
+            name: 'Admin Specialist',
+            departmentId: 1,
+          },
+          {
+            name: 'Human Resource Supervisor',
+            departmentId: 1,
+          },
+          {
+            name: 'Data Analyst',
+            departmentId: 1,
+          },
+          {
+            name: 'Senior Data Analyst',
+            departmentId: 1,
+          },
+          {
+            name: 'Data Analytics Team Leader',
+            departmentId: 1,
+          },
+          {
+            name: 'Senior Product Development Analyst',
+            departmentId: 1,
+          },
+        ];
 
-          position = await prisma.positions.createMany({
-            data: positions,
-          });
+        try {
+          for (const positionData of positions) {
+            const position = await prisma.positions.create({
+              data: positionData,
+            });
+
+            await prisma.accountLogs.create({
+              data: {
+                activity: `Position "${position.name}" created`,
+                updatedPosition: {
+                  connect: {
+                    id: position.id,
+                  },
+                },
+              },
+            });
+          }
         } catch (error: any) {
           console.error('Position creation failed:', error);
         }
-      } else {
-        try {
-          position = await prisma.positions.findFirst();
-        } catch (error: any) {
-          console.error('Position finding failed:', error);
-        }
       }
-
-      let role;
 
       if (rolesCount === 0) {
         const roles = [
@@ -271,17 +323,24 @@ export async function POST(req: Request) {
         ];
 
         try {
-          role = await prisma.roles.createMany({
-            data: roles,
-          });
+          for (const roleData of roles) {
+            const role = await prisma.roles.create({
+              data: roleData,
+            });
+
+            await prisma.accountLogs.create({
+              data: {
+                activity: `Role "${role.role}" created`,
+                updatedRole: {
+                  connect: {
+                    id: role.id,
+                  },
+                },
+              },
+            });
+          }
         } catch (error: any) {
           console.error('Role creation failed:', error);
-        }
-      } else {
-        try {
-          role = await prisma.roles.findFirst();
-        } catch (error: any) {
-          console.error('Role finding failed:', error);
         }
       }
 
@@ -298,12 +357,34 @@ export async function POST(req: Request) {
           },
         });
 
-        await prisma.accounts.create({
+        const account = await prisma.accounts.create({
           data: {
             employeeId: employee.id,
             username: 'matthew.romero',
             passwordHash: hashPassword('admin123'),
             roleId: 1,
+          },
+        });
+
+        await prisma.accountLogs.create({
+          data: {
+            activity: `Employee "${employee.firstName} ${employee.lastName}" created`,
+            updatedEmployee: {
+              connect: {
+                id: employee.id,
+              },
+            },
+          },
+        });
+
+        await prisma.accountLogs.create({
+          data: {
+            activity: `Account "${account.username}" created`,
+            updatedAccount: {
+              connect: {
+                uuid: account.uuid,
+              },
+            },
           },
         });
       } catch (error: any) {
@@ -415,9 +496,26 @@ export async function POST(req: Request) {
         },
       ];
 
-      await prisma.categories.createMany({
-        data: categories,
-      });
+      try {
+        for (const categoryData of categories) {
+          const category = await prisma.categories.create({
+            data: categoryData,
+          });
+
+          await prisma.adminLogs.create({
+            data: {
+              activity: `Category "${category.name}" created`,
+              updatedCategory: {
+                connect: {
+                  id: category.id,
+                },
+              },
+            },
+          });
+        }
+      } catch (error: any) {
+        console.error('Category creation failed:', error);
+      }
     }
 
     if (brandsCount === 0) {
@@ -442,9 +540,26 @@ export async function POST(req: Request) {
         },
       ];
 
-      await prisma.brands.createMany({
-        data: brands,
-      });
+      try {
+        for (const brandData of brands) {
+          const brand = await prisma.brands.create({
+            data: brandData,
+          });
+
+          await prisma.adminLogs.create({
+            data: {
+              activity: `Brand "${brand.name}" created`,
+              updatedBrand: {
+                connect: {
+                  id: brand.id,
+                },
+              },
+            },
+          });
+        }
+      } catch (error: any) {
+        console.error('Brand creation failed:', error);
+      }
     }
 
     if (suppliersCount === 0) {
@@ -600,9 +715,26 @@ export async function POST(req: Request) {
         },
       ];
 
-      await prisma.suppliers.createMany({
-        data: suppliers,
-      });
+      try {
+        for (const supplierData of suppliers) {
+          const supplier = await prisma.suppliers.create({
+            data: supplierData,
+          });
+
+          await prisma.adminLogs.create({
+            data: {
+              activity: `Supplier "${supplier.name}" created`,
+              updatedSupplier: {
+                connect: {
+                  id: supplier.id,
+                },
+              },
+            },
+          });
+        }
+      } catch (error: any) {
+        console.error('Supplier creation failed:', error);
+      }
     }
 
     if (locationsCount === 0) {
@@ -614,6 +746,10 @@ export async function POST(req: Request) {
         {
           name: 'One Ayala',
           abbreviation: 'OA',
+        },
+        {
+          name: 'PEZA',
+          abbreviation: 'PEZ',
         },
         {
           name: 'KZing',
@@ -669,9 +805,26 @@ export async function POST(req: Request) {
         },
       ];
 
-      await prisma.locations.createMany({
-        data: locations,
-      });
+      try {
+        for (const locationData of locations) {
+          const location = await prisma.locations.create({
+            data: locationData,
+          });
+
+          await prisma.adminLogs.create({
+            data: {
+              activity: `Location "${location.name}" created`,
+              updatedLocation: {
+                connect: {
+                  id: location.id,
+                },
+              },
+            },
+          });
+        }
+      } catch (error: any) {
+        console.error('Location creation failed:', error);
+      }
     }
 
     const user = await prisma.accounts.findUnique({
@@ -698,7 +851,7 @@ export async function POST(req: Request) {
           name: 'Inventory',
           path: '/inventory/items',
           icon: 'MonitorCog',
-          access: [3, 2, 1],
+          access: [2, 1],
         },
         {
           name: 'Employees',
@@ -763,29 +916,36 @@ export async function POST(req: Request) {
       ];
 
       try {
-        await Promise.all(
-          directories.map((directory) =>
-            prisma.sidebarLinks.create({
-              data: {
-                name: directory.name,
-                path: directory.path,
-                icon: directory.icon,
+        for (const directoryData of directories) {
+          const sidebarLink = await Promise.all(
+            directories.map((directory) =>
+              prisma.sidebarLinks.create({
+                data: {
+                  name: directory.name,
+                  path: directory.path,
+                  icon: directory.icon,
 
-                updatedByUser: {
-                  connect: {
-                    uuid: user?.uuid,
+                  sidebarLinkRoles: {
+                    create: directory.access.map((roleId) => ({
+                      roleId,
+                    })),
                   },
                 },
+              })
+            )
+          );
 
-                sidebarLinkRoles: {
-                  create: directory.access.map((roleId) => ({
-                    roleId,
-                  })),
+          await prisma.adminLogs.create({
+            data: {
+              activity: `Sidebar Link "${sidebarLink.name}" created`,
+              updatedSidebarLink: {
+                connect: {
+                  id: sidebarLink.id,
                 },
               },
-            })
-          )
-        );
+            },
+          });
+        }
       } catch (error) {
         console.error(error);
       }

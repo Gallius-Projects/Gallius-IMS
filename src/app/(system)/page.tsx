@@ -29,8 +29,6 @@ interface InventoryItem {
   office: { id: number; name: string } | null;
   status: string;
   assignedTo: number;
-  createdAt: string;
-  updatedAt: string;
   remarks: string;
 }
 

@@ -45,7 +45,7 @@ export default function Sidebar({
   userRole: Role;
 }) {
   const router = useRouter();
-  const { isAuthenticated } = useUserContext();
+  const { user, isAuthenticated } = useUserContext();
 
   const [sidebarLinks, setSidebarLinks] = useState<SidebarLinks[]>([]);
 
@@ -78,7 +78,12 @@ export default function Sidebar({
         isSidebarExpanded ? 'w-[250px]' : 'w-0'
       }`}
     >
-      <div className="border-b border-slate-500 bg-slate-100 py-6 dark:border-slate-800 dark:bg-slate-900" />
+      <div className="shadow-b flex items-center justify-center border-slate-500 bg-slate-100 py-3 shadow-xl dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex flex-col items-center">
+          <div className="font-bold">{user?.username}</div>
+          <div className="text-xs uppercase">{user?.role}</div>
+        </div>
+      </div>
 
       <nav className="flex flex-col border-t border-slate-200 py-4 dark:border-slate-800">
         {visibleDirectories
@@ -99,9 +104,8 @@ export default function Sidebar({
                 type="button"
                 onClick={() => {
                   router.push(directory.path);
-                  console.log(directory.path);
                 }}
-                className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left transition-colors duration-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left transition-all duration-200 hover:translate-x-2 hover:bg-slate-100 hover:shadow-md dark:hover:bg-slate-800"
               >
                 {Icon && <Icon size={20} />}
 

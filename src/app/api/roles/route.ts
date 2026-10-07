@@ -15,14 +15,9 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const search = searchParams.get('search') || '';
-    const name = searchParams.get('name') || '';
 
     // Build Prisma query filters
     const whereClause: any = {};
-
-    if (name) {
-      whereClause.name = name;
-    }
 
     if (search) {
       whereClause.OR = [{ name: { contains: search } }];
@@ -30,6 +25,30 @@ export async function GET(req: Request) {
 
     const roles = await prisma.roles.findMany({
       where: whereClause,
+      include: {
+        accounts: {
+          include: {
+            employee: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
+        accountLogs: {
+          include: {
+            involvedUser: {
+              include: {
+                employee: { select: { firstName: true, lastName: true } },
+              },
+            },
+          },
+          orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+          take: 1,
+        },
+      },
     });
 
     return NextResponse.json(roles);
@@ -68,6 +87,18 @@ export async function POST(req: Request) {
         name,
         updatedBy: {
           connect: { uuid: user?.userId },
+        },
+      },
+    });
+
+    await prisma.accountLogs.create({
+      data: {
+        activity: `Role "${name}" created`,
+        updatedRole: {
+          connect: { id: newRole.id },
+        },
+        involvedUser: {
+          connect: { uuid: user.userId },
         },
       },
     });

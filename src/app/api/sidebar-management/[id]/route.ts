@@ -28,15 +28,21 @@ export async function GET(
     const sidebarLink = await prisma.sidebarLinks.findUnique({
       where: { id: itemId },
       include: {
-        updatedByUser: {
-          select: {
-            employee: {
-              select: {
-                firstName: true,
-                lastName: true,
+        adminLogs: {
+          include: {
+            involvedUser: {
+              include: {
+                employee: {
+                  select: {
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
               },
             },
           },
+          orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+          take: 1,
         },
       },
     });
@@ -75,9 +81,9 @@ export async function PUT(
 
     const { id } = await params;
 
-    const itemId = parseInt(id, 10);
+    const sidebarLinkId = parseInt(id, 10);
 
-    if (isNaN(itemId)) {
+    if (isNaN(sidebarLinkId)) {
       return NextResponse.json(
         { error: 'Invalid sidebar link ID' },
         { status: 400 }
@@ -103,35 +109,43 @@ export async function PUT(
     }
 
     const updatedSidebarLink = await prisma.$transaction(async (tx) => {
-      // 1. Update the sidebar link itself
       const sidebarLink = await tx.sidebarLinks.update({
         where: {
-          id: itemId,
+          id: sidebarLinkId,
         },
         data: {
           name,
           path,
           icon,
-          updatedBy: user.userId,
         },
       });
 
-      // 2. Remove existing role assignments
       await tx.sidebarLinkRoles.deleteMany({
         where: {
-          sidebarLinkId: itemId,
+          sidebarLinkId,
         },
       });
 
-      // 3. Add the new role assignments
       if (access.length > 0) {
         await tx.sidebarLinkRoles.createMany({
           data: access.map((roleId: number) => ({
-            sidebarLinkId: itemId,
+            sidebarLinkId,
             roleId,
           })),
         });
       }
+
+      await tx.adminLogs.create({
+        data: {
+          activity: `Updated sidebar link from ${sidebarLink?.name} to ${name}`,
+          updatedSidebarLink: {
+            connect: { id: sidebarLinkId },
+          },
+          involvedUser: {
+            connect: { uuid: user.userId },
+          },
+        },
+      });
 
       return sidebarLink;
     });
@@ -165,8 +179,8 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    const itemId = parseInt(id);
-    if (isNaN(itemId)) {
+    const sidebarLinkId = parseInt(id);
+    if (isNaN(sidebarLinkId)) {
       return NextResponse.json(
         { error: 'Invalid sidebar link ID' },
         { status: 400 }
@@ -174,7 +188,7 @@ export async function DELETE(
     }
 
     await prisma.sidebarLinks.delete({
-      where: { id: itemId },
+      where: { id: sidebarLinkId },
     });
 
     return NextResponse.json({
