@@ -42,11 +42,7 @@ export async function GET(
           orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
           take: 1,
         },
-        deployedBy: {
-          include: {
-            employee: { select: { firstName: true, lastName: true } },
-          },
-        },
+        deployedBy: { select: { firstName: true, lastName: true } },
       },
     });
 

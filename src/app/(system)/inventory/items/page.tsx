@@ -101,6 +101,14 @@ export default function ItemsPage() {
 
   const [categories, setCategories] = useState([]);
 
+  const [employeeSearch, setEmployeeSearch] = useState('');
+  const [deployedBySearch, setDeployedBySearch] = useState('');
+  const [categorySearch, setCategorySearch] = useState('');
+  const [brandSearch, setBrandSearch] = useState('');
+  const [supplierSearch, setSupplierSearch] = useState('');
+  const [officeSearch, setOfficeSearch] = useState('');
+  const [locationSearch, setLocationSearch] = useState('');
+
   useEffect(() => {
     const fetchCategories = async () => {
       const response = await axiosInstance.get('/categories');
@@ -202,23 +210,28 @@ export default function ItemsPage() {
     setFormMode('edit');
     setSelectedItemId(item.id);
 
-    console.log('WTF');
+    console.log('this is triggered');
+
+    const getOldItem = await axiosInstance.get(`/items/${item.id}`);
+    const oldItemData = getOldItem.data;
+
+    setItemToUpdate(oldItemData);
 
     // Set the displayed dropdown values
-    // setCategorySearch(oldItemData?.category?.name || item?.category || '');
-    // setBrandSearch(oldItemData?.brand?.name || item?.brand?.name || '');
-    // setLocationSearch(
-    //   oldItemData?.location?.name || item?.location?.name || ''
-    // );
-    // setOfficeSearch(oldItemData?.office?.name || item?.office?.name || '');
-    // setSupplierSearch(
-    //   oldItemData?.supplier?.name || item?.supplier?.name || ''
-    // );
-    // setEmployeeSearch(
-    //   `${oldItemData?.assignedEmp?.firstName} ${oldItemData?.assignedEmp?.lastName}` ||
-    //     `${item?.assignedEmp?.firstName} ${item?.assignedEmp?.lastName}` ||
-    //     ''
-    // );
+    setCategorySearch(oldItemData?.category?.name || item?.category || '');
+    setBrandSearch(oldItemData?.brand?.name || item?.brand?.name || '');
+    setLocationSearch(
+      oldItemData?.location?.name || item?.location?.name || ''
+    );
+    setOfficeSearch(oldItemData?.office?.name || item?.office?.name || '');
+    setSupplierSearch(
+      oldItemData?.supplier?.name || item?.supplier?.name || ''
+    );
+    setEmployeeSearch(
+      `${oldItemData?.assignedEmp?.firstName} ${oldItemData?.assignedEmp?.lastName}` ||
+        `${item?.assignedEmp?.firstName} ${item?.assignedEmp?.lastName}` ||
+        ''
+    );
 
     setFormError('');
     setIsFormEditOpen(true);
@@ -547,7 +560,6 @@ export default function ItemsPage() {
           categories={categories}
           handleClose={handleClose}
           handleFormSubmit={handleFormSubmit}
-          itemToUpdate={itemToUpdate}
         />
       )}
 

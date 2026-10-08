@@ -60,11 +60,7 @@ export async function GET(req: Request) {
           orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
           take: 1,
         },
-        deployedBy: {
-          include: {
-            employee: { select: { firstName: true, lastName: true } },
-          },
-        },
+        deployedBy: { select: { firstName: true, lastName: true } },
       },
     });
 
@@ -77,8 +73,8 @@ export async function GET(req: Request) {
         updatedAt: latestLog?.updatedAt,
         updatedBy: latestLog?.involvedUser?.employee
           ? latestLog?.involvedUser?.employee.firstName +
-            ' ' +
-            latestLog?.involvedUser?.employee.lastName
+          ' ' +
+          latestLog?.involvedUser?.employee.lastName
           : '--',
       };
     });

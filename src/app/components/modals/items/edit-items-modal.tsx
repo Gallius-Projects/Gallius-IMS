@@ -85,6 +85,7 @@ export default function EditItemsModal({
   handleGenerateAssetTag = () => {},
   handleClose,
   handleFormSubmit,
+  itemToUpdate,
 }: EditItemsModalProps) {
   const { user } = useUserContext();
 
@@ -99,69 +100,99 @@ export default function EditItemsModal({
   const [employees, setEmployees] = useState([]);
 
   const [employeeSearch, setEmployeeSearch] = useState('');
-
   const [deployedBySearch, setDeployedBySearch] = useState('');
-
   const [categorySearch, setCategorySearch] = useState('');
-
   const [brandSearch, setBrandSearch] = useState('');
-
   const [supplierSearch, setSupplierSearch] = useState('');
-
   const [officeSearch, setOfficeSearch] = useState('');
-
   const [locationSearch, setLocationSearch] = useState('');
 
   useEffect(() => {
     console.log(formMode);
-
     if (formMode === 'edit') {
       console.log(formMode);
 
-      const handleEmbedItemDetails = async () => {
-        const getOldItem = await axiosInstance.get(`/items/${item.id}`);
-        const oldItemData = getOldItem.data;
+      // const handleEmbedItemDetails = async () => {
+      //   const getOldItem = await axiosInstance.get(`/items/${item.id}`);
+      //   const oldItemData = getOldItem.data;
 
-        setItemDetails(oldItemData);
+      //   setItemDetails(oldItemData);
 
-        setFormData({
-          name: oldItemData?.name || '',
-          oldAssetTag: oldItemData?.oldAssetTag || '',
-          newAssetTag: oldItemData?.newAssetTag || '',
-          serialNumber: oldItemData?.serialNumber || '',
-          hostname: oldItemData?.hostname || '',
-          status: oldItemData?.status.toUpperCase() || '',
-          categoryId: oldItemData?.categoryId || null,
-          brandId: oldItemData?.brandId || null,
-          locationId: oldItemData?.locationId || null,
-          officeId: oldItemData?.officeId || null,
-          supplierId: oldItemData?.supplierId || null,
-          datePurchased: oldItemData?.datePurchased || null,
-          dateDeployed: oldItemData?.dateDeployed || null,
-          invoiceNo: oldItemData?.invoiceNo || '',
-          assetCondition: oldItemData?.assetCondition || '',
-          isNew: oldItemData?.isNew ?? true,
-          assignedTo: oldItemData?.assignedTo || null,
-          description: oldItemData?.description || '',
-          remarks: oldItemData?.remarks || '',
-        });
+      //   console.log(oldItemData);
 
-        setCategorySearch(oldItemData?.category?.name || '');
-        setBrandSearch(oldItemData?.brand?.name || '');
-        setLocationSearch(oldItemData?.location?.name || '');
-        setOfficeSearch(oldItemData?.office?.name || '');
-        setSupplierSearch(oldItemData?.supplier?.name || '');
-        setEmployeeSearch(
-          `${oldItemData?.assignedEmp?.firstName} ${oldItemData?.assignedEmp?.lastName}` ||
-            ''
-        );
-      };
+      //   setFormData({
+      //     name: itemToUpdate?.name || '',
+      //     oldAssetTag: itemToUpdate?.oldAssetTag || '',
+      //     newAssetTag: itemToUpdate?.newAssetTag || '',
+      //     serialNumber: itemToUpdate?.serialNumber || '',
+      //     hostname: itemToUpdate?.hostname || '',
+      //     status: itemToUpdate?.status.toUpperCase() || '',
+      //     categoryId: itemToUpdate?.categoryId || null,
+      //     brandId: itemToUpdate?.brand?.id || null,
+      //     locationId: itemToUpdate?.locationId || null,
+      //     officeId: itemToUpdate?.office?.id || null,
+      //     supplierId: itemToUpdate?.supplier?.id || null,
+      //     datePurchased: itemToUpdate?.datePurchased || null,
+      //     dateDeployed: itemToUpdate?.dateDeployed || null,
+      //     invoiceNo: itemToUpdate?.invoiceNo || '',
+      //     assetCondition: itemToUpdate?.assetCondition || '',
+      //     isNew: itemToUpdate?.isNew ?? true,
+      //     assignedTo: itemToUpdate?.assignedEmp?.id || null,
+      //     description: itemToUpdate?.description || '',
+      //     remarks: itemToUpdate?.remarks || '',
+      //   });
 
-      handleEmbedItemDetails();
+      //   setCategorySearch(itemToUpdate?.category?.name || '');
+      //   setBrandSearch(itemToUpdate?.brand?.name || '');
+      //   setLocationSearch(itemToUpdate?.location?.name || '');
+      //   setOfficeSearch(itemToUpdate?.office?.name || '');
+      //   setSupplierSearch(itemToUpdate?.supplier?.name || '');
+      //   setEmployeeSearch(
+      //     `${itemToUpdate?.assignedEmp?.firstName} ${itemToUpdate?.assignedEmp?.lastName}` ||
+      //       ''
+      //   );
+      // };
+
+      // handleEmbedItemDetails();
+
+      console.log(itemToUpdate);
+
+      setFormData({
+        name: itemToUpdate?.name || '',
+        oldAssetTag: itemToUpdate?.oldAssetTag || '',
+        newAssetTag: itemToUpdate?.newAssetTag || '',
+        serialNumber: itemToUpdate?.serialNumber || '',
+        hostname: itemToUpdate?.hostname || '',
+        status: itemToUpdate?.status.toUpperCase() || '',
+        categoryId: itemToUpdate?.categoryId || null,
+        brandId: itemToUpdate?.brand?.id || null,
+        locationId: itemToUpdate?.locationId || null,
+        officeId: itemToUpdate?.office?.id || null,
+        supplierId: itemToUpdate?.supplier?.id || null,
+        datePurchased: itemToUpdate?.datePurchased || null,
+        dateDeployed: itemToUpdate?.dateDeployed || null,
+        invoiceNo: itemToUpdate?.invoiceNo || '',
+        assetCondition: itemToUpdate?.assetCondition || '',
+        isNew: itemToUpdate?.isNew ?? true,
+        assignedTo: itemToUpdate?.assignedEmp?.id || null,
+        description: itemToUpdate?.description || '',
+        remarks: itemToUpdate?.remarks || '',
+      });
+
+      setCategorySearch(itemToUpdate?.category?.name || '');
+      setBrandSearch(itemToUpdate?.brand?.name || '');
+      setLocationSearch(itemToUpdate?.location?.name || '');
+      setOfficeSearch(itemToUpdate?.office?.name || '');
+      setSupplierSearch(itemToUpdate?.supplier?.name || '');
+      setEmployeeSearch(
+        `${itemToUpdate?.assignedEmp?.firstName} ${itemToUpdate?.assignedEmp?.lastName}` ||
+          ''
+      );
     }
-  }, [isOpen, formMode]);
+  }, [formData, itemToUpdate, isOpen, formMode]);
 
-  console.log(itemDetails);
+  // console.log(itemToUpdate);
+  // console.log(itemDetails);
 
   useEffect(() => {
     const fetchBrands = async () => {
