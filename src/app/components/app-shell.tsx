@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserContext } from '@/context/UserContext';
+import { useLibrariesContext } from '@/context/LibrariesContext';
 
 export default function AppShell({
   children,

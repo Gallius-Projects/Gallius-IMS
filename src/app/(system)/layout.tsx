@@ -7,6 +7,8 @@ import { useUserContext } from '@/context/UserContext';
 import Sidebar from '../components/ui/sidebar';
 import Header from '../components/ui/header';
 import Footer from '../components/ui/footer';
+import axiosInstance from '@/lib/axiosInstance';
+import { useLibrariesContext } from '@/context/LibrariesContext';
 
 export default function InventoryLayout({
   children,
@@ -17,6 +19,15 @@ export default function InventoryLayout({
 
   const router = useRouter();
   const { user, setUser, setIsAuthenticated } = useUserContext();
+
+  const {
+    setCategories,
+    setBrands,
+    setLocations,
+    setSuppliers,
+    setOffices,
+    setEmployees,
+  } = useLibrariesContext();
 
   const userRole = user?.role as Role;
   const sideBarRef = useRef<HTMLDivElement>(null);
@@ -53,6 +64,45 @@ export default function InventoryLayout({
       setIsAuthenticated(true);
     }
   }, [router]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const response = await axiosInstance.get('/categories');
+      setCategories(response.data);
+    };
+
+    const fetchBrands = async () => {
+      const response = await axiosInstance.get('/brands');
+      setBrands(response.data);
+    };
+
+    const fetchLocations = async () => {
+      const response = await axiosInstance.get('/locations');
+      setLocations(response.data);
+    };
+
+    const fetchSuppliers = async () => {
+      const response = await axiosInstance.get('/suppliers');
+      setSuppliers(response.data);
+    };
+
+    const fetchOffices = async () => {
+      const response = await axiosInstance.get('/offices');
+      setOffices(response.data);
+    };
+
+    const fetchEmployees = async () => {
+      const response = await axiosInstance.get('/employees');
+      setEmployees(response.data);
+    };
+
+    fetchCategories();
+    fetchBrands();
+    fetchLocations();
+    fetchSuppliers();
+    fetchOffices();
+    fetchEmployees();
+  }, []);
 
   return (
     <div className="min-h-screen">

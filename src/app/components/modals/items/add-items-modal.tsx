@@ -1,16 +1,15 @@
 import { useUserContext } from '@/context/UserContext';
 import { AlertCircle, Loader2, X } from 'lucide-react';
 
-import Flatpickr from 'react-flatpickr';
-import 'flatpickr/dist/flatpickr.css';
 import dayjs from 'dayjs';
 import SearchableDropdown from '../../ui-templates/searchable-dropdown';
-import axiosInstance from '@/lib/axiosInstance';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import Dropdown from '../../ui-templates/dropdown';
+import { useLibrariesContext } from '@/context/LibrariesContext';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
-interface AddEditItemsModalProps {
-  formMode?: 'create' | 'edit';
+interface AddItemsModalProps {
   formData?: {
     name: string;
     oldAssetTag: string;
@@ -48,30 +47,8 @@ interface AddEditItemsModalProps {
 }
 
 export default function AddItemsModal({
-  formData = {
-    name: '',
-    oldAssetTag: '',
-    serialNumber: '',
-    description: '',
-    hostname: '',
-    categoryId: null,
-    category: null,
-    brandId: null,
-    brand: null,
-    locationId: null,
-    location: null,
-    officeId: null,
-    office: null,
-    status: '',
-    assignedTo: null,
-    remarks: '',
-    datePurchased: null,
-    dateDeployed: null,
-    invoiceNo: '',
-    assetCondition: '',
-    isNew: true,
-  },
-  setFormData = () => {},
+  formData,
+  setFormData,
   formError = '',
   isSubmitting = false,
   statuses,
@@ -81,77 +58,12 @@ export default function AddItemsModal({
   handleGenerateAssetTag = () => {},
   handleClose,
   handleFormSubmit,
-}: AddEditItemsModalProps) {
+}: AddItemsModalProps) {
   const { user } = useUserContext();
+  const { brands, locations, suppliers, offices, employees } =
+    useLibrariesContext();
 
   const modalRef = useRef<HTMLDivElement>(null);
-
-  const [brands, setBrands] = useState([]);
-  const [locations, setLocations] = useState([]);
-  const [suppliers, setSuppliers] = useState([]);
-  const [offices, setOffices] = useState([]);
-  const [employees, setEmployees] = useState([]);
-
-  const [employeeSearch, setEmployeeSearch] = useState('');
-
-  const [deployedBySearch, setDeployedBySearch] = useState('');
-
-  const [categorySearch, setCategorySearch] = useState('');
-
-  const [brandSearch, setBrandSearch] = useState('');
-
-  const [supplierSearch, setSupplierSearch] = useState('');
-
-  const [officeSearch, setOfficeSearch] = useState('');
-
-  const [locationSearch, setLocationSearch] = useState('');
-
-  console.log(formData);
-
-  useEffect(() => {
-    const fetchBrands = async () => {
-      const response = await axiosInstance.get('/brands');
-      setBrands(response.data);
-    };
-
-    fetchBrands();
-  }, []);
-
-  useEffect(() => {
-    const fetchLocations = async () => {
-      const response = await axiosInstance.get('/locations');
-      setLocations(response.data);
-    };
-
-    fetchLocations();
-  }, []);
-
-  useEffect(() => {
-    const fetchOffices = async () => {
-      const response = await axiosInstance.get('/offices');
-      setOffices(response.data);
-    };
-
-    fetchOffices();
-  }, []);
-
-  useEffect(() => {
-    const fetchSuppliers = async () => {
-      const response = await axiosInstance.get('/suppliers');
-      setSuppliers(response.data);
-    };
-
-    fetchSuppliers();
-  }, []);
-
-  useEffect(() => {
-    const fetchEmployees = async () => {
-      const response = await axiosInstance.get('/employees');
-      setEmployees(response.data);
-    };
-
-    fetchEmployees();
-  }, []);
 
   const assetConditions = [
     { id: 1, name: 'Excellent' },
@@ -227,90 +139,82 @@ export default function AddItemsModal({
               {/* Category */}
               <SearchableDropdown
                 label="Category"
+                placeholder="Select Category"
                 data={categories}
-                // ref={categoryRef}
-                search={categorySearch}
-                setSearch={setCategorySearch}
+                value={formData.categoryId || null}
                 onChange={(value: any) => {
                   setFormData({
                     ...formData,
                     categoryId: parseInt(value),
                   });
                 }}
-                placeholder="Select Category"
                 required
               />
 
               {/* Brand */}
               <SearchableDropdown
                 label="Brand"
-                data={brands}
-                // ref={brandRef}
-                search={brandSearch}
-                setSearch={setBrandSearch}
                 placeholder="Select Brand"
-                required
+                data={brands}
+                value={formData.brandId || null}
                 onChange={(value: any) => {
                   setFormData({
                     ...formData,
                     brandId: parseInt(value),
                   });
                 }}
+                required
               />
 
               {/* Supplier */}
               <SearchableDropdown
                 label="Supplier"
-                data={suppliers}
-                // ref={supplierRef}
-                search={supplierSearch}
-                setSearch={setSupplierSearch}
                 placeholder="Select Supplier"
-                required
+                data={suppliers}
+                value={formData.supplierId || null}
                 onChange={(value: any) => {
                   setFormData({
                     ...formData,
                     supplierId: parseInt(value),
                   });
                 }}
+                required
               />
 
               {/* Offices */}
               <SearchableDropdown
                 label="Tenant"
-                data={offices}
-                // ref={officeRef}
-                search={officeSearch}
-                setSearch={setOfficeSearch}
                 placeholder="Select Tenant"
-                required
+                data={offices}
+                value={formData.officeId || null}
                 onChange={(value: any) => {
                   setFormData({
                     ...formData,
                     officeId: parseInt(value),
                   });
                 }}
+                required
               />
 
               {/* Location */}
               <SearchableDropdown
                 label="Location"
-                data={locations}
-                // ref={locationRef}
-                value={locationSearch}
                 placeholder="Select Location"
-                required
+                data={locations.sort((a, b) => a.name.localeCompare(b.name))}
+                value={formData.locationId || null}
                 onChange={(value: any) => {
                   setFormData({
                     ...formData,
                     locationId: parseInt(value),
                   });
                 }}
+                required
               />
 
               {/* Status */}
               <Dropdown
                 label="Status"
+                placeholder="Select Status"
                 data={statuses}
                 value={
                   formData?.status
@@ -329,7 +233,6 @@ export default function AddItemsModal({
                     status: value ? value?.name?.toUpperCase() : '',
                   }));
                 }}
-                placeholder="Select Status"
                 required
               />
 
@@ -346,7 +249,6 @@ export default function AddItemsModal({
                       setFormData({
                         ...formData,
                         isNew: true,
-                        oldAssetTag: '',
                       });
                       handleGenerateAssetTag();
                     }}
@@ -366,7 +268,6 @@ export default function AddItemsModal({
                       setFormData({
                         ...formData,
                         isNew: false,
-                        newAssetTag: '',
                       });
                     }}
                     aria-pressed={!formData.isNew}
@@ -382,59 +283,57 @@ export default function AddItemsModal({
               </div>
 
               {/* New Asset Tag */}
-              {/* Old Asset Tag */}
-              {formData.isNew ? (
-                <div className="col-span-2">
-                  <div className="flex flex-row items-center justify-between gap-2">
-                    <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                      NEW ASSET TAG
-                    </label>
+              <div className="col-span-2">
+                <div className="flex flex-row items-center justify-between gap-2">
+                  <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
+                    NEW ASSET TAG
+                  </label>
 
-                    {(user?.role.includes('superadmin') ||
-                      user?.role.includes('admin')) && (
-                      <div className="flex flex-row items-center gap-2">
-                        <button
-                          type="button"
-                          className="cursor-pointer text-xs text-slate-500 hover:text-slate-600 hover:underline dark:text-slate-400 dark:hover:text-slate-200"
-                          onClick={() => handleGenerateAssetTag()}
-                        >
-                          Generate
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setEditNewAsset(!editNewAsset)}
-                          className="cursor-pointer text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                          title={`${editNewAsset ? 'Make uneditable' : 'Make editable'}`}
-                        >
-                          {editNewAsset ? 'Editable' : 'Uneditable'}
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  {(user?.role.includes('superadmin') ||
+                    user?.role.includes('admin')) && (
+                    <div className="flex flex-row items-center gap-2">
+                      <button
+                        type="button"
+                        className="cursor-pointer text-xs text-slate-500 hover:text-slate-600 hover:underline dark:text-slate-400 dark:hover:text-slate-200"
+                        onClick={() => handleGenerateAssetTag()}
+                      >
+                        Generate
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditNewAsset(!editNewAsset)}
+                        className="cursor-pointer text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                        title={`${editNewAsset ? 'Make uneditable' : 'Make editable'}`}
+                      >
+                        {editNewAsset ? 'Editable' : 'Uneditable'}
+                      </button>
+                    </div>
+                  )}
+                </div>
 
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="Click 'Generate' to generate an asset tag"
-                      value={formData.newAssetTag || ''}
-                      disabled={!editNewAsset}
-                      onChange={(e) => {
-                        if (
-                          (user?.role.includes('superadmin') ||
-                            user?.role.includes('admin')) &&
-                          editNewAsset
-                        ) {
-                          setFormData({
-                            ...formData,
-                            newAssetTag: e.target.value,
-                          });
-                        }
-                      }}
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                    />
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Click 'Generate' to generate an asset tag"
+                    value={formData.newAssetTag || ''}
+                    disabled={!editNewAsset}
+                    onChange={(e) => {
+                      if (
+                        (user?.role.includes('superadmin') ||
+                          user?.role.includes('admin')) &&
+                        editNewAsset
+                      ) {
+                        setFormData({
+                          ...formData,
+                          newAssetTag: e.target.value,
+                        });
+                      }
+                    }}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                  />
 
-                    <div className="absolute top-1/2 right-3 flex -translate-y-1/2 gap-2">
-                      {/* <button
+                  <div className="absolute top-1/2 right-3 flex -translate-y-1/2 gap-2">
+                    {/* <button
                         type="button"
                         onClick={() => setEditNewAsset(!editNewAsset)}
                         className="cursor-pointer text-sm text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
@@ -447,7 +346,9 @@ export default function AddItemsModal({
                         )}
                       </button> */}
 
-                      {formData?.newAssetTag && editNewAsset && (
+                    {formData?.newAssetTag &&
+                      (user.role.includes('superadmin') ||
+                        user.role.includes('admin')) && (
                         <button
                           type="button"
                           onClick={() => {
@@ -462,16 +363,16 @@ export default function AddItemsModal({
                           ✕
                         </button>
                       )}
-                    </div>
                   </div>
                 </div>
-              ) : (
-                <div className="col-span-2">
-                  <div className="flex flex-row items-center justify-between gap-2">
-                    <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                      Old Asset Tag
-                    </label>
-                  </div>
+              </div>
+
+              {/* Old Asset Tag */}
+              <div className="col-span-2">
+                <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
+                  Old Asset Tag
+                </label>
+                <div className="relative">
                   <input
                     type="text"
                     placeholder="e.g. GS-OA-26-L0001"
@@ -489,8 +390,24 @@ export default function AddItemsModal({
                     }}
                     className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                   />
+
+                  {formData?.oldAssetTag && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData({
+                          ...formData,
+                          oldAssetTag: '',
+                        });
+                      }}
+                      className="absolute top-1/2 right-3 flex -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                      aria-label="Clear old asset tag"
+                    >
+                      ✕
+                    </button>
+                  )}
                 </div>
-              )}
+              </div>
 
               {/* Hostname */}
               <div>
@@ -530,15 +447,12 @@ export default function AddItemsModal({
               {/* Employee Select */}
               <SearchableDropdown
                 label="Assigned to"
+                placeholder="Select Employee"
                 data={employees.map((emp: any) => ({
                   ...emp,
                   name: `${emp?.firstName} ${emp?.lastName}`,
                 }))}
-                // ref={employeeRef}
-                search={employeeSearch}
-                setSearch={setEmployeeSearch}
-                placeholder="Select Employee"
-                required
+                value={formData.assignedTo || null}
                 onChange={(value: any) => {
                   setFormData({
                     ...formData,
@@ -550,14 +464,12 @@ export default function AddItemsModal({
               {/* Deployed By */}
               <SearchableDropdown
                 label="Deployed by"
+                placeholder="Select Deployer"
                 data={employees.map((emp: any) => ({
                   ...emp,
                   name: `${emp?.firstName} ${emp?.lastName}`,
                 }))}
-                // ref={deployedByRef}
-                value={deployedBySearch}
-                placeholder="Select Deployee"
-                required
+                value={formData.deployedBy || null}
                 onChange={(value: any) => {
                   setFormData({
                     ...formData,
@@ -572,24 +484,23 @@ export default function AddItemsModal({
                   Date Purchased
                 </label>
                 <div className="relative w-full">
-                  <Flatpickr
-                    placeholder="Select Date"
-                    value={formData?.datePurchased || ''}
-                    className="mr-0 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                    options={{
-                      dateFormat: 'm-d-Y',
-                      locale: 'en',
-                      onChange(date) {
-                        console.log(dayjs(date[0]).toISOString());
-
-                        setFormData({
-                          ...formData,
-                          datePurchased: date
-                            ? dayjs(date[0]).toISOString()
-                            : null,
-                        });
-                      },
+                  <DatePicker
+                    placeholderText="Select Date"
+                    selected={
+                      formData?.datePurchased
+                        ? new Date(formData.datePurchased)
+                        : null
+                    }
+                    onChange={(date) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        datePurchased: date ? dayjs(date).toISOString() : null,
+                      }));
                     }}
+                    dateFormat="MM-dd-yyyy"
+                    showPopperArrow={false}
+                    wrapperClassName="w-full"
+                    className="mr-0 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                   />
 
                   {formData.datePurchased && (
@@ -602,7 +513,7 @@ export default function AddItemsModal({
                         });
                       }}
                       className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                      aria-label="Clear date purchased"
+                      aria-label="Clear date"
                     >
                       ✕
                     </button>
@@ -616,24 +527,23 @@ export default function AddItemsModal({
                   Date Deployed
                 </label>
                 <div className="relative w-full">
-                  <Flatpickr
-                    placeholder="Select Date"
-                    value={formData?.dateDeployed || ''}
-                    className="mr-0 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                    options={{
-                      dateFormat: 'm-d-Y',
-                      locale: 'en',
-                      onChange(date) {
-                        console.log(dayjs(date[0]).toISOString());
-
-                        setFormData({
-                          ...formData,
-                          dateDeployed: date
-                            ? dayjs(date[0]).toISOString()
-                            : null,
-                        });
-                      },
+                  <DatePicker
+                    placeholderText="Select Date"
+                    selected={
+                      formData?.dateDeployed
+                        ? new Date(formData.dateDeployed)
+                        : null
+                    }
+                    onChange={(date) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        dateDeployed: date ? dayjs(date).toISOString() : null,
+                      }));
                     }}
+                    dateFormat="MM-dd-yyyy"
+                    showPopperArrow={false}
+                    wrapperClassName="w-full"
+                    className="mr-0 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                   />
 
                   {formData.dateDeployed && (
@@ -646,7 +556,7 @@ export default function AddItemsModal({
                         });
                       }}
                       className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                      aria-label="Clear location"
+                      aria-label="Clear date"
                     >
                       ✕
                     </button>

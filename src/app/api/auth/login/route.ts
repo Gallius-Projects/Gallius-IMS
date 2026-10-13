@@ -951,6 +951,16 @@ export async function POST(req: Request) {
       }
     }
 
+    if (!user.status) {
+      return NextResponse.json(
+        {
+          error:
+            'Your account has been deactivated. Please contact the administrator.',
+        },
+        { status: 403 }
+      );
+    }
+
     const token = generateToken({ userId: user.uuid, username: user.username });
 
     return NextResponse.json({

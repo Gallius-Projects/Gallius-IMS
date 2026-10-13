@@ -98,7 +98,7 @@ export default function TableTemplate({
                         {column.dataType === 'date' ? (
                           new Date(row[column.accessor]).toLocaleString()
                         ) : column.dataType === 'boolean' ? (
-                          row[column.accessor] === 1 ? (
+                          row[column.accessor] ? (
                             'Active'
                           ) : (
                             'Inactive'

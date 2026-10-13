@@ -11,6 +11,7 @@ import { UserProvider } from '@/context/UserContext';
 // import AppShell from './components/app-shell';
 import './globals.css';
 import AppShell from './components/app-shell';
+import { LibrariesProvider } from '@/context/LibrariesContext';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -57,9 +58,11 @@ export default function RootLayout({
     >
       <body className="bg-background text-foreground min-h-full transition-colors duration-200">
         <ThemeProvider>
-          <UserProvider>
-            <AppShell>{children}</AppShell>
-          </UserProvider>
+          <LibrariesProvider>
+            <UserProvider>
+              <AppShell>{children}</AppShell>
+            </UserProvider>
+          </LibrariesProvider>
         </ThemeProvider>
       </body>
     </html>

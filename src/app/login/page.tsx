@@ -60,7 +60,7 @@ export default function LoginPage() {
 
   return (
     <div className="relative flex min-h-screen w-full items-center justify-center bg-[url('/images/OneAyala.jpeg')] bg-cover bg-fixed bg-center bg-no-repeat p-10">
-      <div className="absolute inset-0 bg-black/30 dark:bg-black" />
+      <div className="absolute inset-0 bg-black/30 dark:bg-black/80" />
 
       {/* Bottom Left Logo and Text */}
       <div className="absolute bottom-0 left-0 z-50 flex [animation:fade-in_0.5s_ease-in-out_0.1s_forwards] items-center opacity-0">

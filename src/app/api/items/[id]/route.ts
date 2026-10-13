@@ -81,31 +81,68 @@ export async function PUT(
     }
 
     const body = await req.json();
+    const normalizedBody = {
+      ...body,
+      brandId: Number(body.brandId),
+      assignedTo: Number(body.assignedTo),
+      categoryId: Number(body.categoryId),
+      locationId: Number(body.locationId),
+      officeId: Number(body.officeId),
+      supplierId: Number(body.supplierId),
+    };
+
     const {
       name,
       oldAssetTag,
       newAssetTag,
       serialNumber,
-      description,
       hostname,
-      remarks,
-      brandId,
-      assignedTo,
+      status,
       categoryId,
+      brandId,
       locationId,
       officeId,
       supplierId,
-      status,
-      updatedBy,
-    } = body;
-
-    console.log(body);
+      deployedBy,
+      datePurchased,
+      dateDeployed,
+      invoiceNo,
+      assetCondition,
+      isNew,
+      assignedTo,
+      description,
+      remarks,
+    } = normalizedBody;
 
     if (!name) {
       return NextResponse.json(
         { error: 'Item name is required' },
         { status: 400 }
       );
+    }
+
+    const item = await prisma.inventoryItems.findUnique({
+      where: { id: itemId },
+    });
+
+    if (!item) {
+      return NextResponse.json({ error: 'Item not found' }, { status: 404 });
+    }
+
+    const changes = [];
+
+    for (const key of Object.keys(normalizedBody)) {
+      if (normalizedBody[key] !== item[key]) {
+        changes.push({
+          field: key,
+          oldValue: item[key],
+          newValue: normalizedBody[key],
+        });
+      }
+    }
+
+    if (changes.length === 0) {
+      return NextResponse.json(item);
     }
 
     const updatedItem = await prisma.inventoryItems.update({
@@ -137,8 +174,27 @@ export async function PUT(
         supplier: {
           connect: { id: parseInt(supplierId) },
         },
-        updatedBy: {
-          connect: { uuid: updatedBy },
+        deployedBy: {
+          connect: { id: parseInt(deployedBy) },
+        },
+      },
+    });
+
+    const activity = changes
+      .map(
+        ({ field, oldValue, newValue }) =>
+          `${field} changed from "${oldValue}" to "${newValue}"`
+      )
+      .join(', ');
+
+    await prisma.inventoryLogs.create({
+      data: {
+        activity,
+        updatedItem: {
+          connect: { id: itemId },
+        },
+        involvedUser: {
+          connect: { uuid: user.userId },
         },
       },
     });

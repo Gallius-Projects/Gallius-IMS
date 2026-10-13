@@ -63,6 +63,8 @@ export async function GET(req: Request) {
       };
     });
 
+    console.log(departmentsWithLatestLog[0].updatedBy);
+
     return NextResponse.json(departmentsWithLatestLog);
   } catch (error: any) {
     console.error('Fetch departments error:', error);

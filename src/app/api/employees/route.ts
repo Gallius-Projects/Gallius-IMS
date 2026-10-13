@@ -58,6 +58,7 @@ export async function GET(req: Request) {
 
       return {
         ...employee,
+        accountStatus: employee?.accounts?.status,
         createdAt: latestLog?.createdAt,
         updatedAt: latestLog?.updatedAt,
         updatedBy: latestLog?.involvedUser?.employee
@@ -95,6 +96,7 @@ export async function POST(req: Request) {
       lastName,
       middleName,
       employeeId,
+      officeId,
       departmentId,
       positionId,
     } = body;
@@ -104,6 +106,7 @@ export async function POST(req: Request) {
       !lastName ||
       !middleName ||
       !employeeId ||
+      !officeId ||
       !departmentId ||
       !positionId
     ) {
@@ -119,8 +122,9 @@ export async function POST(req: Request) {
         lastName,
         middleName,
         employeeId,
-        departmentId: parseInt(departmentId),
-        positionId: parseInt(positionId),
+        office: { connect: { id: parseInt(officeId) } },
+        department: { connect: { id: parseInt(departmentId) } },
+        position: { connect: { id: parseInt(positionId) } },
       },
     });
 

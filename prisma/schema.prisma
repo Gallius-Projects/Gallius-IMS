@@ -136,7 +136,7 @@ model inventoryItems {
   newAssetTag    String?
   serialNumber   String?
   description    String?         @db.Text
-  hostname       String?
+  hostname       String?         @unique
   status         status
   categoryId     Int
   category       categories      @relation(fields: [categoryId], references: [id])
@@ -144,8 +144,8 @@ model inventoryItems {
   location       locations       @relation(fields: [locationId], references: [id])
   brandId        Int
   brand          brands          @relation(fields: [brandId], references: [id])
-  assignedTo     Int
-  assignedEmp    employees       @relation("assignedEmp", fields: [assignedTo], references: [id])
+  assignedTo     Int?
+  assignedEmp    employees?      @relation("assignedEmp", fields: [assignedTo], references: [id])
   officeId       Int
   office         offices         @relation(fields: [officeId], references: [id])
   deployedById   Int?

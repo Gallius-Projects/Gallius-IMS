@@ -1,18 +1,20 @@
+import SearchableDropdown from '@/app/components/ui-templates/searchable-dropdown';
+import { useLibrariesContext } from '@/context/LibrariesContext';
 import axiosInstance from '@/lib/axiosInstance';
-import { AlertCircle, Eye, EyeOff, X } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, Loader2, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
-export default function AddEditAccountModal({
-  accountFormMode,
+export default function EditAccountModal({
   accountFormData,
+  setAccountFormData,
   handleClose,
   accountFormError,
   setAccountFormError,
   fetchEmployees,
   isSubmitting,
   setIsSubmitting,
+  dataToUpdate,
 }: {
-  accountFormMode: 'create' | 'update';
   accountFormData: any;
   handleClose: () => void;
   accountFormError: string;
@@ -20,43 +22,30 @@ export default function AddEditAccountModal({
   fetchEmployees: () => void;
   isSubmitting: boolean;
   setIsSubmitting: (submitting: boolean) => void;
+  dataToUpdate: any;
 }) {
-  const roleRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  const { roles } = useLibrariesContext();
 
   const [confirmPassword, setConfirmPassword] = useState('');
-
-  const [formData, setFormData] = useState(accountFormData);
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const [roles, setRoles] = useState([]);
-  const [showRole, setShowRole] = useState(false);
-  const [roleSearch, setRoleSearch] = useState('');
-
   const [formError, setFormError] = useState(accountFormError);
 
   useEffect(() => {
-    console.log(accountFormData);
-
-    setFormData(accountFormData);
-  }, [accountFormData]);
-
-  const filteredRoles = roles.filter((role: any) => {
-    const roleName = `${role.role}`.toLowerCase();
-
-    return roleName.includes(roleSearch.toLowerCase());
-  });
-
-  useEffect(() => {
-    const fetchRoles = async () => {
-      const response = await axiosInstance.get('/roles');
-
-      setRoles(response.data);
-    };
-
-    fetchRoles();
-  }, []);
+    if (dataToUpdate) {
+      setFormData({
+        id: dataToUpdate.id || '',
+        username: dataToUpdate.username || '',
+        password: '',
+        roleId: dataToUpdate.roleId || '',
+        status: dataToUpdate.status || true,
+      });
+    }
+  }, [dataToUpdate]);
 
   useEffect(() => {
     if (confirmPassword !== accountFormData.password) {
@@ -77,11 +66,8 @@ export default function AddEditAccountModal({
     }
 
     try {
-      if (accountFormMode === 'create') {
-        await axiosInstance.post('/accounts', formData);
-      } else {
-        await axiosInstance.put(`/accounts/${formData.id}`, formData);
-      }
+      await axiosInstance.put(`/accounts/${dataToUpdate.uuid}`, formData);
+
       handleClose();
       fetchEmployees();
     } catch (err: any) {
@@ -171,77 +157,21 @@ export default function AddEditAccountModal({
               </div>
 
               {/* Role */}
-              <div ref={roleRef}>
-                <div className="relative">
-                  <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                    Role *
-                  </label>
+              <SearchableDropdown
+                label="Role"
+                placeholder="Select Role"
+                data={roles}
+                value={formData.roleId}
+                onChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    roleId: value,
+                  })
+                }
+                required
+              />
 
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={roleSearch}
-                      placeholder="Select Role"
-                      onFocus={() => setShowRole(true)}
-                      onChange={(e) => {
-                        setRoleSearch(e.target.value);
-                        setShowRole(true);
-                      }}
-                      required
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 pr-10 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                    />
-
-                    {/* Clear button */}
-                    {roleSearch && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setRoleSearch('');
-                          setFormData({
-                            ...formData,
-                            roleId: '',
-                          });
-                          setShowRole(true);
-                        }}
-                        className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                        aria-label="Clear role"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-
-                  {showRole && (
-                    <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-950">
-                      {filteredRoles.length > 0 ? (
-                        filteredRoles.map((role: any) => (
-                          <button
-                            key={role.id}
-                            type="button"
-                            onClick={() => {
-                              setFormData({
-                                ...formData,
-                                roleId: role.id,
-                              });
-
-                              setRoleSearch(role.role);
-                              setShowRole(false);
-                            }}
-                            className="block w-full cursor-pointer px-3.5 py-2.5 text-left text-sm text-slate-900 hover:bg-slate-100 dark:text-white dark:hover:bg-slate-800"
-                          >
-                            {role.role}
-                          </button>
-                        ))
-                      ) : (
-                        <div className="px-3.5 py-2.5 text-sm text-slate-500">
-                          No roles found
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
+              {/* Confirm Password */}
               <div>
                 <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
                   Confirm Password
@@ -270,6 +200,7 @@ export default function AddEditAccountModal({
                 </div>
               </div>
 
+              {/* Status */}
               <div className="col-span-2 rounded-2xl bg-slate-50 p-3 dark:bg-slate-800">
                 <label className="mb-2 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
                   Status
@@ -330,7 +261,7 @@ export default function AddEditAccountModal({
                   Saving...
                 </>
               ) : (
-                'Save Employee'
+                'Save Account'
               )}
             </button>
           </div>

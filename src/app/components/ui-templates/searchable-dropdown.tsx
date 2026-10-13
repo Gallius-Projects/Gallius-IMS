@@ -18,35 +18,42 @@ export default function SearchableDropdown({
 }) {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const [search, setSearch] = useState(value);
+  const [search, setSearch] = useState('');
   const [showOptions, setShowOptions] = useState(false);
 
   const filteredItems = data.filter((item: any) => {
-    const itemName = `${item.name}`.toLowerCase();
+    const itemName =
+      `${item.name || item.value || `${item.firstName} ${item.lastName}`}`.toLowerCase();
 
     return itemName.includes(search.toLowerCase());
   });
 
-  // useEffect(() => {
-  //   const handleClickOutside = (event: MouseEvent) => {
-  //     if (
-  //       dropdownRef.current &&
-  //       !dropdownRef.current.contains(event.target as Node)
-  //     ) {
-  //       setShowOptions(false);
+  useEffect(() => {
+    const selectedItem = data.find((item: any) => item.id === value);
 
-  //       if (!search) {
-  //         setSearch('');
-  //       }
-  //     }
-  //   };
+    setSearch(selectedItem?.name || selectedItem?.value || '');
+  }, [value]);
 
-  //   document.addEventListener('mousedown', handleClickOutside);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowOptions(false);
 
-  //   return () => {
-  //     document.removeEventListener('mousedown', handleClickOutside);
-  //   };
-  // }, [showOptions]);
+        // if (!search) {
+        //   setSearch('');
+        // }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [dropdownRef]);
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -87,8 +94,7 @@ export default function SearchableDropdown({
           <button
             type="button"
             onClick={() => {
-              setSearch('');
-              onChange(null);
+              // onChange(null);
               setShowOptions(!showOptions);
             }}
             className="cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"

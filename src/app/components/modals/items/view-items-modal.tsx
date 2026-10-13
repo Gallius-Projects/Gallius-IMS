@@ -44,7 +44,7 @@ export default function ViewItemsModal({
               <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
                 Category
               </span>
-              <span className="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
+              <span className="font-montserrat text-xs font-semibold text-slate-800 dark:text-slate-200">
                 {viewingDetails?.category || '—'}
               </span>
             </div>
@@ -52,7 +52,7 @@ export default function ViewItemsModal({
               <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
                 Hostname
               </span>
-              <span className="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
+              <span className="font-montserrat text-xs font-semibold text-slate-800 dark:text-slate-200">
                 {viewingDetails.hostname || '—'}
               </span>
             </div>
@@ -60,7 +60,7 @@ export default function ViewItemsModal({
               <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
                 Asset Tag
               </span>
-              <span className="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
+              <span className="font-montserrat text-xs font-semibold text-slate-800 dark:text-slate-200">
                 {viewingDetails?.oldAssetTag || '—'}
               </span>
             </div>
@@ -68,7 +68,7 @@ export default function ViewItemsModal({
               <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
                 New Asset Tag
               </span>
-              <span className="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
+              <span className="font-montserrat text-xs font-semibold text-slate-800 dark:text-slate-200">
                 {viewingDetails?.newAssetTag || '—'}
               </span>
             </div>
@@ -76,7 +76,7 @@ export default function ViewItemsModal({
               <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
                 Brand
               </span>
-              <span className="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
+              <span className="font-montserrat text-xs font-semibold text-slate-800 dark:text-slate-200">
                 {viewingDetails?.brand?.name || '—'}
               </span>
             </div>
@@ -84,7 +84,7 @@ export default function ViewItemsModal({
               <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
                 Supplier
               </span>
-              <span className="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
+              <span className="font-montserrat text-xs font-semibold text-slate-800 dark:text-slate-200">
                 {viewingDetails?.supplier?.name || '—'}
               </span>
             </div>
@@ -92,7 +92,7 @@ export default function ViewItemsModal({
               <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
                 Tenant
               </span>
-              <span className="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
+              <span className="font-montserrat text-xs font-semibold text-slate-800 dark:text-slate-200">
                 {viewingDetails.office?.name || '—'}
               </span>
             </div>
@@ -100,8 +100,32 @@ export default function ViewItemsModal({
               <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
                 Location
               </span>
-              <span className="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
+              <span className="font-montserrat text-xs font-semibold text-slate-800 dark:text-slate-200">
                 {viewingDetails?.location?.name || '—'}
+              </span>
+            </div>
+            <div>
+              <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
+                Deployed By
+              </span>
+              <span className="font-montserrat text-xs font-semibold text-slate-800 dark:text-slate-200">
+                {(viewingDetails.deployedBy?.firstName &&
+                  viewingDetails.deployedBy?.firstName +
+                    ' ' +
+                    viewingDetails.deployedBy?.lastName) ||
+                  '—'}
+              </span>
+            </div>
+            <div>
+              <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
+                Assigned To
+              </span>
+              <span className="font-montserrat text-xs font-semibold text-slate-800 dark:text-slate-200">
+                {viewingDetails.assignedEmp?.firstName
+                  ? viewingDetails.assignedEmp?.firstName +
+                    ' ' +
+                    viewingDetails.assignedEmp?.lastName
+                  : '—'}
               </span>
             </div>
             <div>
@@ -114,27 +138,33 @@ export default function ViewItemsModal({
             </div>
             <div>
               <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                Assigned To
+                Serial Number
               </span>
-              <span className="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
-                {viewingDetails.assignedEmp?.firstName +
-                  ' ' +
-                  viewingDetails.assignedEmp?.lastName || '—'}
+              <span className="font-montserrat text-xs font-semibold text-slate-800 dark:text-slate-200">
+                {viewingDetails.serialNumber || '—'}
               </span>
             </div>
             <div>
               <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                Serial Number
+                Asset Condition
               </span>
-              <span className="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
-                {viewingDetails.serialNumber || '—'}
+              <span className="font-montserrat text-xs font-semibold text-slate-800 dark:text-slate-200">
+                {viewingDetails.assetCondition || '—'}
+              </span>
+            </div>
+            <div>
+              <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
+                Asset Classification (New/Old)
+              </span>
+              <span className="font-montserrat text-xs font-semibold text-slate-800 dark:text-slate-200">
+                {viewingDetails.isNew ? 'New' : 'Old'}
               </span>
             </div>
             <div>
               <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
                 Date Purchased
               </span>
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+              <span className="font-montserrat text-xs font-semibold text-slate-800 dark:text-slate-200">
                 {new Date(viewingDetails.datePurchased).toLocaleDateString()}
               </span>
             </div>
@@ -142,7 +172,7 @@ export default function ViewItemsModal({
               <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
                 Date Deployed
               </span>
-              <span className="font-mono text-xs font-semibold text-slate-800 dark:text-slate-200">
+              <span className="font-montserrat text-xs font-semibold text-slate-800 dark:text-slate-200">
                 {new Date(viewingDetails.dateDeployed).toLocaleDateString()}
               </span>
             </div>
@@ -150,7 +180,7 @@ export default function ViewItemsModal({
               <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
                 Last Updated
               </span>
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+              <span className="font-montserrat text-xs font-semibold text-slate-800 dark:text-slate-200">
                 {new Date(viewingDetails.updatedAt).toLocaleDateString()}
               </span>
             </div>
@@ -158,7 +188,7 @@ export default function ViewItemsModal({
               <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
                 Updated By
               </span>
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+              <span className="font-montserrat text-xs font-semibold text-slate-800 dark:text-slate-200">
                 {viewingDetails.updatedBy || '—'}
               </span>
             </div>
@@ -169,7 +199,13 @@ export default function ViewItemsModal({
             <span className="mb-2 block text-xs font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
               Description
             </span>
-            <div className="text-slate-755 max-h-40 overflow-y-auto rounded-xl border border-slate-200/40 bg-slate-50 p-4 text-sm leading-relaxed whitespace-pre-wrap dark:border-slate-800/40 dark:bg-slate-950/30 dark:text-slate-300">
+            <div
+              className={`max-h-40 overflow-y-auto rounded-xl border border-slate-200/40 bg-slate-50 p-4 text-sm leading-relaxed whitespace-pre-wrap dark:border-slate-800/40 dark:bg-slate-950/30 ${
+                viewingDetails.description
+                  ? 'text-slate-600 dark:text-slate-300'
+                  : 'text-slate-400 dark:text-slate-500'
+              }`}
+            >
               {viewingDetails.description || 'No description provided.'}
             </div>
           </div>
@@ -179,7 +215,13 @@ export default function ViewItemsModal({
             <span className="mb-2 block text-xs font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
               Remarks
             </span>
-            <div className="text-slate-755 max-h-40 overflow-y-auto rounded-xl border border-slate-200/40 bg-slate-50 p-4 text-sm leading-relaxed whitespace-pre-wrap dark:border-slate-800/40 dark:bg-slate-950/30 dark:text-slate-300">
+            <div
+              className={`max-h-40 overflow-y-auto rounded-xl border border-slate-200/40 bg-slate-50 p-4 text-sm leading-relaxed whitespace-pre-wrap dark:border-slate-800/40 dark:bg-slate-950/30 ${
+                viewingDetails.remarks
+                  ? 'text-slate-600 dark:text-slate-300'
+                  : 'text-slate-400 dark:text-slate-500'
+              }`}
+            >
               {viewingDetails.remarks || 'No remarks provided.'}
             </div>
           </div>

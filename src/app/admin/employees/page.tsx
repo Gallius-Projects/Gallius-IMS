@@ -11,11 +11,15 @@ import {
 import axiosInstance from '@/lib/axiosInstance';
 import { useUserContext } from '@/context/UserContext';
 import TableTemplate from '@/app/components/ui-templates/table-template';
-import AddEditEmployee from '@/app/components/modals/employees/add-edit-employee';
-import AddEditAccountModal from '@/app/components/modals/employees/account/add-edit-account';
+import AddEmployee from '@/app/components/modals/employees/add-employee';
+import EditEmployee from '@/app/components/modals/employees/edit-employee';
+import AddAccountModal from '@/app/components/modals/employees/account/add-account';
+import EditAccountModal from '@/app/components/modals/employees/account/edit-account';
+import { useLibrariesContext } from '@/context/LibrariesContext';
 
 interface Employee {
   id: number;
+  employeeId: string;
   firstName: string;
   lastName: string;
   middleName: string;
@@ -30,12 +34,13 @@ interface Account {
   id: number;
   username: string;
   roleId: number;
-  employeeId: number;
   status: boolean;
 }
 
 export default function EmployeesPage() {
   const { user, isAuthenticated } = useUserContext();
+  const { setOffices, setDepartments, setPositions, setRoles } =
+    useLibrariesContext();
 
   const [search, setSearch] = useState('');
 
@@ -44,20 +49,24 @@ export default function EmployeesPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Modal states
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isAccountFormOpen, setIsAccountFormOpen] = useState(false);
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-
-  // Form states
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
   const [accountFormMode, setAccountFormMode] = useState<'create' | 'edit'>(
     'create'
   );
+
+  // Modal states
+  const [isAddFormOpen, setIsAddFormOpen] = useState(false);
+  const [isEditFormOpen, setIsEditFormOpen] = useState(false);
+  const [isAddAccountFormOpen, setIsAddAccountFormOpen] = useState(false);
+  const [isEditAccountFormOpen, setIsEditAccountFormOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
+  // Form states
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(
     null
   );
   const [formData, setFormData] = useState({
+    employeeId: '',
     firstName: '',
     lastName: '',
     middleName: '',
@@ -72,19 +81,17 @@ export default function EmployeesPage() {
     username: '',
     password: '',
     roleId: '',
-    employeeId: '',
     status: true,
   });
 
-  const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const [accountFormError, setAccountFormError] = useState('');
 
   // Detail / Delete target state
   const [deletingEmployeeId, setDeletingEmployeeId] = useState<number | null>(
     null
   );
+
+  const [previousData, setPreviousData] = useState({});
 
   // Fetch Departments callback
   const fetchEmployees = useCallback(async () => {
@@ -95,8 +102,6 @@ export default function EmployeesPage() {
       const response = await axiosInstance.get('/employees', {
         params: { search },
       });
-
-      // console.log(response.data);
 
       setEmployees(response.data);
     } catch (err: any) {
@@ -114,18 +119,52 @@ export default function EmployeesPage() {
     fetchEmployees();
   }, [fetchEmployees]);
 
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      const response = await axiosInstance.get('/departments');
+      setDepartments(response.data);
+    };
+
+    fetchDepartments();
+  }, []);
+
+  useEffect(() => {
+    const fetchPositions = async () => {
+      const response = await axiosInstance.get('/positions');
+      setPositions(response.data);
+    };
+
+    fetchPositions();
+  }, []);
+
+  useEffect(() => {
+    const fetchOffices = async () => {
+      const response = await axiosInstance.get('/offices');
+      setOffices(response.data);
+    };
+
+    fetchOffices();
+  }, []);
+
+  useEffect(() => {
+    const fetchRoles = async () => {
+      const response = await axiosInstance.get('/roles');
+      setRoles(response.data);
+    };
+
+    fetchRoles();
+  }, []);
+
   // Open form for account creation
   const handleCreateAccountOpen = () => {
     setAccountFormData({
       username: '',
       password: '',
       roleId: '',
-      employeeId: '',
       status: true,
     });
-    setAccountFormError('');
     setAccountFormMode('create');
-    setIsAccountFormOpen(true);
+    setIsAddAccountFormOpen(true);
   };
 
   // Open form for account editing
@@ -143,7 +182,6 @@ export default function EmployeesPage() {
       username: oldAccountData.username,
       password: '',
       roleId: oldAccountData.roleId,
-      employeeId: oldAccountData.employeeId,
       status: oldAccountData.status,
     });
 
@@ -154,27 +192,25 @@ export default function EmployeesPage() {
     //   employeeId: oldAccountData.employeeId,
     //   status: oldAccountData.status,
     // });
-
-    setAccountFormError('');
-    setIsAccountFormOpen(true);
+    setIsEditAccountFormOpen(true);
   };
 
   const handleAccountClose = () => {
-    setIsAccountFormOpen(false);
+    setIsAddAccountFormOpen(false);
+    setIsEditAccountFormOpen(false);
     setAccountFormMode('create');
     setAccountFormData({
       username: '',
       password: '',
       roleId: '',
-      employeeId: '',
       status: true,
     });
-    setAccountFormError('');
   };
 
   // Open form for creation
   const handleCreateOpen = () => {
     setFormData({
+      employeeId: '',
       firstName: '',
       lastName: '',
       middleName: '',
@@ -184,9 +220,8 @@ export default function EmployeesPage() {
       positionId: '',
       status: false,
     });
-    setFormError('');
     setFormMode('create');
-    setIsFormOpen(true);
+    setIsAddFormOpen(true);
   };
 
   // Open form for editing
@@ -196,31 +231,9 @@ export default function EmployeesPage() {
     );
     const oldEmployeeData = getOldEmployee.data;
 
-    setOldEmployee(oldEmployeeData);
+    setPreviousData(oldEmployeeData);
 
-    setFormMode('edit');
-    setSelectedEmployeeId(employee.id);
-    setFormData({
-      firstName: employee.firstName,
-      lastName: employee.lastName,
-      middleName: employee.middleName,
-      suffix: employee.suffix,
-      officeId: employee.officeId,
-      departmentId: employee.departmentId,
-      positionId: employee.positionId,
-      status: employee.status,
-    });
-
-    setOfficeSearch(oldEmployeeData?.office?.name || employee?.office || '');
-    setDepartmentSearch(
-      oldEmployeeData?.department?.name || employee?.department || ''
-    );
-    setCategorySearch(
-      oldEmployeeData?.position?.name || employee?.position || ''
-    );
-
-    setFormError('');
-    setIsFormOpen(true);
+    setIsEditFormOpen(true);
   };
 
   // Open delete confirm
@@ -253,7 +266,8 @@ export default function EmployeesPage() {
           updatedBy: user?.id ?? '',
         });
       }
-      setIsFormOpen(false);
+      setIsAddFormOpen(false);
+      setIsEditFormOpen(false);
       fetchEmployees();
     } catch (err: any) {
       setFormError(err.message || 'Failed to save employee');
@@ -280,9 +294,11 @@ export default function EmployeesPage() {
   };
 
   const handleClose = () => {
-    setIsFormOpen(false);
+    setIsAddFormOpen(false);
+    setIsEditFormOpen(false);
     setFormMode('create');
     setFormData({
+      employeeId: '',
       firstName: '',
       lastName: '',
       middleName: '',
@@ -292,7 +308,6 @@ export default function EmployeesPage() {
       positionId: '',
       status: false,
     });
-    setFormError('');
     setSelectedEmployeeId(null);
     setDeletingEmployeeId(null);
   };
@@ -309,7 +324,7 @@ export default function EmployeesPage() {
       header: 'Employee',
       accessor: 'firstName',
       dataType: 'string',
-      fontStyle: 'bold',
+      fontStyle: 'semibold',
       secondary: 'lastName',
       emphasizeLevel: 'high',
     },
@@ -333,6 +348,13 @@ export default function EmployeesPage() {
       dataType: 'boolean',
       fontStyle: 'normal',
       emphasizeLevel: 'medium',
+    },
+    {
+      header: 'Account Status',
+      accessor: 'accountStatus',
+      dataType: 'boolean',
+      fontStyle: 'normal',
+      emphasizeLevel: 'high',
     },
     {
       header: 'Created At',
@@ -429,20 +451,32 @@ export default function EmployeesPage() {
       </main>
 
       {/* FORM MODAL (Add / Edit) */}
-      {isFormOpen && (
-        <AddEditEmployee
+      {isAddFormOpen && (
+        <AddEmployee
           formMode={formMode}
           formData={formData}
           setFormData={setFormData}
           handleClose={handleClose}
-          handleFormSubmit={handleFormSubmit}
-          formError={formError}
+          fetchEmployees={fetchEmployees}
           isSubmitting={isSubmitting}
+          setIsSubmitting={setIsSubmitting}
+        />
+      )}
+      {isEditFormOpen && (
+        <EditEmployee
+          formMode={formMode}
+          formData={formData}
+          setFormData={setFormData}
+          handleClose={handleClose}
+          fetchEmployees={fetchEmployees}
+          isSubmitting={isSubmitting}
+          setIsSubmitting={setIsSubmitting}
+          dataToUpdate={previousData}
         />
       )}
 
-      {isAccountFormOpen && (
-        <AddEditAccountModal
+      {isAddAccountFormOpen && (
+        <AddAccountModal
           accountFormMode={accountFormMode}
           accountFormData={accountFormData}
           setAccountFormData={setAccountFormData}
@@ -451,6 +485,19 @@ export default function EmployeesPage() {
           accountFormError={accountFormError}
           setAccountFormError={setAccountFormError}
           isSubmitting={isSubmitting}
+        />
+      )}
+      {isEditAccountFormOpen && (
+        <EditAccountModal
+          accountFormMode={accountFormMode}
+          accountFormData={accountFormData}
+          setAccountFormData={setAccountFormData}
+          handleCreateAccountOpen={handleCreateAccountOpen}
+          handleClose={handleAccountClose}
+          accountFormError={accountFormError}
+          setAccountFormError={setAccountFormError}
+          isSubmitting={isSubmitting}
+          dataToUpdate={previousAccountData}
         />
       )}
 

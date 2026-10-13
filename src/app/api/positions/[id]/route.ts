@@ -78,7 +78,7 @@ export async function PUT(
 
     if (!normalizedBody?.name) {
       return NextResponse.json(
-        { error: 'position name is required' },
+        { error: 'Position name is required' },
         { status: 400 }
       );
     }

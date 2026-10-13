@@ -214,7 +214,7 @@ export default function CategoriesPage() {
       accessor: 'createdAt',
       header: 'Created At',
       dataType: 'date',
-      fontStyle: 'regular',
+      fontStyle: 'normal',
       fontSize: 'xs',
       emphasizeLevel: 'none',
     },
@@ -222,21 +222,21 @@ export default function CategoriesPage() {
       accessor: 'updatedAt',
       header: 'Updated At',
       dataType: 'date',
-      fontStyle: 'regular',
+      fontStyle: 'normal',
       fontSize: 'xs',
       emphasizeLevel: 'none',
     },
     {
-      accessor: 'updatedBy',
       header: 'Updated By',
-      dataType: 'object',
-      fontStyle: 'regular',
+      accessor: 'updatedBy',
+      dataType: 'string',
+      fontStyle: 'normal',
       fontSize: 'xs',
-      emphasizeLevel: 'medium',
-      customCell: (value: any) =>
-        value?.employee?.firstName + ' ' + value?.employee?.lastName || '--',
+      emphasizeLevel: 'normal',
     },
   ];
+
+  // console.log(categories);
 
   return (
     <div className="flex max-h-screen min-h-screen flex-col bg-slate-50/50 px-4 py-8 font-sans text-slate-900 transition-all duration-300 sm:px-6 lg:px-8 dark:bg-slate-950 dark:text-slate-100">
@@ -297,16 +297,7 @@ export default function CategoriesPage() {
 
         {/* Table Container */}
         <TableTemplate
-          rows={categories.map((category) => {
-            return {
-              ...category,
-              updatedBy: category.updatedBy
-                ? category.updatedBy?.employee?.firstName +
-                  ' ' +
-                  category.updatedBy?.employee?.lastName
-                : '--',
-            };
-          })}
+          rows={categories}
           columns={columns}
           isLoading={isLoading}
           tableName="Categories"

@@ -79,7 +79,7 @@ export default function AddEditCategory({
                 <input
                   type="text"
                   required
-                  placeholder="e.g. MTN"
+                  placeholder="e.g. MNT"
                   value={formData.abbreviation}
                   onChange={(e) =>
                     setFormData({ ...formData, abbreviation: e.target.value })

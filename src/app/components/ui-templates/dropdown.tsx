@@ -1,3 +1,4 @@
+import { ChevronDown } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 export default function Dropdown({
@@ -19,26 +20,26 @@ export default function Dropdown({
 
   const [showOptions, setShowOptions] = useState(false);
 
-  //   useEffect(() => {
-  //     const handleClickOutside = (event: MouseEvent) => {
-  //       if (
-  //         dropdownRef.current &&
-  //         !dropdownRef.current.contains(event.target as Node)
-  //       ) {
-  //         setShowOptions(false);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowOptions(false);
 
-  //         if (!value) {
-  //           onChange('');
-  //         }
-  //       }
-  //     };
+        // if (!value) {
+        //   onChange('');
+        // }
+      }
+    };
 
-  //     document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
 
-  //     return () => {
-  //       document.removeEventListener('mousedown', handleClickOutside);
-  //     };
-  //   }, [showOptions]);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [dropdownRef]);
 
   return (
     <div ref={dropdownRef}>
@@ -61,19 +62,38 @@ export default function Dropdown({
         />
 
         {/* Clear button */}
-        {value && (
+        <div className="absolute top-1/2 right-3 flex -translate-y-1/2 gap-2">
+          {value && (
+            <button
+              type="button"
+              onClick={() => {
+                // onChange(null);
+                setShowOptions(true);
+              }}
+              className="cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              aria-label={`Clear ${label.toLowerCase()}`}
+            >
+              ✕
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => {
-              onChange('');
-              setShowOptions(false);
+              setShowOptions(!showOptions);
             }}
-            className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-            aria-label="Clear category"
+            className="cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            aria-label="Toggle dropdown"
           >
-            ✕
+            <ChevronDown
+              className={
+                showOptions
+                  ? 'h-4 w-4 rotate-180 transition-transform duration-300'
+                  : 'h-4 w-4 transition-transform duration-300'
+              }
+            />
           </button>
-        )}
+        </div>
 
         {showOptions && (
           <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-950">

@@ -1,13 +1,12 @@
 import { useUserContext } from '@/context/UserContext';
 import { AlertCircle, Loader2, X } from 'lucide-react';
 
-import Flatpickr from 'react-flatpickr';
-import 'flatpickr/dist/flatpickr.css';
 import dayjs from 'dayjs';
 import SearchableDropdown from '../../ui-templates/searchable-dropdown';
-import axiosInstance from '@/lib/axiosInstance';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import Dropdown from '../../ui-templates/dropdown';
+import { useLibrariesContext } from '@/context/LibrariesContext';
+import DatePicker from 'react-datepicker';
 
 interface EditItemsModalProps {
   formMode?: 'create' | 'edit';
@@ -26,6 +25,8 @@ interface EditItemsModalProps {
     location: { id: number; name: string } | null;
     officeId: number | null;
     office: { id: number; name: string } | null;
+    supplierId: number | null;
+    supplier: { id: number; name: string } | null;
     status: string;
     assignedTo: number | null;
     remarks: string;
@@ -50,7 +51,7 @@ interface EditItemsModalProps {
 }
 
 export default function EditItemsModal({
-  formMode = 'create',
+  formMode,
   isOpen = false,
   formData = {
     name: '',
@@ -80,164 +81,43 @@ export default function EditItemsModal({
   isSubmitting = false,
   statuses,
   editNewAsset,
-  categories,
   setEditNewAsset,
+  categories,
   handleGenerateAssetTag = () => {},
   handleClose,
   handleFormSubmit,
   itemToUpdate,
 }: EditItemsModalProps) {
   const { user } = useUserContext();
+  const { brands, locations, suppliers, offices, employees } =
+    useLibrariesContext();
 
   const modalRef = useRef<HTMLDivElement>(null);
 
-  const [itemDetails, setItemDetails] = useState([]);
-
-  const [brands, setBrands] = useState([]);
-  const [locations, setLocations] = useState([]);
-  const [suppliers, setSuppliers] = useState([]);
-  const [offices, setOffices] = useState([]);
-  const [employees, setEmployees] = useState([]);
-
-  const [employeeSearch, setEmployeeSearch] = useState('');
-  const [deployedBySearch, setDeployedBySearch] = useState('');
-  const [categorySearch, setCategorySearch] = useState('');
-  const [brandSearch, setBrandSearch] = useState('');
-  const [supplierSearch, setSupplierSearch] = useState('');
-  const [officeSearch, setOfficeSearch] = useState('');
-  const [locationSearch, setLocationSearch] = useState('');
-
   useEffect(() => {
-    console.log(formMode);
-    if (formMode === 'edit') {
-      console.log(formMode);
-
-      // const handleEmbedItemDetails = async () => {
-      //   const getOldItem = await axiosInstance.get(`/items/${item.id}`);
-      //   const oldItemData = getOldItem.data;
-
-      //   setItemDetails(oldItemData);
-
-      //   console.log(oldItemData);
-
-      //   setFormData({
-      //     name: itemToUpdate?.name || '',
-      //     oldAssetTag: itemToUpdate?.oldAssetTag || '',
-      //     newAssetTag: itemToUpdate?.newAssetTag || '',
-      //     serialNumber: itemToUpdate?.serialNumber || '',
-      //     hostname: itemToUpdate?.hostname || '',
-      //     status: itemToUpdate?.status.toUpperCase() || '',
-      //     categoryId: itemToUpdate?.categoryId || null,
-      //     brandId: itemToUpdate?.brand?.id || null,
-      //     locationId: itemToUpdate?.locationId || null,
-      //     officeId: itemToUpdate?.office?.id || null,
-      //     supplierId: itemToUpdate?.supplier?.id || null,
-      //     datePurchased: itemToUpdate?.datePurchased || null,
-      //     dateDeployed: itemToUpdate?.dateDeployed || null,
-      //     invoiceNo: itemToUpdate?.invoiceNo || '',
-      //     assetCondition: itemToUpdate?.assetCondition || '',
-      //     isNew: itemToUpdate?.isNew ?? true,
-      //     assignedTo: itemToUpdate?.assignedEmp?.id || null,
-      //     description: itemToUpdate?.description || '',
-      //     remarks: itemToUpdate?.remarks || '',
-      //   });
-
-      //   setCategorySearch(itemToUpdate?.category?.name || '');
-      //   setBrandSearch(itemToUpdate?.brand?.name || '');
-      //   setLocationSearch(itemToUpdate?.location?.name || '');
-      //   setOfficeSearch(itemToUpdate?.office?.name || '');
-      //   setSupplierSearch(itemToUpdate?.supplier?.name || '');
-      //   setEmployeeSearch(
-      //     `${itemToUpdate?.assignedEmp?.firstName} ${itemToUpdate?.assignedEmp?.lastName}` ||
-      //       ''
-      //   );
-      // };
-
-      // handleEmbedItemDetails();
-
-      console.log(itemToUpdate);
-
-      setFormData({
-        name: itemToUpdate?.name || '',
-        oldAssetTag: itemToUpdate?.oldAssetTag || '',
-        newAssetTag: itemToUpdate?.newAssetTag || '',
-        serialNumber: itemToUpdate?.serialNumber || '',
-        hostname: itemToUpdate?.hostname || '',
-        status: itemToUpdate?.status.toUpperCase() || '',
-        categoryId: itemToUpdate?.categoryId || null,
-        brandId: itemToUpdate?.brand?.id || null,
-        locationId: itemToUpdate?.locationId || null,
-        officeId: itemToUpdate?.office?.id || null,
-        supplierId: itemToUpdate?.supplier?.id || null,
-        datePurchased: itemToUpdate?.datePurchased || null,
-        dateDeployed: itemToUpdate?.dateDeployed || null,
-        invoiceNo: itemToUpdate?.invoiceNo || '',
-        assetCondition: itemToUpdate?.assetCondition || '',
-        isNew: itemToUpdate?.isNew ?? true,
-        assignedTo: itemToUpdate?.assignedEmp?.id || null,
-        description: itemToUpdate?.description || '',
-        remarks: itemToUpdate?.remarks || '',
-      });
-
-      setCategorySearch(itemToUpdate?.category?.name || '');
-      setBrandSearch(itemToUpdate?.brand?.name || '');
-      setLocationSearch(itemToUpdate?.location?.name || '');
-      setOfficeSearch(itemToUpdate?.office?.name || '');
-      setSupplierSearch(itemToUpdate?.supplier?.name || '');
-      setEmployeeSearch(
-        `${itemToUpdate?.assignedEmp?.firstName} ${itemToUpdate?.assignedEmp?.lastName}` ||
-          ''
-      );
-    }
-  }, [formData, itemToUpdate, isOpen, formMode]);
-
-  // console.log(itemToUpdate);
-  // console.log(itemDetails);
-
-  useEffect(() => {
-    const fetchBrands = async () => {
-      const response = await axiosInstance.get('/brands');
-      setBrands(response.data);
-    };
-
-    fetchBrands();
-  }, []);
-
-  useEffect(() => {
-    const fetchLocations = async () => {
-      const response = await axiosInstance.get('/locations');
-      setLocations(response.data);
-    };
-
-    fetchLocations();
-  }, []);
-
-  useEffect(() => {
-    const fetchOffices = async () => {
-      const response = await axiosInstance.get('/offices');
-      setOffices(response.data);
-    };
-
-    fetchOffices();
-  }, []);
-
-  useEffect(() => {
-    const fetchSuppliers = async () => {
-      const response = await axiosInstance.get('/suppliers');
-      setSuppliers(response.data);
-    };
-
-    fetchSuppliers();
-  }, []);
-
-  useEffect(() => {
-    const fetchEmployees = async () => {
-      const response = await axiosInstance.get('/employees');
-      setEmployees(response.data);
-    };
-
-    fetchEmployees();
-  }, []);
+    // console.log(itemToUpdate);
+    setFormData({
+      name: itemToUpdate?.name || '',
+      oldAssetTag: itemToUpdate?.oldAssetTag || '',
+      newAssetTag: itemToUpdate?.newAssetTag || '',
+      serialNumber: itemToUpdate?.serialNumber || '',
+      hostname: itemToUpdate?.hostname || '',
+      status: itemToUpdate?.status.toUpperCase() || '',
+      categoryId: itemToUpdate?.categoryId || null,
+      brandId: itemToUpdate?.brand?.id || null,
+      locationId: itemToUpdate?.locationId || null,
+      officeId: itemToUpdate?.office?.id || null,
+      supplierId: itemToUpdate?.supplier?.id || null,
+      datePurchased: itemToUpdate?.datePurchased || null,
+      dateDeployed: itemToUpdate?.dateDeployed || null,
+      invoiceNo: itemToUpdate?.invoiceNo || '',
+      assetCondition: itemToUpdate?.assetCondition || '',
+      isNew: itemToUpdate?.isNew ?? true,
+      assignedTo: itemToUpdate?.assignedEmp?.id || null,
+      description: itemToUpdate?.description || '',
+      remarks: itemToUpdate?.remarks || '',
+    });
+  }, [itemToUpdate, isOpen]);
 
   const assetConditions = [
     { id: 1, name: 'Excellent' },
@@ -313,90 +193,82 @@ export default function EditItemsModal({
               {/* Category */}
               <SearchableDropdown
                 label="Category"
+                placeholder="Select Category"
                 data={categories}
-                // ref={categoryRef}
-                search={categorySearch}
-                setSearch={setCategorySearch}
+                value={formData.categoryId || null}
                 onChange={(value: any) => {
                   setFormData({
                     ...formData,
                     categoryId: parseInt(value),
                   });
                 }}
-                placeholder="Select Category"
                 required
               />
 
               {/* Brand */}
               <SearchableDropdown
                 label="Brand"
-                data={brands}
-                // ref={brandRef}
-                search={brandSearch}
-                setSearch={setBrandSearch}
                 placeholder="Select Brand"
-                required
+                data={brands}
+                value={formData.brandId || null}
                 onChange={(value: any) => {
                   setFormData({
                     ...formData,
                     brandId: parseInt(value),
                   });
                 }}
+                required
               />
 
               {/* Supplier */}
               <SearchableDropdown
                 label="Supplier"
-                data={suppliers}
-                // ref={supplierRef}
-                search={supplierSearch}
-                setSearch={setSupplierSearch}
                 placeholder="Select Supplier"
-                required
+                data={suppliers}
+                value={formData.supplierId || null}
                 onChange={(value: any) => {
                   setFormData({
                     ...formData,
                     supplierId: parseInt(value),
                   });
                 }}
+                required
               />
 
               {/* Offices */}
               <SearchableDropdown
                 label="Tenant"
-                data={offices}
-                // ref={officeRef}
-                search={officeSearch}
-                setSearch={setOfficeSearch}
                 placeholder="Select Tenant"
-                required
+                data={offices}
+                value={formData.officeId || null}
                 onChange={(value: any) => {
                   setFormData({
                     ...formData,
                     officeId: parseInt(value),
                   });
                 }}
+                required
               />
 
               {/* Location */}
               <SearchableDropdown
                 label="Location"
-                data={locations}
-                // ref={locationRef}
-                value={locationSearch}
                 placeholder="Select Location"
-                required
+                data={locations}
+                value={formData.locationId || null}
                 onChange={(value: any) => {
                   setFormData({
                     ...formData,
                     locationId: parseInt(value),
                   });
                 }}
+                required
               />
 
               {/* Status */}
               <Dropdown
                 label="Status"
+                placeholder="Select Status"
                 data={statuses}
                 value={
                   formData?.status
@@ -415,7 +287,6 @@ export default function EditItemsModal({
                     status: value ? value?.name?.toUpperCase() : '',
                   });
                 }}
-                placeholder="Select Status"
                 required
               />
 
@@ -432,7 +303,6 @@ export default function EditItemsModal({
                       setFormData({
                         ...formData,
                         isNew: true,
-                        oldAssetTag: '',
                       });
                       handleGenerateAssetTag();
                     }}
@@ -452,7 +322,6 @@ export default function EditItemsModal({
                       setFormData({
                         ...formData,
                         isNew: false,
-                        newAssetTag: '',
                       });
                     }}
                     aria-pressed={!formData.isNew}
@@ -468,72 +337,59 @@ export default function EditItemsModal({
               </div>
 
               {/* New Asset Tag */}
-              {/* Old Asset Tag */}
-              {formData.isNew ? (
-                <div className="col-span-2">
-                  <div className="flex flex-row items-center justify-between gap-2">
-                    <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                      NEW ASSET TAG
-                    </label>
+              <div className="col-span-2">
+                <div className="flex flex-row items-center justify-between gap-2">
+                  <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
+                    NEW ASSET TAG
+                  </label>
 
-                    {(user?.role.includes('superadmin') ||
-                      user?.role.includes('admin')) && (
-                      <div className="flex flex-row items-center gap-2">
-                        <button
-                          type="button"
-                          className="cursor-pointer text-xs text-slate-500 hover:text-slate-600 hover:underline dark:text-slate-400 dark:hover:text-slate-200"
-                          onClick={() => handleGenerateAssetTag()}
-                        >
-                          Generate
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setEditNewAsset(!editNewAsset)}
-                          className="cursor-pointer text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                          title={`${editNewAsset ? 'Make uneditable' : 'Make editable'}`}
-                        >
-                          {editNewAsset ? 'Editable' : 'Uneditable'}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="Click 'Generate' to generate an asset tag"
-                      value={formData.newAssetTag || ''}
-                      disabled={!editNewAsset}
-                      onChange={(e) => {
-                        if (
-                          (user?.role.includes('superadmin') ||
-                            user?.role.includes('admin')) &&
-                          editNewAsset
-                        ) {
-                          setFormData({
-                            ...formData,
-                            newAssetTag: e.target.value,
-                          });
-                        }
-                      }}
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                    />
-
-                    <div className="absolute top-1/2 right-3 flex -translate-y-1/2 gap-2">
-                      {/* <button
+                  {(user?.role.includes('superadmin') ||
+                    user?.role.includes('admin')) && (
+                    <div className="flex flex-row items-center gap-2">
+                      <button
+                        type="button"
+                        className="cursor-pointer text-xs text-slate-500 hover:text-slate-600 hover:underline dark:text-slate-400 dark:hover:text-slate-200"
+                        onClick={() => handleGenerateAssetTag()}
+                      >
+                        Generate
+                      </button>
+                      <button
                         type="button"
                         onClick={() => setEditNewAsset(!editNewAsset)}
-                        className="cursor-pointer text-sm text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                        className="cursor-pointer text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                         title={`${editNewAsset ? 'Make uneditable' : 'Make editable'}`}
                       >
-                        {editNewAsset ? (
-                          <PencilOff className="h-4 w-4" />
-                        ) : (
-                          <Pencil className="h-4 w-4" />
-                        )}
-                      </button> */}
+                        {editNewAsset ? 'Editable' : 'Uneditable'}
+                      </button>
+                    </div>
+                  )}
+                </div>
 
-                      {formData?.newAssetTag && editNewAsset && (
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Click 'Generate' to generate an asset tag"
+                    value={formData.newAssetTag || ''}
+                    disabled={!editNewAsset}
+                    onChange={(e) => {
+                      if (
+                        (user?.role.includes('superadmin') ||
+                          user?.role.includes('admin')) &&
+                        editNewAsset
+                      ) {
+                        setFormData({
+                          ...formData,
+                          newAssetTag: e.target.value,
+                        });
+                      }
+                    }}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                  />
+
+                  <div className="absolute top-1/2 right-3 flex -translate-y-1/2 gap-2">
+                    {formData?.newAssetTag &&
+                      (user.role.includes('superadmin') ||
+                        user.role.includes('admin')) && (
                         <button
                           type="button"
                           onClick={() => {
@@ -548,16 +404,16 @@ export default function EditItemsModal({
                           ✕
                         </button>
                       )}
-                    </div>
                   </div>
                 </div>
-              ) : (
-                <div className="col-span-2">
-                  <div className="flex flex-row items-center justify-between gap-2">
-                    <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                      Old Asset Tag
-                    </label>
-                  </div>
+              </div>
+
+              {/* Old Asset Tag */}
+              <div className="col-span-2">
+                <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
+                  Old Asset Tag
+                </label>
+                <div className="relative">
                   <input
                     type="text"
                     placeholder="e.g. GS-OA-26-L0001"
@@ -575,8 +431,24 @@ export default function EditItemsModal({
                     }}
                     className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                   />
+
+                  {formData?.oldAssetTag && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData({
+                          ...formData,
+                          oldAssetTag: '',
+                        });
+                      }}
+                      className="absolute top-1/2 right-3 flex -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                      aria-label="Clear old asset tag"
+                    >
+                      ✕
+                    </button>
+                  )}
                 </div>
-              )}
+              </div>
 
               {/* Hostname */}
               <div>
@@ -616,15 +488,12 @@ export default function EditItemsModal({
               {/* Employee Select */}
               <SearchableDropdown
                 label="Assigned to"
+                placeholder="Select Employee"
                 data={employees.map((emp: any) => ({
                   ...emp,
                   name: `${emp?.firstName} ${emp?.lastName}`,
                 }))}
-                // ref={employeeRef}
-                search={employeeSearch}
-                setSearch={setEmployeeSearch}
-                placeholder="Select Employee"
-                required
+                value={formData.assignedTo || null}
                 onChange={(value: any) => {
                   setFormData({
                     ...formData,
@@ -636,14 +505,12 @@ export default function EditItemsModal({
               {/* Deployed By */}
               <SearchableDropdown
                 label="Deployed by"
+                placeholder="Select Deployer"
                 data={employees.map((emp: any) => ({
                   ...emp,
                   name: `${emp?.firstName} ${emp?.lastName}`,
                 }))}
-                // ref={deployedByRef}
-                value={deployedBySearch}
-                placeholder="Select Deployee"
-                required
+                value={formData.deployedBy || null}
                 onChange={(value: any) => {
                   setFormData({
                     ...formData,
@@ -658,24 +525,23 @@ export default function EditItemsModal({
                   Date Purchased
                 </label>
                 <div className="relative w-full">
-                  <Flatpickr
-                    placeholder="Select Date"
-                    value={formData?.datePurchased || ''}
-                    className="mr-0 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                    options={{
-                      dateFormat: 'm-d-Y',
-                      locale: 'en',
-                      onChange(date) {
-                        console.log(dayjs(date[0]).toISOString());
-
-                        setFormData({
-                          ...formData,
-                          datePurchased: date
-                            ? dayjs(date[0]).toISOString()
-                            : null,
-                        });
-                      },
+                  <DatePicker
+                    placeholderText="Select Date"
+                    selected={
+                      formData?.datePurchased
+                        ? new Date(formData.datePurchased)
+                        : null
+                    }
+                    onChange={(date) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        datePurchased: date ? dayjs(date).toISOString() : null,
+                      }));
                     }}
+                    dateFormat="MM-dd-yyyy"
+                    showPopperArrow={false}
+                    wrapperClassName="w-full"
+                    className="mr-0 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                   />
 
                   {formData.datePurchased && (
@@ -702,24 +568,23 @@ export default function EditItemsModal({
                   Date Deployed
                 </label>
                 <div className="relative w-full">
-                  <Flatpickr
-                    placeholder="Select Date"
-                    value={formData?.dateDeployed || ''}
-                    className="mr-0 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
-                    options={{
-                      dateFormat: 'm-d-Y',
-                      locale: 'en',
-                      onChange(date) {
-                        console.log(dayjs(date[0]).toISOString());
-
-                        setFormData({
-                          ...formData,
-                          dateDeployed: date
-                            ? dayjs(date[0]).toISOString()
-                            : null,
-                        });
-                      },
+                  <DatePicker
+                    placeholderText="Select Date"
+                    selected={
+                      formData?.dateDeployed
+                        ? new Date(formData.dateDeployed)
+                        : null
+                    }
+                    onChange={(date) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        dateDeployed: date ? dayjs(date).toISOString() : null,
+                      }));
                     }}
+                    dateFormat="MM-dd-yyyy"
+                    showPopperArrow={false}
+                    wrapperClassName="w-full"
+                    className="mr-0 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                   />
 
                   {formData.dateDeployed && (

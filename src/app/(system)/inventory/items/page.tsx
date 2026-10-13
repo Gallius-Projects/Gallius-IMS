@@ -11,9 +11,10 @@ import {
 } from 'lucide-react';
 import axiosInstance from '@/lib/axiosInstance';
 import { useUserContext } from '@/context/UserContext';
+import { useLibrariesContext } from '@/context/LibrariesContext';
 import TableTemplate from '@/app/components/ui-templates/table-template';
 import ViewItemsModal from '@/app/components/modals/items/view-items-modal';
-import AddEditItemsModal from '@/app/components/modals/items/add-edit-items-modal';
+import AddEditItemsModal from '@/app/components/modals/items/add-items-modal';
 import EditItemsModal from '@/app/components/modals/items/edit-items-modal';
 
 interface InventoryItem {
@@ -45,6 +46,7 @@ interface InventoryItem {
 export default function ItemsPage() {
   // Auth check
   const { user, isAuthenticated } = useUserContext();
+  const { categories } = useLibrariesContext();
 
   // Data states
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -61,6 +63,8 @@ export default function ItemsPage() {
   const [isFormEditOpen, setIsFormEditOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
+  const [editNewAsset, setEditNewAsset] = useState(false);
 
   // Form states
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
@@ -97,26 +101,6 @@ export default function ItemsPage() {
   const [deletingItemId, setDeletingItemId] = useState<number | null>(null);
 
   const [itemToUpdate, setItemToUpdate] = useState<any>(null);
-  const [editNewAsset, setEditNewAsset] = useState(false);
-
-  const [categories, setCategories] = useState([]);
-
-  const [employeeSearch, setEmployeeSearch] = useState('');
-  const [deployedBySearch, setDeployedBySearch] = useState('');
-  const [categorySearch, setCategorySearch] = useState('');
-  const [brandSearch, setBrandSearch] = useState('');
-  const [supplierSearch, setSupplierSearch] = useState('');
-  const [officeSearch, setOfficeSearch] = useState('');
-  const [locationSearch, setLocationSearch] = useState('');
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      const response = await axiosInstance.get('/categories');
-      setCategories(response.data);
-    };
-
-    fetchCategories();
-  }, []);
 
   // Statuses list
   const statuses = [
@@ -164,6 +148,7 @@ export default function ItemsPage() {
       if (selectedStatus) params.status = selectedStatus;
 
       const response = await axiosInstance.get('/items', { params });
+      // console.log(response.data);
       setItems(response.data);
     } catch (err: any) {
       console.error('Fetch items error:', err);
@@ -207,34 +192,31 @@ export default function ItemsPage() {
 
   // Open form for editing
   const handleEditOpen = async (item: InventoryItem) => {
-    setFormMode('edit');
-    setSelectedItemId(item.id);
+    try {
+      const response = await axiosInstance.get(`/items/${item.id}`);
+      const oldItemData = response.data;
 
-    console.log('this is triggered');
+      setFormMode('edit');
+      setSelectedItemId(item.id);
+      setItemToUpdate(oldItemData);
 
-    const getOldItem = await axiosInstance.get(`/items/${item.id}`);
-    const oldItemData = getOldItem.data;
+      // setCategorySearch(oldItemData?.category?.name || '');
+      // setBrandSearch(oldItemData?.brand?.name || '');
+      // setLocationSearch(oldItemData?.location?.name || '');
+      // setOfficeSearch(oldItemData?.office?.name || '');
+      // setSupplierSearch(oldItemData?.supplier?.name || '');
 
-    setItemToUpdate(oldItemData);
+      // setEmployeeSearch(
+      //   oldItemData?.assignedEmp
+      //     ? `${oldItemData.assignedEmp.firstName} ${oldItemData.assignedEmp.lastName}`
+      //     : ''
+      // );
 
-    // Set the displayed dropdown values
-    setCategorySearch(oldItemData?.category?.name || item?.category || '');
-    setBrandSearch(oldItemData?.brand?.name || item?.brand?.name || '');
-    setLocationSearch(
-      oldItemData?.location?.name || item?.location?.name || ''
-    );
-    setOfficeSearch(oldItemData?.office?.name || item?.office?.name || '');
-    setSupplierSearch(
-      oldItemData?.supplier?.name || item?.supplier?.name || ''
-    );
-    setEmployeeSearch(
-      `${oldItemData?.assignedEmp?.firstName} ${oldItemData?.assignedEmp?.lastName}` ||
-        `${item?.assignedEmp?.firstName} ${item?.assignedEmp?.lastName}` ||
-        ''
-    );
-
-    setFormError('');
-    setIsFormEditOpen(true);
+      setFormError('');
+      setIsFormEditOpen(true);
+    } catch (error) {
+      console.error('Failed to get item:', error);
+    }
   };
 
   // Open details modal
@@ -293,38 +275,14 @@ export default function ItemsPage() {
   const handleClose = () => {
     setIsFormCreateOpen(false);
     setIsFormEditOpen(false);
-    setFormMode('create');
-    setFormData({
-      name: '',
-      oldAssetTag: '',
-      newAssetTag: '',
-      serialNumber: '',
-      hostname: '',
-      status: '',
-      categoryId: null,
-      brandId: null,
-      locationId: null,
-      officeId: null,
-      supplierId: null,
-      description: '',
-      assignedTo: null,
-      isNew: true,
-      datePurchased: null,
-      dateDeployed: null,
-      invoiceNo: '',
-      assetCondition: '',
-      remarks: '',
-    });
     setFormError('');
     setSelectedItemId(null);
     setItemToUpdate(null);
   };
 
   const handleGenerateAssetTag = async () => {
-    if (
-      (user?.role.includes('superadmin') && formData.isNew && editNewAsset) ||
-      (user?.role.includes('admin') && formData.isNew)
-    ) {
+    if (user?.role.includes('superadmin') || user?.role.includes('admin')) {
+      console.log('Generating new asset tag');
       if (!formData.categoryId || !formData.officeId || !formData.locationId) {
         setFormError('Please select an tenant, category, and location');
         setFormData((prev) => {
@@ -414,9 +372,26 @@ export default function ItemsPage() {
       accessor: 'status',
       dataType: 'string',
     },
+    {
+      header: 'Created At',
+      accessor: 'createdAt',
+      dataType: 'date',
+      fontStyle: 'normal',
+      fontSize: 'xs',
+      emphasizeLevel: 'normal',
+    },
+    {
+      header: 'Last Updated',
+      accessor: 'updatedAt',
+      dataType: 'date',
+      fontStyle: 'normal',
+      fontSize: 'xs',
+      emphasizeLevel: 'normal',
+    },
   ];
 
-  // console.log(formData);
+  console.log(formData);
+
   return (
     <div className="flex max-h-screen min-h-screen flex-col bg-slate-50/50 px-4 py-8 font-sans text-slate-900 transition-all duration-300 sm:px-6 lg:px-8 dark:bg-slate-950 dark:text-slate-100">
       <div className="mb-6 flex w-fit gap-2 border-b-2 border-slate-300 pr-2 pb-2 dark:border-slate-700">

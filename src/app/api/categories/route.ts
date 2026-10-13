@@ -51,9 +51,9 @@ export async function GET(req: Request) {
         createdAt: latestLog?.createdAt,
         updatedAt: latestLog?.updatedAt,
         updatedBy: latestLog?.involvedUser?.employee
-          ? latestLog?.involvedUser?.employee.firstName +
+          ? latestLog?.involvedUser?.employee?.firstName +
             ' ' +
-            latestLog?.involvedUser?.employee.lastName
+            latestLog?.involvedUser?.employee?.lastName
           : '--',
       };
     });

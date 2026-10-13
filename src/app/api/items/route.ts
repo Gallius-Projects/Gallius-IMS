@@ -73,8 +73,8 @@ export async function GET(req: Request) {
         updatedAt: latestLog?.updatedAt,
         updatedBy: latestLog?.involvedUser?.employee
           ? latestLog?.involvedUser?.employee.firstName +
-          ' ' +
-          latestLog?.involvedUser?.employee.lastName
+            ' ' +
+            latestLog?.involvedUser?.employee.lastName
           : '--',
       };
     });
@@ -113,6 +113,7 @@ export async function POST(req: Request) {
       locationId,
       officeId,
       supplierId,
+      deployedBy,
       datePurchased,
       dateDeployed,
       invoiceNo,
@@ -123,11 +124,20 @@ export async function POST(req: Request) {
       remarks,
     } = body;
 
-    console.log(body);
-
     if (!name) {
       return NextResponse.json(
         { error: 'Item name is required' },
+        { status: 400 }
+      );
+    }
+
+    const duplicateHostname = await prisma.inventoryItems.findFirst({
+      where: { hostname: hostname || '' },
+    });
+
+    if (duplicateHostname) {
+      return NextResponse.json(
+        { error: 'Hostname already exists' },
         { status: 400 }
       );
     }
@@ -162,9 +172,12 @@ export async function POST(req: Request) {
         supplier: {
           connect: { id: parseInt(supplierId) },
         },
-        assignedEmp: {
-          connect: { id: parseInt(assignedTo) },
-        },
+        ...(assignedTo
+          ? { assignedEmp: { connect: { id: parseInt(assignedTo) } } }
+          : {}),
+        ...(deployedBy
+          ? { deployedBy: { connect: { id: parseInt(deployedBy) } } }
+          : {}),
       },
     });
 

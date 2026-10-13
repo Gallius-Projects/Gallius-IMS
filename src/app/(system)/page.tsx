@@ -34,7 +34,7 @@ interface InventoryItem {
 
 export default function Dashboard() {
   // Auth check
-  const { user, isAuthenticated } = useUserContext();
+  const { isAuthenticated } = useUserContext();
 
   // Data states
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -83,6 +83,11 @@ export default function Dashboard() {
 
   return (
     <div className="flex max-h-screen min-h-screen flex-col bg-slate-50/50 px-4 py-8 font-sans text-slate-900 transition-all duration-300 sm:px-6 lg:px-8 dark:bg-slate-950 dark:text-slate-100">
+      {isLoading && (
+        <div className="flex items-center justify-center">Loading...</div>
+      )}
+      {error && <div>{error}</div>}
+
       <div className="mb-6 flex w-fit gap-2 border-b-2 border-slate-300 pr-2 pb-2 dark:border-slate-700">
         <LucideHome />
         <h5 className="font-league-spartan text-lg font-bold text-slate-900 dark:text-slate-100">
