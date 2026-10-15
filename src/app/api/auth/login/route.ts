@@ -856,7 +856,7 @@ export async function POST(req: Request) {
         {
           name: 'Employees',
           path: '/admin/employees',
-          icon: 'Users',
+          icon: 'IDCard',
           access: [2, 1],
         },
         {
@@ -902,15 +902,21 @@ export async function POST(req: Request) {
           access: [1],
         },
         {
-          name: 'Accounts',
-          path: '/admin/accounts',
-          icon: 'UserCog',
+          name: 'Departments',
+          path: '/admin/departments',
+          icon: 'Building2',
+          access: [1],
+        },
+        {
+          name: 'Positions',
+          path: '/admin/positions',
+          icon: 'UserRoundCog',
           access: [1],
         },
         {
           name: 'Sidebar Links',
           path: '/admin/sidebar-management',
-          icon: 'BarChart4',
+          icon: 'LucidePanelLeft',
           access: [1],
         },
       ];

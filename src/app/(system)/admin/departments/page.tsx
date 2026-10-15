@@ -15,19 +15,19 @@ import axiosInstance from '@/lib/axiosInstance';
 import { useUserContext } from '@/context/UserContext';
 import TableTemplate from '@/app/components/ui-templates/table-template';
 
-interface Position {
+interface Department {
+  id: number;
   name: string;
-  departmentId: number;
 }
 
-export default function PositionsPage() {
+export default function DepartmentsPage() {
   // Auth check
   const { user, isAuthenticated } = useUserContext();
 
   const [search, setSearch] = useState('');
 
   // Data states
-  const [positions, setPositions] = useState<Position[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -37,37 +37,34 @@ export default function PositionsPage() {
 
   // Form states
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
-  const [selectedPositionId, setSelectedPositionId] = useState<number | null>(
-    null
-  );
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState<
+    number | null
+  >(null);
   const [formData, setFormData] = useState({
     name: '',
-    departmentId: '',
   });
 
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Detail / Delete target state
-  const [deletingPositionId, setDeletingPositionId] = useState<number | null>(
-    null
-  );
-
-  const [departments, setDepartments] = useState([]);
-  const [departmentSearch, setDepartmentSearch] = useState('');
-
-  const [oldPosition, setOldPosition] = useState<Position[]>([]);
+  const [deletingDepartmentId, setDeletingDepartmentId] = useState<
+    number | null
+  >(null);
 
   // Fetch Departments callback
-  const fetchPositions = useCallback(async () => {
+  const fetchDepartments = useCallback(async () => {
     if (!localStorage.getItem('auth_token')) return;
     setIsLoading(true);
     setError('');
     try {
-      const response = await axiosInstance.get('/positions');
-      setPositions(response.data);
+      const response = await axiosInstance.get(
+        '/departments',
+        search ? { params: { search } } : undefined
+      );
+      setDepartments(response.data);
     } catch (err: any) {
-      console.error('Fetch positions error:', err);
+      console.error('Fetch departments error:', err);
       setError(
         err.message ||
           'Could not connect to the database. Make sure MySQL is running.'
@@ -75,29 +72,12 @@ export default function PositionsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
-
-  // Fetch Departments
-  useEffect(() => {
-    const fetchDepartments = async () => {
-      const response = await axiosInstance.get('/departments');
-      setDepartments(response.data);
-    };
-
-    fetchDepartments();
-  }, []);
-
-  const filteredDepartments = departments.filter((department: any) => {
-    const departmentName = `${department.name}`.toLowerCase();
-
-    return departmentName.includes(departmentSearch.toLowerCase());
-  });
+  }, [search]);
 
   // Open form for creation
   const handleCreateOpen = () => {
     setFormData({
       name: '',
-      departmentId: '',
     });
     setFormError('');
     setFormMode('create');
@@ -105,22 +85,12 @@ export default function PositionsPage() {
   };
 
   // Open form for editing
-  const handleEditOpen = async (position: Position) => {
+  const handleEditOpen = (department: Department) => {
     setFormMode('edit');
-
-    const getOldPosition = await axiosInstance.get(`/positions/${position.id}`);
-
-    const oldPositionData = getOldPosition.data;
-
-    setOldPosition(oldPositionData);
-
-    setSelectedPositionId(position.id);
+    setSelectedDepartmentId(department.id);
     setFormData({
-      name: position.name,
-      departmentId: position.departmentId,
+      name: department.name,
     });
-
-    setDepartmentSearch(oldPositionData?.department?.name);
 
     setFormError('');
     setIsFormOpen(true);
@@ -128,7 +98,7 @@ export default function PositionsPage() {
 
   // Open delete confirm
   const handleDeleteOpen = (id: number) => {
-    setDeletingPositionId(id);
+    setDeletingDepartmentId(id);
     setIsDeleteOpen(true);
   };
 
@@ -139,46 +109,46 @@ export default function PositionsPage() {
     setIsSubmitting(true);
 
     if (!formData.name) {
-      setFormError('Position name is required');
+      setFormError('Department name is required');
       setIsSubmitting(false);
       return;
     }
 
     try {
       if (formMode === 'create') {
-        await axiosInstance.post('/positions', {
+        await axiosInstance.post('/departments', {
           ...formData,
           updatedBy: user?.id ?? '',
         });
       } else {
-        await axiosInstance.put(`/positions/${selectedPositionId}`, {
+        await axiosInstance.put(`/departments/${selectedDepartmentId}`, {
           ...formData,
           updatedBy: user?.id ?? '',
         });
       }
       setIsFormOpen(false);
-      fetchPositions();
+      fetchDepartments();
     } catch (err: any) {
-      setFormError(err.message || 'Failed to save position');
+      setFormError(err.message || 'Failed to save department');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Delete position handler
+  // Delete department handler
   const handleDeleteConfirm = async () => {
-    if (!deletingPositionId || !user) return;
+    if (!deletingDepartmentId || !user) return;
     try {
-      await axiosInstance.delete(`/positions/${deletingPositionId}`, {
+      await axiosInstance.delete(`/departments/${deletingDepartmentId}`, {
         data: {
           updatedBy: user?.id ?? '',
         },
       });
       setIsDeleteOpen(false);
-      setDeletingPositionId(null);
-      fetchPositions();
+      setDeletingDepartmentId(null);
+      fetchDepartments();
     } catch (err: any) {
-      alert(err.message || 'Failed to delete position');
+      alert(err.message || 'Failed to delete department');
     }
   };
 
@@ -187,24 +157,25 @@ export default function PositionsPage() {
     setFormMode('create');
     setFormData({
       name: '',
-      departmentId: '',
     });
     setFormError('');
-    setSelectedPositionId(null);
-    setDeletingPositionId(null);
-    setOldPosition([]);
+    setSelectedDepartmentId(null);
+    setDeletingDepartmentId(null);
   };
 
   // Trigger fetch when parameters change
   useEffect(() => {
     if (isAuthenticated) {
-      fetchPositions();
+      const delayDebounceFn = setTimeout(() => {
+        fetchDepartments();
+      }, 300); // Debounce search
+      return () => clearTimeout(delayDebounceFn);
     }
-  }, [fetchPositions, isAuthenticated]);
+  }, [fetchDepartments, isAuthenticated]);
 
   const columns = [
     {
-      header: 'Position Name',
+      header: 'Department Name',
       accessor: 'name',
       dataType: 'string',
       fontStyle: 'semibold',
@@ -237,14 +208,14 @@ export default function PositionsPage() {
     },
   ];
 
-  console.log(positions);
+  console.log(departments);
 
   return (
     <div className="flex max-h-screen min-h-screen flex-col bg-slate-50/50 px-4 py-8 font-sans text-slate-900 transition-all duration-300 sm:px-6 lg:px-8 dark:bg-slate-950 dark:text-slate-100">
       <div className="mb-6 flex w-fit gap-2 border-b-2 border-slate-300 pr-2 pb-2 dark:border-slate-700">
         <LucideBuilding2 />
         <h5 className="font-league-spartan text-lg font-bold text-slate-900 dark:text-slate-100">
-          Positions
+          Departments
         </h5>
       </div>
 
@@ -276,7 +247,7 @@ export default function PositionsPage() {
             </div>
             <input
               type="text"
-              placeholder="Search position name..."
+              placeholder="Search department name..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pr-4 pl-9 text-sm text-slate-900 placeholder-slate-400 transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
@@ -291,131 +262,22 @@ export default function PositionsPage() {
               className="ml-auto flex cursor-pointer items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-md shadow-indigo-600/10 hover:bg-indigo-500 lg:ml-0 dark:bg-indigo-500 dark:hover:bg-indigo-400"
             >
               <Plus className="h-4 w-4" />
-              <span>Add Position</span>
+              <span>Add Department</span>
             </button>
           </div>
         </div>
 
+        {/* Table Container */}
         <TableTemplate
-          rows={positions.map((position) => ({
-            ...position,
-            updatedBy: position?.accountLogs
-              ? position?.accountLogs?.involvedUser?.employee?.firstName +
-                ' ' +
-                position?.accountLogs?.involvedUser?.employee?.lastName
-              : '--',
-          }))}
+          rows={departments}
           columns={columns}
           isLoading={isLoading}
-          tableName="Positions"
+          tableName="Departments"
           canEdit={user?.role === 'superadmin' || user?.role === 'admin'}
           canDelete={user?.role === 'superadmin' || user?.role === 'admin'}
           handleEditOpen={handleEditOpen}
           handleDeleteOpen={handleDeleteOpen}
         />
-
-        {/* Table Container */}
-        <div className="overflow-x-auto rounded-xl border border-slate-200/50 dark:border-slate-800/50">
-          <table className="w-full border-collapse text-left">
-            <thead>
-              <tr className="border-b border-slate-200/60 bg-slate-50 dark:border-slate-800/60 dark:bg-slate-950">
-                <th className="px-5 py-3.5 text-xs font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                  Position Name
-                </th>
-                <th className="px-5 py-3.5 text-xs font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                  Created At
-                </th>
-                <th className="px-5 py-3.5 text-xs font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                  Updated At
-                </th>
-                <th className="px-5 py-3.5 text-xs font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                  Updated By
-                </th>
-                <th className="px-5 py-3.5 text-right text-xs font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200/40 dark:divide-slate-800/40">
-              {isLoading ? (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="px-5 py-12 text-center text-slate-400"
-                  >
-                    <div className="flex items-center justify-center gap-2">
-                      <Loader2 className="h-5 w-5 animate-spin text-indigo-600 dark:text-indigo-400" />
-                      <span>Loading departments...</span>
-                    </div>
-                  </td>
-                </tr>
-              ) : departments.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="px-5 py-12 text-center text-sm text-slate-400 dark:text-slate-500"
-                  >
-                    No departments found. Try adjusting filters or create a new
-                    department.
-                  </td>
-                </tr>
-              ) : (
-                departments.map((department) => (
-                  <tr
-                    key={department.id}
-                    className="group transition-all hover:bg-slate-50/50 dark:hover:bg-slate-800/20"
-                  >
-                    <td className="px-5 py-4">
-                      <span className="block text-sm font-semibold text-slate-900 dark:text-white">
-                        {department.name}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                        {new Date(department?.createdAt).toLocaleDateString()}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <span className="font-mono text-xs text-slate-600 dark:text-slate-400">
-                        {new Date(department?.updatedAt).toLocaleDateString()}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                        {department?.updatedBy
-                          ? department?.updatedBy?.employee?.firstName +
-                              ' ' +
-                              department?.updatedBy?.employee?.lastName || ' — '
-                          : '--'}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="flex items-center justify-end gap-2">
-                        {/* Edit Button */}
-                        <button
-                          onClick={() => handleEditOpen(department)}
-                          className="dark:hover:bg-slate-850 cursor-pointer rounded-lg border border-slate-200/50 bg-white p-1.5 text-slate-400 transition-all hover:bg-slate-50 hover:text-indigo-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500 dark:hover:text-indigo-400"
-                          title="Edit Department"
-                        >
-                          <Edit className="h-3.5 w-3.5" />
-                        </button>
-
-                        {/* Delete Button */}
-                        <button
-                          onClick={() => handleDeleteOpen(department.id)}
-                          className="cursor-pointer rounded-lg border border-slate-200/50 bg-white p-1.5 text-slate-400 transition-all hover:bg-rose-50 hover:text-rose-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500 dark:hover:bg-rose-950/20 dark:hover:text-rose-400"
-                          title="Delete Department"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
       </main>
 
       {/* FORM MODAL (Add / Edit) */}
@@ -449,7 +311,7 @@ export default function PositionsPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   {/* Name */}
-                  <div>
+                  <div className="col-span-2">
                     <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
                       Department Name *
                     </label>

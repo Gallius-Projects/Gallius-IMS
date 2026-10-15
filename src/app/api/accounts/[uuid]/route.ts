@@ -5,7 +5,7 @@ import { getAuthUser, hashPassword } from '@/lib/auth';
 // GET: Retrieve a single account
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ accountId: string }> }
+  { params }: { params: Promise<{ uuid: string }> }
 ) {
   try {
     const user = getAuthUser(req);
@@ -16,19 +16,19 @@ export async function GET(
       );
     }
 
-    const { accountId } = await params;
-
-    console.log({ accountId });
+    const { uuid } = await params;
 
     const account = await prisma.accounts.findUnique({
-      where: { uuid: accountId },
+      where: { uuid },
     });
 
     if (!account) {
       return NextResponse.json({ error: 'Account not found' }, { status: 404 });
     }
 
-    return NextResponse.json(account);
+    const { passwordHash, ...accountData } = account;
+
+    return NextResponse.json(accountData);
   } catch (error: any) {
     console.error('Fetch single account error:', error);
     return NextResponse.json(
@@ -41,7 +41,7 @@ export async function GET(
 // PUT: Update an account
 export async function PUT(
   req: Request,
-  { params }: { params: Promise<{ accountId: string }> }
+  { params }: { params: Promise<{ uuid: string }> }
 ) {
   try {
     const user = getAuthUser(req);
@@ -52,7 +52,7 @@ export async function PUT(
       );
     }
 
-    const { accountId } = await params;
+    const { uuid } = await params;
 
     const body = await req.json();
     const { username, password, roleId, employeeId, status } = body;
@@ -65,10 +65,10 @@ export async function PUT(
     }
 
     const updatedAccount = await prisma.accounts.update({
-      where: { id: accountId },
+      where: { uuid },
       data: {
         username,
-        passwordHash: hashPassword(password),
+        ...(password ? { passwordHash: hashPassword(password) } : {}),
         role: {
           connect: { id: roleId },
         },
@@ -92,7 +92,7 @@ export async function PUT(
 // DELETE: Delete an account
 export async function DELETE(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ uuid: string }> }
 ) {
   try {
     const user = getAuthUser(req);
@@ -103,9 +103,8 @@ export async function DELETE(
       );
     }
 
-    const { id } = await params;
-    const accountId = parseInt(id);
-    if (isNaN(accountId)) {
+    const { uuid } = await params;
+    if (isNaN(uuid)) {
       return NextResponse.json(
         { error: 'Invalid account ID' },
         { status: 400 }
@@ -113,7 +112,7 @@ export async function DELETE(
     }
 
     await prisma.accounts.delete({
-      where: { id: accountId },
+      where: { uuid },
     });
 
     return NextResponse.json({

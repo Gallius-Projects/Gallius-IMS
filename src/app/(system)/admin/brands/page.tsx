@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import axiosInstance from '@/lib/axiosInstance';
 import { useUserContext } from '@/context/UserContext';
+import TableTemplate from '@/app/components/ui-templates/table-template';
 
 interface Brand {
   id: number;
@@ -165,6 +166,41 @@ export default function BrandsPage() {
     }
   }, [fetchBrands, isAuthenticated]);
 
+  const columns = [
+    {
+      accessor: 'name',
+      header: 'Brand Name',
+      dataType: 'string',
+      fontStyle: 'semibold',
+      fontSize: 'sm',
+      emphasizeLevel: 'high',
+    },
+    {
+      accessor: 'createdAt',
+      header: 'Created At',
+      dataType: 'date',
+      fontStyle: 'normal',
+      fontSize: 'xs',
+      emphasizeLevel: 'none',
+    },
+    {
+      accessor: 'updatedAt',
+      header: 'Updated At',
+      dataType: 'date',
+      fontStyle: 'normal',
+      fontSize: 'xs',
+      emphasizeLevel: 'none',
+    },
+    {
+      header: 'Updated By',
+      accessor: 'updatedBy',
+      dataType: 'string',
+      fontStyle: 'normal',
+      fontSize: 'xs',
+      emphasizeLevel: 'normal',
+    },
+  ];
+
   return (
     <div className="flex max-h-screen min-h-screen flex-col bg-slate-50/50 px-4 py-8 font-sans text-slate-900 transition-all duration-300 sm:px-6 lg:px-8 dark:bg-slate-950 dark:text-slate-100">
       <div className="mb-6 flex w-fit gap-2 border-b-2 border-slate-300 pr-2 pb-2 dark:border-slate-700">
@@ -223,107 +259,16 @@ export default function BrandsPage() {
         </div>
 
         {/* Table Container */}
-        <div className="overflow-x-auto rounded-xl border border-slate-200/50 dark:border-slate-800/50">
-          <table className="w-full border-collapse text-left">
-            <thead>
-              <tr className="border-b border-slate-200/60 bg-slate-50 dark:border-slate-800/60 dark:bg-slate-950">
-                <th className="px-5 py-3.5 text-xs font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                  Brand Name
-                </th>
-                <th className="px-5 py-3.5 text-xs font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                  Created At
-                </th>
-                <th className="px-5 py-3.5 text-xs font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                  Updated At
-                </th>
-                <th className="px-5 py-3.5 text-xs font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                  Updated By
-                </th>
-                <th className="px-5 py-3.5 text-right text-xs font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200/40 dark:divide-slate-800/40">
-              {isLoading ? (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="px-5 py-12 text-center text-slate-400"
-                  >
-                    <div className="flex items-center justify-center gap-2">
-                      <Loader2 className="h-5 w-5 animate-spin text-indigo-600 dark:text-indigo-400" />
-                      <span>Loading brands...</span>
-                    </div>
-                  </td>
-                </tr>
-              ) : brands.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="px-5 py-12 text-center text-sm text-slate-400 dark:text-slate-500"
-                  >
-                    No brands found. Try adjusting filters or create a new
-                    brand.
-                  </td>
-                </tr>
-              ) : (
-                brands.map((brand) => (
-                  <tr
-                    key={brand.id}
-                    className="group transition-all hover:bg-slate-50/50 dark:hover:bg-slate-800/20"
-                  >
-                    <td className="px-5 py-4">
-                      <span className="block text-sm font-semibold text-slate-900 dark:text-white">
-                        {brand.name}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                        {new Date(brand?.createdAt).toLocaleDateString()}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <span className="font-mono text-xs text-slate-600 dark:text-slate-400">
-                        {new Date(brand?.updatedAt).toLocaleDateString()}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                        {brand?.updatedBy
-                          ? brand?.updatedBy?.employee?.firstName +
-                              ' ' +
-                              brand?.updatedBy?.employee?.lastName || ' — '
-                          : '--'}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="flex items-center justify-end gap-2">
-                        {/* Edit Button */}
-                        <button
-                          onClick={() => handleEditOpen(brand)}
-                          className="dark:hover:bg-slate-850 cursor-pointer rounded-lg border border-slate-200/50 bg-white p-1.5 text-slate-400 transition-all hover:bg-slate-50 hover:text-indigo-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500 dark:hover:text-indigo-400"
-                          title="Edit Brand"
-                        >
-                          <Edit className="h-3.5 w-3.5" />
-                        </button>
-
-                        {/* Delete Button */}
-                        <button
-                          onClick={() => handleDeleteOpen(brand.id)}
-                          className="cursor-pointer rounded-lg border border-slate-200/50 bg-white p-1.5 text-slate-400 transition-all hover:bg-rose-50 hover:text-rose-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500 dark:hover:bg-rose-950/20 dark:hover:text-rose-400"
-                          title="Delete Brand"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        <TableTemplate
+          rows={brands}
+          columns={columns}
+          tableName="Brands"
+          handleEditOpen={handleEditOpen}
+          handleDeleteOpen={handleDeleteOpen}
+          isLoading={isLoading}
+          canEdit={user?.role === 'superadmin' || user?.role === 'admin'}
+          canDelete={user?.role === 'superadmin'}
+        />
       </main>
 
       {/* FORM MODAL (Add / Edit) */}

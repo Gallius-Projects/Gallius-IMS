@@ -147,7 +147,7 @@ export default function TableTemplate({
                           className="dark:hover:bg-slate-850 cursor-pointer rounded-lg border border-slate-200/50 bg-white p-1.5 text-slate-400 transition-all hover:bg-slate-50 hover:text-indigo-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500 dark:hover:text-indigo-400"
                           title="Edit Account"
                         >
-                          <Pencil className="h-3.5 w-3.5" />
+                          <Lucide.LucideUserPen className="h-3.5 w-3.5" />
                         </button>
                       )}
 

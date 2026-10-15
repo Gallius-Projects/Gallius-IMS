@@ -1,21 +1,14 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  Plus,
-  Search,
-  Trash2,
-  AlertCircle,
-  LucideBuilding2,
-} from 'lucide-react';
+import { Plus, Search, Trash2, AlertCircle, LucideIdCard } from 'lucide-react';
 import axiosInstance from '@/lib/axiosInstance';
 import { useUserContext } from '@/context/UserContext';
 import TableTemplate from '@/app/components/ui-templates/table-template';
-import AddEmployee from '@/app/components/modals/employees/add-employee';
-import EditEmployee from '@/app/components/modals/employees/edit-employee';
-import AddAccountModal from '@/app/components/modals/employees/account/add-account';
-import EditAccountModal from '@/app/components/modals/employees/account/edit-account';
-import { useLibrariesContext } from '@/context/LibrariesContext';
+import AddEmployee from '@/app/components/modals/employees/add-employee-modal';
+import EditEmployee from '@/app/components/modals/employees/edit-employee-modal';
+import AddAccountModal from '@/app/components/modals/employees/account/add-account-modal';
+import EditAccountModal from '@/app/components/modals/employees/account/edit-account-modal';
 
 interface Employee {
   id: number;
@@ -39,8 +32,8 @@ interface Account {
 
 export default function EmployeesPage() {
   const { user, isAuthenticated } = useUserContext();
-  const { setOffices, setDepartments, setPositions, setRoles } =
-    useLibrariesContext();
+  // const { setOffices, setDepartments, setPositions, setRoles } =
+  //   useLibrariesContext();
 
   const [search, setSearch] = useState('');
 
@@ -48,11 +41,6 @@ export default function EmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-
-  const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
-  const [accountFormMode, setAccountFormMode] = useState<'create' | 'edit'>(
-    'create'
-  );
 
   // Modal states
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
@@ -91,7 +79,8 @@ export default function EmployeesPage() {
     null
   );
 
-  const [previousData, setPreviousData] = useState({});
+  const [prevEmpData, setPrevEmpData] = useState({});
+  const [prevAcctData, setPrevAcctData] = useState({});
 
   // Fetch Departments callback
   const fetchEmployees = useCallback(async () => {
@@ -119,86 +108,34 @@ export default function EmployeesPage() {
     fetchEmployees();
   }, [fetchEmployees]);
 
-  useEffect(() => {
-    const fetchDepartments = async () => {
-      const response = await axiosInstance.get('/departments');
-      setDepartments(response.data);
-    };
-
-    fetchDepartments();
-  }, []);
-
-  useEffect(() => {
-    const fetchPositions = async () => {
-      const response = await axiosInstance.get('/positions');
-      setPositions(response.data);
-    };
-
-    fetchPositions();
-  }, []);
-
-  useEffect(() => {
-    const fetchOffices = async () => {
-      const response = await axiosInstance.get('/offices');
-      setOffices(response.data);
-    };
-
-    fetchOffices();
-  }, []);
-
-  useEffect(() => {
-    const fetchRoles = async () => {
-      const response = await axiosInstance.get('/roles');
-      setRoles(response.data);
-    };
-
-    fetchRoles();
-  }, []);
-
   // Open form for account creation
-  const handleCreateAccountOpen = () => {
+  const handleCreateAccountOpen = (employee: Employee) => {
     setAccountFormData({
       username: '',
       password: '',
       roleId: '',
       status: true,
     });
-    setAccountFormMode('create');
+    setPrevAcctData(employee);
     setIsAddAccountFormOpen(true);
   };
 
   // Open form for account editing
   const handleEditAccountOpen = async (employee: Employee) => {
-    // console.log(employee);
-
-    const getOldAccount = await axiosInstance.get(`/accounts`, {
-      params: { accountId: employee?.accounts?.uuid },
-    });
+    const getOldAccount = await axiosInstance.get(
+      `/accounts/${employee?.accounts?.uuid}`
+    );
     const oldAccountData = getOldAccount.data;
 
-    setAccountFormMode('edit');
-    setSelectedEmployeeId(employee?.id);
-    setAccountFormData({
-      username: oldAccountData.username,
-      password: '',
-      roleId: oldAccountData.roleId,
-      status: oldAccountData.status,
-    });
+    setPrevAcctData(oldAccountData);
 
-    // console.log({
-    //   username: oldAccountData.username,
-    //   password: '',
-    //   roleId: oldAccountData.roleId,
-    //   employeeId: oldAccountData.employeeId,
-    //   status: oldAccountData.status,
-    // });
+    setSelectedEmployeeId(employee?.id);
     setIsEditAccountFormOpen(true);
   };
 
   const handleAccountClose = () => {
     setIsAddAccountFormOpen(false);
     setIsEditAccountFormOpen(false);
-    setAccountFormMode('create');
     setAccountFormData({
       username: '',
       password: '',
@@ -220,7 +157,6 @@ export default function EmployeesPage() {
       positionId: '',
       status: false,
     });
-    setFormMode('create');
     setIsAddFormOpen(true);
   };
 
@@ -231,7 +167,7 @@ export default function EmployeesPage() {
     );
     const oldEmployeeData = getOldEmployee.data;
 
-    setPreviousData(oldEmployeeData);
+    setPrevEmpData(oldEmployeeData);
 
     setIsEditFormOpen(true);
   };
@@ -240,40 +176,6 @@ export default function EmployeesPage() {
   const handleDeleteOpen = (id: number) => {
     setDeletingEmployeeId(id);
     setIsDeleteOpen(true);
-  };
-
-  // Form submission handler
-  const handleFormSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError('');
-    setIsSubmitting(true);
-
-    if (!formData.name) {
-      setFormError('Employee name is required');
-      setIsSubmitting(false);
-      return;
-    }
-
-    try {
-      if (formMode === 'create') {
-        await axiosInstance.post('/employees', {
-          ...formData,
-          updatedBy: user?.id ?? '',
-        });
-      } else {
-        await axiosInstance.put(`/employees/${selectedEmployeeId}`, {
-          ...formData,
-          updatedBy: user?.id ?? '',
-        });
-      }
-      setIsAddFormOpen(false);
-      setIsEditFormOpen(false);
-      fetchEmployees();
-    } catch (err: any) {
-      setFormError(err.message || 'Failed to save employee');
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   // Delete department handler
@@ -296,7 +198,6 @@ export default function EmployeesPage() {
   const handleClose = () => {
     setIsAddFormOpen(false);
     setIsEditFormOpen(false);
-    setFormMode('create');
     setFormData({
       employeeId: '',
       firstName: '',
@@ -370,12 +271,10 @@ export default function EmployeesPage() {
     },
   ];
 
-  // console.log(accountFormData);
-
   return (
     <div className="flex max-h-screen min-h-screen flex-col bg-slate-50/50 px-4 py-8 font-sans text-slate-900 transition-all duration-300 sm:px-6 lg:px-8 dark:bg-slate-950 dark:text-slate-100">
       <div className="mb-6 flex w-fit gap-2 border-b-2 border-slate-300 pr-2 pb-2 dark:border-slate-700">
-        <LucideBuilding2 />
+        <LucideIdCard />
         <h5 className="font-league-spartan text-lg font-bold text-slate-900 dark:text-slate-100">
           Employees
         </h5>
@@ -453,7 +352,6 @@ export default function EmployeesPage() {
       {/* FORM MODAL (Add / Edit) */}
       {isAddFormOpen && (
         <AddEmployee
-          formMode={formMode}
           formData={formData}
           setFormData={setFormData}
           handleClose={handleClose}
@@ -464,40 +362,36 @@ export default function EmployeesPage() {
       )}
       {isEditFormOpen && (
         <EditEmployee
-          formMode={formMode}
           formData={formData}
           setFormData={setFormData}
           handleClose={handleClose}
           fetchEmployees={fetchEmployees}
           isSubmitting={isSubmitting}
           setIsSubmitting={setIsSubmitting}
-          dataToUpdate={previousData}
+          dataToUpdate={prevEmpData}
         />
       )}
 
       {isAddAccountFormOpen && (
         <AddAccountModal
-          accountFormMode={accountFormMode}
           accountFormData={accountFormData}
           setAccountFormData={setAccountFormData}
-          handleCreateAccountOpen={handleCreateAccountOpen}
+          fetchEmployees={fetchEmployees}
           handleClose={handleAccountClose}
-          accountFormError={accountFormError}
-          setAccountFormError={setAccountFormError}
           isSubmitting={isSubmitting}
+          setIsSubmitting={setIsSubmitting}
+          dataToUpdate={prevAcctData}
         />
       )}
       {isEditAccountFormOpen && (
         <EditAccountModal
-          accountFormMode={accountFormMode}
           accountFormData={accountFormData}
           setAccountFormData={setAccountFormData}
-          handleCreateAccountOpen={handleCreateAccountOpen}
+          fetchEmployees={fetchEmployees}
           handleClose={handleAccountClose}
-          accountFormError={accountFormError}
-          setAccountFormError={setAccountFormError}
           isSubmitting={isSubmitting}
-          dataToUpdate={previousAccountData}
+          setIsSubmitting={setIsSubmitting}
+          dataToUpdate={prevAcctData}
         />
       )}
 

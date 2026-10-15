@@ -10,7 +10,7 @@ import Footer from '../components/ui/footer';
 import axiosInstance from '@/lib/axiosInstance';
 import { useLibrariesContext } from '@/context/LibrariesContext';
 
-export default function InventoryLayout({
+export default function MainLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -27,6 +27,9 @@ export default function InventoryLayout({
     setSuppliers,
     setOffices,
     setEmployees,
+    setDepartments,
+    setPositions,
+    setRoles,
   } = useLibrariesContext();
 
   const userRole = user?.role as Role;
@@ -96,12 +99,31 @@ export default function InventoryLayout({
       setEmployees(response.data);
     };
 
+    const fetchDepartments = async () => {
+      const response = await axiosInstance.get('/departments');
+      setDepartments(response.data);
+    };
+
+    const fetchPositions = async () => {
+      const response = await axiosInstance.get('/positions');
+      setPositions(response.data);
+    };
+
+    const fetchRoles = async () => {
+      const response = await axiosInstance.get('/roles');
+      setRoles(response.data);
+    };
+
     fetchCategories();
     fetchBrands();
     fetchLocations();
     fetchSuppliers();
-    fetchOffices();
     fetchEmployees();
+
+    fetchRoles();
+    fetchDepartments();
+    fetchPositions();
+    fetchOffices();
   }, []);
 
   return (

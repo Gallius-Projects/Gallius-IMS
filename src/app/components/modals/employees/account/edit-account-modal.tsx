@@ -8,17 +8,14 @@ export default function EditAccountModal({
   accountFormData,
   setAccountFormData,
   handleClose,
-  accountFormError,
-  setAccountFormError,
   fetchEmployees,
   isSubmitting,
   setIsSubmitting,
   dataToUpdate,
 }: {
   accountFormData: any;
+  setAccountFormData: (formData: any) => void;
   handleClose: () => void;
-  accountFormError: string;
-  setAccountFormError: (error: string) => void;
   fetchEmployees: () => void;
   isSubmitting: boolean;
   setIsSubmitting: (submitting: boolean) => void;
@@ -33,40 +30,45 @@ export default function EditAccountModal({
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const [formError, setFormError] = useState(accountFormError);
+  const [formError, setFormError] = useState('');
 
   useEffect(() => {
     if (dataToUpdate) {
-      setFormData({
+      console.log(dataToUpdate.status);
+
+      setAccountFormData({
         id: dataToUpdate.id || '',
         username: dataToUpdate.username || '',
         password: '',
         roleId: dataToUpdate.roleId || '',
-        status: dataToUpdate.status || true,
+        status: dataToUpdate.status ? dataToUpdate.status : false,
       });
     }
-  }, [dataToUpdate]);
+  }, [dataToUpdate, setAccountFormData]);
 
   useEffect(() => {
     if (confirmPassword !== accountFormData.password) {
-      setAccountFormError('Passwords do not match');
+      setFormError('Passwords do not match');
     }
   }, [confirmPassword]);
 
   // Form submission handler
   const handleAccountFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setAccountFormError('');
+    setFormError('');
     setIsSubmitting(true);
 
     if (!accountFormData.username) {
-      setAccountFormError('Employee username is required');
+      setFormError('Employee username is required');
       setIsSubmitting(false);
       return;
     }
 
     try {
-      await axiosInstance.put(`/accounts/${dataToUpdate.uuid}`, formData);
+      await axiosInstance.put(`/accounts/${dataToUpdate.uuid}`, {
+        ...accountFormData,
+        employeeId: dataToUpdate?.employeeId,
+      });
 
       handleClose();
       fetchEmployees();
@@ -76,7 +78,8 @@ export default function EditAccountModal({
       setIsSubmitting(false);
     }
   };
-  // console.log(accountFormData);
+
+  console.log(accountFormData);
 
   return (
     <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
@@ -84,7 +87,7 @@ export default function EditAccountModal({
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-slate-200/60 px-6 py-4 dark:border-slate-800/60">
           <h3 className="text-base font-bold text-slate-900 dark:text-white">
-            {accountFormMode === 'create' ? 'Create Account' : 'Edit Account'}
+            Edit Account
           </h3>
           <button
             onClick={() => handleClose()}
@@ -112,10 +115,10 @@ export default function EditAccountModal({
                 <input
                   type="text"
                   placeholder="e.g. john.doe"
-                  value={formData.username}
+                  value={accountFormData.username}
                   onChange={(e) =>
-                    setFormData({
-                      ...formData,
+                    setAccountFormData({
+                      ...accountFormData,
                       username: e.target.value,
                     })
                   }
@@ -131,10 +134,10 @@ export default function EditAccountModal({
                   <input
                     type="password"
                     placeholder="**********"
-                    value={formData.password}
+                    value={accountFormData.password}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
+                      setAccountFormData({
+                        ...accountFormData,
                         password: e.target.value,
                       })
                     }
@@ -160,11 +163,14 @@ export default function EditAccountModal({
               <SearchableDropdown
                 label="Role"
                 placeholder="Select Role"
-                data={roles}
-                value={formData.roleId}
+                data={roles.map((role) => ({
+                  ...role,
+                  name: role.role,
+                }))}
+                value={accountFormData.roleId}
                 onChange={(value) =>
-                  setFormData({
-                    ...formData,
+                  setAccountFormData({
+                    ...accountFormData,
                     roleId: value,
                   })
                 }
@@ -210,11 +216,11 @@ export default function EditAccountModal({
                   <button
                     type="button"
                     onClick={() => {
-                      setFormData({ ...formData, status: true });
+                      setAccountFormData({ ...accountFormData, status: true });
                     }}
-                    aria-pressed={formData.status}
+                    aria-pressed={accountFormData.status}
                     className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-all duration-200 ${
-                      formData.status
+                      accountFormData.status
                         ? 'bg-violet-600 text-white shadow-sm'
                         : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'
                     }`}
@@ -225,11 +231,11 @@ export default function EditAccountModal({
                   <button
                     type="button"
                     onClick={() => {
-                      setFormData({ ...formData, status: false });
+                      setAccountFormData({ ...accountFormData, status: false });
                     }}
-                    aria-pressed={!formData.status}
+                    aria-pressed={!accountFormData.status}
                     className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-all duration-200 ${
-                      !formData.status
+                      !accountFormData.status
                         ? 'bg-violet-600 text-white shadow-sm'
                         : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'
                     }`}

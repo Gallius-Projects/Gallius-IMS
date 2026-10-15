@@ -13,22 +13,22 @@ export async function GET(req: Request) {
       );
     }
 
-    const { searchParams } = new URL(req.url);
-    const search = searchParams.get('search') || '';
+    // const { searchParams } = new URL(req.url);
+    // const search = searchParams.get('search') || '';
 
     // Build Prisma query filters
-    const whereClause: any = {};
+    // const whereClause: any = {};
 
-    if (search) {
-      whereClause.OR = [
-        { name: { contains: search } },
-        { path: { contains: search } },
-        { icon: { contains: search } },
-      ];
-    }
+    // if (search) {
+    //   whereClause.OR = [
+    //     { name: { contains: search } },
+    //     { path: { contains: search } },
+    //     { icon: { contains: search } },
+    //   ];
+    // }
 
     const sidebarLinks = await prisma.sidebarLinks.findMany({
-      where: whereClause,
+      // where: whereClause,
       include: {
         sidebarLinkRoles: { include: { role: true } },
         adminLogs: {
@@ -50,7 +50,23 @@ export async function GET(req: Request) {
       },
     });
 
-    return NextResponse.json(sidebarLinks);
+    const linksWithLogs = sidebarLinks.map((link) => {
+      const latestLog = link?.adminLogs[0];
+
+      return {
+        ...link,
+        access: link.sidebarLinkRoles.map((role) => role?.role?.role),
+        createdAt: latestLog?.createdAt,
+        updatedAt: latestLog?.updatedAt,
+        updatedBy: latestLog?.involvedUser?.employee
+          ? latestLog?.involvedUser?.employee.firstName +
+            ' ' +
+            latestLog?.involvedUser?.employee.lastName
+          : '--',
+      };
+    });
+
+    return NextResponse.json(linksWithLogs);
   } catch (error: any) {
     console.error('Fetch sidebar links error:', error);
     return NextResponse.json(

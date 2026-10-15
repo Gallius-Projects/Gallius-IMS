@@ -1,59 +1,52 @@
 import SearchableDropdown from '@/app/components/ui-templates/searchable-dropdown';
 import { useLibrariesContext } from '@/context/LibrariesContext';
 import axiosInstance from '@/lib/axiosInstance';
-import { AlertCircle, Eye, EyeOff, X } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, Loader2, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 export default function AddAccountModal({
-  accountFormMode,
   accountFormData,
+  setAccountFormData,
   handleClose,
-  accountFormError,
-  setAccountFormError,
   fetchEmployees,
   isSubmitting,
   setIsSubmitting,
+  dataToUpdate,
 }: {
-  accountFormMode: 'create' | 'update';
   accountFormData: any;
+  setAccountFormData: (accountFormData: any) => void;
   handleClose: () => void;
-  accountFormError: string;
-  setAccountFormError: (error: string) => void;
   fetchEmployees: () => void;
   isSubmitting: boolean;
   setIsSubmitting: (submitting: boolean) => void;
+  dataToUpdate?: any;
 }) {
   const { roles } = useLibrariesContext();
 
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const [formData, setFormData] = useState(accountFormData);
-
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const [formError, setFormError] = useState(accountFormError);
-
-  useEffect(() => {
-    if (confirmPassword !== accountFormData.password) {
-      setAccountFormError('Passwords do not match');
-    }
-  }, [confirmPassword]);
+  const [formError, setFormError] = useState('');
 
   // Form submission handler
   const handleAccountFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setAccountFormError('');
+    setFormError('');
     setIsSubmitting(true);
 
     if (!accountFormData.username) {
-      setAccountFormError('Employee username is required');
+      setFormError('Employee username is required');
       setIsSubmitting(false);
       return;
     }
 
     try {
-      await axiosInstance.post('/accounts', formData);
+      await axiosInstance.post('/accounts', {
+        ...accountFormData,
+        employeeId: dataToUpdate?.id,
+      });
 
       handleClose();
       fetchEmployees();
@@ -63,7 +56,16 @@ export default function AddAccountModal({
       setIsSubmitting(false);
     }
   };
-  // console.log(accountFormData);
+
+  const verifyPasswords = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (confirmPassword !== accountFormData.password) {
+      setFormError('Passwords do not match');
+    } else {
+      setFormError('');
+      handleAccountFormSubmit(e);
+    }
+  };
 
   return (
     <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
@@ -71,7 +73,10 @@ export default function AddAccountModal({
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-slate-200/60 px-6 py-4 dark:border-slate-800/60">
           <h3 className="text-base font-bold text-slate-900 dark:text-white">
-            Add Account
+            Create Account for{' '}
+            {dataToUpdate
+              ? `${dataToUpdate?.firstName} ${dataToUpdate?.lastName}`
+              : 'Employee'}
           </h3>
           <button
             onClick={() => handleClose()}
@@ -82,7 +87,7 @@ export default function AddAccountModal({
         </div>
 
         {/* Modal Body / Form */}
-        <form onSubmit={handleAccountFormSubmit}>
+        <form onSubmit={verifyPasswords}>
           <div className="max-h-[70vh] space-y-4 overflow-y-auto p-6">
             {formError && (
               <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-600 dark:border-red-900/30 dark:bg-red-950/20 dark:text-red-400">
@@ -99,10 +104,10 @@ export default function AddAccountModal({
                 <input
                   type="text"
                   placeholder="e.g. john.doe"
-                  value={formData.username}
+                  value={accountFormData.username}
                   onChange={(e) =>
-                    setFormData({
-                      ...formData,
+                    setAccountFormData({
+                      ...accountFormData,
                       username: e.target.value,
                     })
                   }
@@ -116,12 +121,12 @@ export default function AddAccountModal({
                 </label>
                 <div className="relative">
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     placeholder="**********"
-                    value={formData.password}
+                    value={accountFormData.password}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
+                      setAccountFormData({
+                        ...accountFormData,
                         password: e.target.value,
                       })
                     }
@@ -145,12 +150,16 @@ export default function AddAccountModal({
 
               {/* Role */}
               <SearchableDropdown
+                label="Role"
                 placeholder="Select Role"
-                data={roles}
-                value={formData.roleId}
+                data={roles.map((role) => ({
+                  ...role,
+                  name: role.role,
+                }))}
+                value={accountFormData.roleId}
                 onChange={(value) =>
-                  setFormData({
-                    ...formData,
+                  setAccountFormData({
+                    ...accountFormData,
                     roleId: value,
                   })
                 }
@@ -196,11 +205,11 @@ export default function AddAccountModal({
                   <button
                     type="button"
                     onClick={() => {
-                      setFormData({ ...formData, status: true });
+                      setAccountFormData({ ...accountFormData, status: true });
                     }}
-                    aria-pressed={formData.status}
+                    aria-pressed={accountFormData.status}
                     className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-all duration-200 ${
-                      formData.status
+                      accountFormData.status
                         ? 'bg-violet-600 text-white shadow-sm'
                         : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'
                     }`}
@@ -211,11 +220,11 @@ export default function AddAccountModal({
                   <button
                     type="button"
                     onClick={() => {
-                      setFormData({ ...formData, status: false });
+                      setAccountFormData({ ...accountFormData, status: false });
                     }}
-                    aria-pressed={!formData.status}
+                    aria-pressed={!accountFormData.status}
                     className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-all duration-200 ${
-                      !formData.status
+                      !accountFormData.status
                         ? 'bg-violet-600 text-white shadow-sm'
                         : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'
                     }`}
@@ -247,7 +256,7 @@ export default function AddAccountModal({
                   Saving...
                 </>
               ) : (
-                'Save Employee'
+                'Save Account'
               )}
             </button>
           </div>

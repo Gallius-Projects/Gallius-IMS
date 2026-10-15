@@ -25,17 +25,7 @@ export async function GET(req: Request) {
     }
 
     if (search) {
-      whereClause.OR = [
-        { name: { contains: search } },
-        {
-          adminlogs: {
-            OR: [
-              { createdAt: { contains: search } },
-              { updatedAt: { contains: search } },
-            ],
-          },
-        },
-      ];
+      whereClause.OR = [{ name: { contains: search } }];
     }
 
     const offices = await prisma.offices.findMany({
@@ -49,7 +39,7 @@ export async function GET(req: Request) {
               },
             },
           },
-          orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+          orderBy: [{ updatedAt: 'desc' }],
           take: 1,
         },
       },

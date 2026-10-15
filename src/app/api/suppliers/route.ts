@@ -61,8 +61,6 @@ export async function GET(req: Request) {
         { address: { contains: search } },
         { contactPerson: { contains: search } },
         { contactNumber: { contains: search } },
-        { createdAt: { contains: search } },
-        { updatedAt: { contains: search } },
       ];
     }
 
@@ -77,7 +75,7 @@ export async function GET(req: Request) {
               },
             },
           },
-          orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+          orderBy: [{ updatedAt: 'desc' }],
           take: 1,
         },
       },

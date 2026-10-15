@@ -24,10 +24,12 @@ import {
   AlertCircle,
   X,
   Loader2,
-  LucideBuilding,
   ChevronDown,
   Check,
   icons,
+  BriefcaseBusiness,
+  UsersRound,
+  LucidePanelLeft,
 } from 'lucide-react';
 import axiosInstance from '@/lib/axiosInstance';
 import { useUserContext } from '@/context/UserContext';
@@ -52,6 +54,9 @@ export default function SidebarManagement() {
 
   // Data states
   const [sidebarLinks, setSidebarLinks] = useState<SidebarLinks[]>([]);
+  const [filteredSidebarLinks, setFilteredSidebarLinks] = useState<
+    SidebarLinks[]
+  >([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -104,6 +109,8 @@ export default function SidebarManagement() {
     { name: 'Database', icon: Database },
     { name: 'Folder', icon: Folder },
     { name: 'FileText', icon: FileText },
+    { name: 'BriefcaseBusiness', icon: BriefcaseBusiness },
+    { name: 'UsersRound', icon: UsersRound },
   ];
 
   const filteredIcons = commonIcons.filter((icon) =>
@@ -138,6 +145,16 @@ export default function SidebarManagement() {
       setIsLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    const filteredLinks = sidebarLinks.filter(
+      (sidebar: SidebarLinks) =>
+        sidebar.name.toLowerCase().includes(search.toLowerCase()) ||
+        sidebar.path.toLowerCase().includes(search.toLowerCase()) ||
+        sidebar.icon.toLowerCase().includes(search.toLowerCase())
+    );
+    setFilteredSidebarLinks(filteredLinks);
+  }, [search, sidebarLinks]);
 
   // Open form for creation
   const handleCreateOpen = () => {
@@ -313,12 +330,12 @@ export default function SidebarManagement() {
   // Get manually typed icon
   const ManualIcon = icons[selectedIcon as keyof typeof icons];
 
-  console.log(sidebarLinks);
+  // console.log(sidebarLinks);
 
   return (
     <div className="flex max-h-screen min-h-screen flex-col bg-slate-50/50 px-4 py-8 font-sans text-slate-900 transition-all duration-300 sm:px-6 lg:px-8 dark:bg-slate-950 dark:text-slate-100">
       <div className="mb-6 flex w-fit gap-2 border-b-2 border-slate-300 pr-2 pb-2 dark:border-slate-700">
-        <LucideBuilding />
+        <LucidePanelLeft />
         <h5 className="font-league-spartan text-lg font-bold text-slate-900 dark:text-slate-100">
           Sidebar Management Page
         </h5>
@@ -360,8 +377,8 @@ export default function SidebarManagement() {
           </div>
 
           {/* Filters Dropdown */}
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Add New Button */}
+          {/* Add New Button */}
+          {/* <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={handleCreateOpen}
               className="ml-auto flex cursor-pointer items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-md shadow-indigo-600/10 hover:bg-indigo-500 lg:ml-0 dark:bg-indigo-500 dark:hover:bg-indigo-400"
@@ -369,18 +386,12 @@ export default function SidebarManagement() {
               <Plus className="h-4 w-4" />
               <span>Add Sidebar</span>
             </button>
-          </div>
+          </div> */}
         </div>
 
         {/* Table Container */}
         <TableTemplate
-          rows={sidebarLinks.map((link) => ({
-            ...link,
-            access: link.sidebarLinkRoles.map((role) => role?.role?.role),
-            updatedBy: link.updatedByUser
-              ? `${link.updatedByUser?.employee?.firstName} ${link.updatedByUser?.employee?.lastName}`
-              : '--',
-          }))}
+          rows={filteredSidebarLinks}
           columns={columns}
           tableName="Sidebar Links"
           isLoading={isLoading}

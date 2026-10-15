@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Plus, Search, AlertCircle, LucidePackage } from 'lucide-react';
+import { Plus, Search, AlertCircle, LucideMapPin } from 'lucide-react';
 import axiosInstance from '@/lib/axiosInstance';
 import { useUserContext } from '@/context/UserContext';
 import TableTemplate from '@/app/components/ui-templates/table-template';
@@ -188,12 +188,36 @@ export default function LocationsPage() {
       fontSize: 'xs',
       emphasizeLevel: 'normal',
     },
+    {
+      accessor: 'createdAt',
+      header: 'Created At',
+      dataType: 'date',
+      fontStyle: 'normal',
+      fontSize: 'xs',
+      emphasizeLevel: 'none',
+    },
+    {
+      accessor: 'updatedAt',
+      header: 'Updated At',
+      dataType: 'date',
+      fontStyle: 'normal',
+      fontSize: 'xs',
+      emphasizeLevel: 'none',
+    },
+    {
+      header: 'Updated By',
+      accessor: 'updatedBy',
+      dataType: 'string',
+      fontStyle: 'normal',
+      fontSize: 'xs',
+      emphasizeLevel: 'normal',
+    },
   ];
 
   return (
     <div className="flex max-h-screen min-h-screen flex-col bg-slate-50/50 px-4 py-8 font-sans text-slate-900 transition-all duration-300 sm:px-6 lg:px-8 dark:bg-slate-950 dark:text-slate-100">
       <div className="mb-6 flex w-fit gap-2 border-b-2 border-slate-300 pr-2 pb-2 dark:border-slate-700">
-        <LucidePackage />
+        <LucideMapPin />
         <h5 className="font-league-spartan text-lg font-bold text-slate-900 dark:text-slate-100">
           Locations
         </h5>

@@ -57,7 +57,7 @@ export async function GET(req: Request) {
               },
             },
           },
-          orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+          orderBy: [{ updatedAt: 'desc' }],
           take: 1,
         },
         deployedBy: { select: { firstName: true, lastName: true } },
@@ -156,7 +156,7 @@ export async function POST(req: Request) {
         dateDeployed: dateDeployed || null,
         invoiceNo: invoiceNo || '',
         assetCondition: assetCondition || '',
-        isNew: isNew || true,
+        isNew: isNew ? isNew : false,
         brand: {
           connect: { id: parseInt(brandId) },
         },
@@ -172,12 +172,12 @@ export async function POST(req: Request) {
         supplier: {
           connect: { id: parseInt(supplierId) },
         },
-        ...(assignedTo
-          ? { assignedEmp: { connect: { id: parseInt(assignedTo) } } }
-          : {}),
-        ...(deployedBy
-          ? { deployedBy: { connect: { id: parseInt(deployedBy) } } }
-          : {}),
+        assignedEmp: assignedTo
+          ? { connect: { id: parseInt(assignedTo) } }
+          : null,
+        deployedBy: deployedBy
+          ? { connect: { id: parseInt(deployedBy) } }
+          : null,
       },
     });
 

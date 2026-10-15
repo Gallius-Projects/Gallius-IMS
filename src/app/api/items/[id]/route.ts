@@ -39,7 +39,7 @@ export async function GET(
               },
             },
           },
-          orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+          orderBy: [{ updatedAt: 'desc' }],
           take: 1,
         },
         deployedBy: { select: { firstName: true, lastName: true } },
@@ -81,6 +81,26 @@ export async function PUT(
     }
 
     const body = await req.json();
+
+    const {
+      name,
+      oldAssetTag,
+      newAssetTag,
+      serialNumber,
+      hostname,
+      isNew,
+      status,
+      categoryId,
+      brandId,
+      locationId,
+      officeId,
+      supplierId,
+      deployedBy,
+      assignedTo,
+      description,
+      remarks,
+    } = body;
+
     const normalizedBody = {
       ...body,
       brandId: Number(body.brandId),
@@ -89,30 +109,8 @@ export async function PUT(
       locationId: Number(body.locationId),
       officeId: Number(body.officeId),
       supplierId: Number(body.supplierId),
+      deployedBy: Number(body.deployedBy),
     };
-
-    const {
-      name,
-      oldAssetTag,
-      newAssetTag,
-      serialNumber,
-      hostname,
-      status,
-      categoryId,
-      brandId,
-      locationId,
-      officeId,
-      supplierId,
-      deployedBy,
-      datePurchased,
-      dateDeployed,
-      invoiceNo,
-      assetCondition,
-      isNew,
-      assignedTo,
-      description,
-      remarks,
-    } = normalizedBody;
 
     if (!name) {
       return NextResponse.json(
@@ -156,11 +154,9 @@ export async function PUT(
         hostname: hostname || '',
         remarks: remarks || '',
         status: status || 'SPARE',
+        isNew: isNew ? isNew : false,
         brand: {
           connect: { id: parseInt(brandId) },
-        },
-        assignedEmp: {
-          connect: { id: parseInt(assignedTo) },
         },
         category: {
           connect: { id: parseInt(categoryId) },
@@ -174,9 +170,25 @@ export async function PUT(
         supplier: {
           connect: { id: parseInt(supplierId) },
         },
-        deployedBy: {
-          connect: { id: parseInt(deployedBy) },
-        },
+        assignedEmp: assignedTo
+          ? { connect: { id: parseInt(assignedTo) } }
+          : { disconnect: true },
+        deployedBy: deployedBy
+          ? { connect: { id: parseInt(deployedBy) } }
+          : { disconnect: true },
+        // ...(assignedTo
+        //   ? { assignedEmp: { connect: { id: parseInt(assignedTo) } } }
+        //   : { assignedEmp: null }),
+        // ...(deployedBy
+        //   ? { deployedBy: { connect: { id: parseInt(deployedBy) } } }
+        //   : { deployedBy: null }),
+        // brandId: parseInt(brandId),
+        // categoryId: parseInt(categoryId),
+        // locationId: parseInt(locationId),
+        // officeId: parseInt(officeId),
+        // supplierId: parseInt(supplierId),
+        // assignedTo: parseInt(assignedTo) || null,
+        // deployedBy: parseInt(deployedBy) || null,
       },
     });
 

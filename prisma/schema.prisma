@@ -20,6 +20,7 @@ model sidebarLinks {
   name             String             @unique
   path             String             @unique
   icon             String
+  createdAt        DateTime           @default(now())
   sidebarLinkRoles sidebarLinkRoles[]
   accounts         accounts?          @relation(fields: [accountsUuid], references: [uuid])
   accountsUuid     String?
@@ -27,9 +28,10 @@ model sidebarLinks {
 }
 
 model sidebarLinkRoles {
-  id            Int @id @default(autoincrement())
+  id            Int      @id @default(autoincrement())
   sidebarLinkId Int
   roleId        Int
+  createdAt     DateTime @default(now())
 
   sidebarLink sidebarLinks @relation(fields: [sidebarLinkId], references: [id], onDelete: Cascade)
   role        roles        @relation(fields: [roleId], references: [id], onDelete: Cascade)
@@ -38,8 +40,9 @@ model sidebarLinkRoles {
 }
 
 model roles {
-  id   Int    @id @default(autoincrement())
-  role String @unique
+  id        Int      @id @default(autoincrement())
+  role      String   @unique
+  createdAt DateTime @default(now())
 
   sidebarLinkRoles sidebarLinkRoles[]
   accounts         accounts[]
@@ -50,6 +53,7 @@ model departments {
   id           Int           @id @default(autoincrement())
   name         String        @unique
   abbreviation String?
+  createdAt    DateTime      @default(now())
   positions    positions[]
   employees    employees[]
   accountLogs  accountLogs[]
@@ -60,6 +64,7 @@ model positions {
   name         String        @unique
   departmentId Int
   department   departments   @relation(fields: [departmentId], references: [id])
+  createdAt    DateTime      @default(now())
   employees    employees[]
   accountLogs  accountLogs[]
 }
@@ -72,7 +77,6 @@ model accounts {
   roleId                 Int?
   status                 Boolean         @default(true)
   createdAt              DateTime        @default(now())
-  updatedAt              DateTime        @updatedAt
   employeeId             Int             @unique
   employee               employees       @relation(fields: [employeeId], references: [id])
   sidebarLinks           sidebarLinks[]
@@ -87,6 +91,7 @@ model categories {
   name           String
   quantity       Int?
   abbreviation   String?
+  createdAt      DateTime         @default(now())
   inventoryItems inventoryItems[]
   adminLogs      adminLogs[]
 }
@@ -94,6 +99,7 @@ model categories {
 model brands {
   id             Int              @id @default(autoincrement())
   name           String
+  createdAt      DateTime         @default(now())
   inventoryItems inventoryItems[]
   adminLogs      adminLogs[]
 }
@@ -105,6 +111,7 @@ model suppliers {
   contactNumber  String?
   email          String?
   address        String?
+  createdAt      DateTime         @default(now())
   inventoryItems inventoryItems[]
   adminLogs      adminLogs[]
 }
@@ -113,6 +120,7 @@ model locations {
   id             Int              @id @default(autoincrement())
   name           String
   abbreviation   String?
+  createdAt      DateTime         @default(now())
   inventoryItems inventoryItems[]
   adminLogs      adminLogs[]
 }
@@ -123,7 +131,6 @@ model offices {
   status         Boolean          @default(true)
   abbreviation   String?
   createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
   inventoryItems inventoryItems[]
   employees      employees[]
   adminLogs      adminLogs[]
@@ -156,6 +163,7 @@ model inventoryItems {
   assetCondition String?
   isNew          Boolean         @default(true)
   remarks        String          @db.Text
+  createdAt      DateTime        @default(now())
   supplier       suppliers?      @relation(fields: [supplierId], references: [id])
   supplierId     Int?
   inventoryLogs  inventoryLogs[]
@@ -175,6 +183,7 @@ model employees {
   position      positions        @relation(fields: [positionId], references: [id])
   positionId    Int
   status        Boolean          @default(true)
+  createdAt     DateTime         @default(now())
   accounts      accounts?
   assignedItems inventoryItems[] @relation("assignedEmp")
   itemsDeployed inventoryItems[] @relation("deployedBy")
@@ -189,7 +198,6 @@ model inventoryLogs {
   inventoryId      Int?
   involvedUserUUID String?
   involvedUser     accounts?       @relation(fields: [involvedUserUUID], references: [uuid])
-  createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
 }
 
@@ -210,7 +218,6 @@ model adminLogs {
   updatedSidebarLink   sidebarLinks? @relation(fields: [updatedSidebarLinkId], references: [id])
   involvedUserUUID     String?
   involvedUser         accounts?     @relation(fields: [involvedUserUUID], references: [uuid])
-  createdAt            DateTime      @default(now())
   updatedAt            DateTime      @updatedAt
   employees            employees?    @relation(fields: [employeesId], references: [id])
   employeesId          Int?
@@ -231,6 +238,5 @@ model accountLogs {
   updatedRole         roles?       @relation(fields: [updatedRoleId], references: [id])
   involvedUserUUID    String?
   involvedUser        accounts?    @relation("involvedUser", fields: [involvedUserUUID], references: [uuid])
-  createdAt           DateTime     @default(now())
   updatedAt           DateTime     @updatedAt
 }

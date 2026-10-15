@@ -33,7 +33,7 @@ export async function GET(
               },
             },
           },
-          orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+          orderBy: [{ updatedAt: 'desc' }],
           take: 1,
         },
       },

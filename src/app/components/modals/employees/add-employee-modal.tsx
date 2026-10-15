@@ -1,58 +1,33 @@
-import { AlertCircle, Loader2, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
-import SearchableDropdown from '../../ui-templates/searchable-dropdown';
 import { useLibrariesContext } from '@/context/LibrariesContext';
+import { AlertCircle, Loader2, X } from 'lucide-react';
+import SearchableDropdown from '../../ui-templates/searchable-dropdown';
 import axiosInstance from '@/lib/axiosInstance';
+import { useRef, useState } from 'react';
 
-export default function EditEmployee({
+export default function AddEmployee({
   formData,
   setFormData,
   handleClose,
   fetchEmployees,
   isSubmitting,
   setIsSubmitting,
-  dataToUpdate,
 }: {
   formData: any;
   setFormData: any;
   handleClose: () => void;
   fetchEmployees: () => void;
   isSubmitting: boolean;
-  setIsSubmitting: (isSubmitting: boolean) => void;
-  dataToUpdate: any;
+  setIsSubmitting: any;
 }) {
   const modalRef = useRef<HTMLDivElement>(null);
   const { offices, departments, positions } = useLibrariesContext();
 
   const [formError, setFormError] = useState('');
 
-  // Auto-fill values if editing
-  useEffect(() => {
-    if (dataToUpdate) {
-      setFormData({
-        employeeId: dataToUpdate.employeeId || '',
-        firstName: dataToUpdate.firstName || '',
-        lastName: dataToUpdate.lastName || '',
-        middleName: dataToUpdate.middleName || '',
-        suffix: dataToUpdate.suffix || '',
-        officeId: dataToUpdate.officeId || null,
-        departmentId: dataToUpdate.departmentId || null,
-        positionId: dataToUpdate.positionId || null,
-        status: dataToUpdate.status || true,
-      });
-    }
-  }, [dataToUpdate, setFormData]);
-
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setFormError('');
-
-    if (!formData.employeeId) {
-      setFormError('Employee number is required');
-      setIsSubmitting(false);
-      return;
-    }
 
     if (!formData.firstName) {
       setFormError('First name is required');
@@ -85,38 +60,19 @@ export default function EditEmployee({
     }
 
     try {
-      await axiosInstance.put(`/employees/${dataToUpdate.id}`, formData);
+      await axiosInstance.post(`/employees`, formData);
 
-      alert('Employee updated successfully');
+      alert('Employee added successfully');
 
       fetchEmployees();
       handleClose();
     } catch (err: any) {
-      setFormError(err.response.data.error || 'Failed to save employee');
+      console.log(err);
+      setFormError(err?.message || 'Failed to save employee');
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
-        handleClose();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [handleClose]);
-
-  useEffect(() => {
-    if (formError) {
-      modalRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }, [formError]);
-
-  console.log('dataToUpdate', dataToUpdate.status);
-  console.log('formData', formData.status);
 
   return (
     <div
@@ -127,7 +83,7 @@ export default function EditEmployee({
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-slate-200/60 px-6 py-4 dark:border-slate-800/60">
           <h3 className="text-base font-bold text-slate-900 dark:text-white">
-            Edit Employee
+            Add New Employee
           </h3>
           <button
             onClick={() => handleClose()}
@@ -165,7 +121,7 @@ export default function EditEmployee({
                 />
               </div>
 
-              {/* Name */}
+              {/* First Name */}
               <div>
                 <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
                   First Name *
@@ -181,6 +137,8 @@ export default function EditEmployee({
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                 />
               </div>
+
+              {/* Last Name */}
               <div>
                 <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
                   Last Name *
@@ -196,6 +154,8 @@ export default function EditEmployee({
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                 />
               </div>
+
+              {/* Middle Name */}
               <div>
                 <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
                   Middle Name
@@ -210,6 +170,8 @@ export default function EditEmployee({
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                 />
               </div>
+
+              {/* Suffix */}
               <div>
                 <label className="mb-1.5 block text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">
                   Suffix
@@ -231,9 +193,9 @@ export default function EditEmployee({
                 placeholder="Select Office"
                 data={offices}
                 value={formData.officeId}
-                onChange={(value) =>
-                  setFormData({ ...formData, officeId: value })
-                }
+                onChange={(value) => {
+                  setFormData({ ...formData, officeId: value });
+                }}
                 required
               />
 
@@ -243,9 +205,9 @@ export default function EditEmployee({
                 placeholder="Select Department"
                 data={departments}
                 value={formData.departmentId}
-                onChange={(value) =>
-                  setFormData({ ...formData, departmentId: value })
-                }
+                onChange={(value) => {
+                  setFormData({ ...formData, departmentId: value });
+                }}
                 required
               />
 
@@ -255,9 +217,9 @@ export default function EditEmployee({
                 placeholder="Select Position"
                 data={positions}
                 value={formData.positionId}
-                onChange={(value) =>
-                  setFormData({ ...formData, positionId: value })
-                }
+                onChange={(value) => {
+                  setFormData({ ...formData, positionId: value });
+                }}
                 required
               />
 

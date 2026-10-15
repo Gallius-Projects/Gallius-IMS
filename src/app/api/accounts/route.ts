@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
+import { hashPassword, getAuthUser } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { getAuthUser } from '@/lib/auth';
+import { NextResponse } from 'next/server';
 
 // GET: Retrieve accounts
 export async function GET(req: Request) {
@@ -39,7 +39,6 @@ export async function GET(req: Request) {
         },
         role: true,
       },
-      orderBy: { updatedAt: 'desc' },
     });
 
     // Filter out the passwordHash from the response
@@ -69,41 +68,26 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const {
-      firstName,
-      lastName,
-      middleName,
-      employeeId,
-      departmentId,
-      positionId,
-    } = body;
+    const { username, password, roleId, status, employeeId } = body;
 
-    if (
-      !firstName ||
-      !lastName ||
-      !middleName ||
-      !employeeId ||
-      !departmentId ||
-      !positionId
-    ) {
+    if (!username || !password || !roleId || !status || !employeeId) {
       return NextResponse.json(
-        { error: 'All employee fields are required' },
+        { error: 'All account fields are required' },
         { status: 400 }
       );
     }
 
-    const newEmployee = await prisma.employees.create({
+    const newAccount = await prisma.accounts.create({
       data: {
-        firstName,
-        lastName,
-        middleName,
-        employeeId,
-        departmentId: parseInt(departmentId),
-        positionId: parseInt(positionId),
+        username,
+        passwordHash: hashPassword(password),
+        role: { connect: { id: parseInt(roleId) } },
+        status,
+        employee: { connect: { id: parseInt(employeeId) } },
       },
     });
 
-    return NextResponse.json(newEmployee, { status: 201 });
+    return NextResponse.json(newAccount, { status: 201 });
   } catch (error: any) {
     console.error('Create employee error:', error);
     return NextResponse.json(

@@ -4,6 +4,7 @@ CREATE TABLE `sidebarLinks` (
     `name` VARCHAR(191) NOT NULL,
     `path` VARCHAR(191) NOT NULL,
     `icon` VARCHAR(191) NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `accountsUuid` VARCHAR(191) NULL,
 
     UNIQUE INDEX `sidebarLinks_name_key`(`name`),
@@ -16,6 +17,7 @@ CREATE TABLE `sidebarLinkRoles` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `sidebarLinkId` INTEGER NOT NULL,
     `roleId` INTEGER NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     UNIQUE INDEX `sidebarLinkRoles_sidebarLinkId_roleId_key`(`sidebarLinkId`, `roleId`),
     PRIMARY KEY (`id`)
@@ -25,6 +27,7 @@ CREATE TABLE `sidebarLinkRoles` (
 CREATE TABLE `roles` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `role` VARCHAR(191) NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     UNIQUE INDEX `roles_role_key`(`role`),
     PRIMARY KEY (`id`)
@@ -35,6 +38,7 @@ CREATE TABLE `departments` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(191) NOT NULL,
     `abbreviation` VARCHAR(191) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     UNIQUE INDEX `departments_name_key`(`name`),
     PRIMARY KEY (`id`)
@@ -45,6 +49,7 @@ CREATE TABLE `positions` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(191) NOT NULL,
     `departmentId` INTEGER NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     UNIQUE INDEX `positions_name_key`(`name`),
     PRIMARY KEY (`id`)
@@ -58,7 +63,6 @@ CREATE TABLE `accounts` (
     `roleId` INTEGER NULL,
     `status` BOOLEAN NOT NULL DEFAULT true,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `updatedAt` DATETIME(3) NOT NULL,
     `employeeId` INTEGER NOT NULL,
 
     UNIQUE INDEX `accounts_username_key`(`username`),
@@ -72,6 +76,7 @@ CREATE TABLE `categories` (
     `name` VARCHAR(191) NOT NULL,
     `quantity` INTEGER NULL,
     `abbreviation` VARCHAR(191) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -80,6 +85,7 @@ CREATE TABLE `categories` (
 CREATE TABLE `brands` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(191) NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -92,6 +98,7 @@ CREATE TABLE `suppliers` (
     `contactNumber` VARCHAR(191) NULL,
     `email` VARCHAR(191) NULL,
     `address` VARCHAR(191) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -101,6 +108,7 @@ CREATE TABLE `locations` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(191) NOT NULL,
     `abbreviation` VARCHAR(191) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -112,7 +120,6 @@ CREATE TABLE `offices` (
     `status` BOOLEAN NOT NULL DEFAULT true,
     `abbreviation` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `updatedAt` DATETIME(3) NOT NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -130,17 +137,19 @@ CREATE TABLE `inventoryItems` (
     `categoryId` INTEGER NOT NULL,
     `locationId` INTEGER NOT NULL,
     `brandId` INTEGER NOT NULL,
-    `assignedTo` INTEGER NOT NULL,
+    `assignedTo` INTEGER NULL,
     `officeId` INTEGER NOT NULL,
-    `deployedByUUID` VARCHAR(191) NULL,
+    `deployedById` INTEGER NULL,
     `invoiceNo` VARCHAR(191) NULL,
     `dateDeployed` DATETIME(3) NULL,
     `datePurchased` DATETIME(3) NULL,
     `assetCondition` VARCHAR(191) NULL,
     `isNew` BOOLEAN NOT NULL DEFAULT true,
     `remarks` TEXT NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `supplierId` INTEGER NULL,
 
+    UNIQUE INDEX `inventoryItems_hostname_key`(`hostname`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -156,6 +165,7 @@ CREATE TABLE `employees` (
     `departmentId` INTEGER NOT NULL,
     `positionId` INTEGER NOT NULL,
     `status` BOOLEAN NOT NULL DEFAULT true,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     UNIQUE INDEX `employees_employeeId_key`(`employeeId`),
     PRIMARY KEY (`id`)
@@ -167,7 +177,6 @@ CREATE TABLE `inventoryLogs` (
     `activity` TEXT NOT NULL,
     `inventoryId` INTEGER NULL,
     `involvedUserUUID` VARCHAR(191) NULL,
-    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
     PRIMARY KEY (`id`)
@@ -184,7 +193,6 @@ CREATE TABLE `adminLogs` (
     `updatedLocationId` INTEGER NULL,
     `updatedSidebarLinkId` INTEGER NULL,
     `involvedUserUUID` VARCHAR(191) NULL,
-    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
     `employeesId` INTEGER NULL,
 
@@ -201,7 +209,6 @@ CREATE TABLE `accountLogs` (
     `updatedAccountUuid` VARCHAR(191) NULL,
     `updatedRoleId` INTEGER NULL,
     `involvedUserUUID` VARCHAR(191) NULL,
-    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
     PRIMARY KEY (`id`)
@@ -235,13 +242,13 @@ ALTER TABLE `inventoryItems` ADD CONSTRAINT `inventoryItems_locationId_fkey` FOR
 ALTER TABLE `inventoryItems` ADD CONSTRAINT `inventoryItems_brandId_fkey` FOREIGN KEY (`brandId`) REFERENCES `brands`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `inventoryItems` ADD CONSTRAINT `inventoryItems_assignedTo_fkey` FOREIGN KEY (`assignedTo`) REFERENCES `employees`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `inventoryItems` ADD CONSTRAINT `inventoryItems_assignedTo_fkey` FOREIGN KEY (`assignedTo`) REFERENCES `employees`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `inventoryItems` ADD CONSTRAINT `inventoryItems_officeId_fkey` FOREIGN KEY (`officeId`) REFERENCES `offices`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `inventoryItems` ADD CONSTRAINT `inventoryItems_deployedByUUID_fkey` FOREIGN KEY (`deployedByUUID`) REFERENCES `accounts`(`uuid`) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE `inventoryItems` ADD CONSTRAINT `inventoryItems_deployedById_fkey` FOREIGN KEY (`deployedById`) REFERENCES `employees`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `inventoryItems` ADD CONSTRAINT `inventoryItems_supplierId_fkey` FOREIGN KEY (`supplierId`) REFERENCES `suppliers`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;

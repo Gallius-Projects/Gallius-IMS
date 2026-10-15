@@ -20,23 +20,7 @@ export async function GET(req: Request) {
     const whereClause: any = {};
 
     if (search) {
-      whereClause.OR = [
-        { name: { contains: search } },
-        {
-          accountLogs: {
-            involvedUser: {
-              employee: {
-                OR: [
-                  { firstName: { contains: search } },
-                  { lastName: { contains: search } },
-                  { createdAt: { contains: search } },
-                  { updatedAt: { contains: search } },
-                ],
-              },
-            },
-          },
-        },
-      ];
+      whereClause.OR = [{ name: { contains: search } }];
     }
 
     const positions = await prisma.positions.findMany({
@@ -51,7 +35,7 @@ export async function GET(req: Request) {
               },
             },
           },
-          orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+          orderBy: [{ updatedAt: 'desc' }],
           take: 1,
         },
       },

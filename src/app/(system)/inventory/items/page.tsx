@@ -7,7 +7,7 @@ import {
   Trash2,
   AlertCircle,
   Filter,
-  LucideMonitor,
+  LucideMonitorCog,
 } from 'lucide-react';
 import axiosInstance from '@/lib/axiosInstance';
 import { useUserContext } from '@/context/UserContext';
@@ -284,7 +284,7 @@ export default function ItemsPage() {
     if (user?.role.includes('superadmin') || user?.role.includes('admin')) {
       console.log('Generating new asset tag');
       if (!formData.categoryId || !formData.officeId || !formData.locationId) {
-        setFormError('Please select an tenant, category, and location');
+        setFormError('Please select a tenant, category, and location');
         setFormData((prev) => {
           return {
             ...prev,
@@ -395,7 +395,7 @@ export default function ItemsPage() {
   return (
     <div className="flex max-h-screen min-h-screen flex-col bg-slate-50/50 px-4 py-8 font-sans text-slate-900 transition-all duration-300 sm:px-6 lg:px-8 dark:bg-slate-950 dark:text-slate-100">
       <div className="mb-6 flex w-fit gap-2 border-b-2 border-slate-300 pr-2 pb-2 dark:border-slate-700">
-        <LucideMonitor />
+        <LucideMonitorCog />
         <h5 className="font-league-spartan text-lg font-bold text-slate-900 dark:text-slate-100">
           Inventory Items
         </h5>
