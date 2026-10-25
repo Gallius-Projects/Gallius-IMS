@@ -8,6 +8,7 @@ import {
   LucidePackageOpen,
   LucideSend,
   LucideWrench,
+  LucideX,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -79,6 +80,9 @@ export default function Dashboard() {
   const spareItems = items.filter((item) => item.status === 'SPARE').length;
   const defectiveItems = items.filter(
     (item) => item.status === 'DEFECTIVE'
+  ).length;
+  const disposedItems = items.filter(
+    (item) => item.status === 'DISPOSED'
   ).length;
 
   return (
@@ -252,6 +256,48 @@ export default function Dashboard() {
 
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                 Items currently defective
+              </p>
+            </div>
+          </div>
+
+          {/* Card 5 - Disposed Items */}
+          <div className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-slate-700 dark:bg-slate-800">
+            {/* Decorative background */}
+            <div className="pointer-events-none absolute -top-8 -right-8 h-32 w-32 rounded-full bg-orange-500/5 transition-transform duration-300 group-hover:scale-125" />
+
+            {/* Header */}
+            <div className="relative flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-200 text-gray-700 dark:bg-gray-700/20 dark:text-gray-400">
+                  <LucideX size={21} />
+                </div>
+
+                <div>
+                  <h6 className="font-league-spartan text-base font-bold text-slate-700 dark:text-slate-200">
+                    Disposed Items
+                  </h6>
+
+                  <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                    Disposed Overview
+                  </p>
+                </div>
+              </div>
+
+              {/* Status */}
+              <div className="flex items-center gap-1.5 rounded-full bg-orange-50 px-2.5 py-1 text-[10px] font-semibold text-orange-600 dark:bg-orange-500/10 dark:text-orange-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
+                Disposed
+              </div>
+            </div>
+
+            {/* Main Number */}
+            <div className="relative mt-6">
+              <p className="font-league-spartan text-5xl font-bold tracking-tight text-slate-900 dark:text-white">
+                {disposedItems}
+              </p>
+
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                Items currently disposed
               </p>
             </div>
           </div>

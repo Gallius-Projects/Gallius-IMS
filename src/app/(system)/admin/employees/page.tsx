@@ -226,6 +226,7 @@ export default function EmployeesPage() {
       accessor: 'firstName',
       dataType: 'string',
       fontStyle: 'semibold',
+      fontSize: 'sm',
       secondary: 'lastName',
       emphasizeLevel: 'high',
     },
@@ -234,6 +235,7 @@ export default function EmployeesPage() {
       accessor: 'department',
       dataType: 'object',
       fontStyle: 'normal',
+      fontSize: 'sm',
       emphasizeLevel: 'medium',
     },
     {
@@ -342,10 +344,9 @@ export default function EmployeesPage() {
           handleEditAccountOpen={handleEditAccountOpen}
           handleEditOpen={handleEditOpen}
           handleDeleteOpen={handleDeleteOpen}
-          canCreateAccount={user?.role === 'superadmin'}
-          canEditAccount={user?.role === 'superadmin'}
-          canEdit={user?.role === 'superadmin'}
-          canDelete={user?.role === 'superadmin'}
+          canCreateEditAccount={user?.role === 'superadmin'}
+          canEdit={user?.role === 'superadmin' || user?.role === 'admin'}
+          canDelete={user?.role === 'superadmin' || user?.role === 'admin'}
         />
       </main>
 

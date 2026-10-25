@@ -58,7 +58,7 @@ export async function GET(req: Request) {
             },
           },
           orderBy: [{ updatedAt: 'desc' }],
-          take: 1,
+          take: 5,
         },
         deployedBy: { select: { firstName: true, lastName: true } },
       },
@@ -69,7 +69,6 @@ export async function GET(req: Request) {
 
       return {
         ...item,
-        createdAt: latestLog?.createdAt,
         updatedAt: latestLog?.updatedAt,
         updatedBy: latestLog?.involvedUser?.employee
           ? latestLog?.involvedUser?.employee.firstName +
@@ -172,12 +171,12 @@ export async function POST(req: Request) {
         supplier: {
           connect: { id: parseInt(supplierId) },
         },
-        assignedEmp: assignedTo
-          ? { connect: { id: parseInt(assignedTo) } }
-          : null,
-        deployedBy: deployedBy
-          ? { connect: { id: parseInt(deployedBy) } }
-          : null,
+        ...(assignedTo
+          ? { assignedEmp: { connect: { id: parseInt(assignedTo) } } }
+          : {}),
+        ...(deployedBy
+          ? { deployedBy: { connect: { id: parseInt(deployedBy) } } }
+          : {}),
       },
     });
 

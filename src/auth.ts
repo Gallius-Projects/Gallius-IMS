@@ -1,12 +1,12 @@
 import NextAuth from 'next-auth';
-import Microsoft from 'next-auth/providers/microsoft';
+import MicrosoftEntraID from 'next-auth/providers/microsoft-entra-id';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
-    Microsoft({
+    MicrosoftEntraID({
       clientId: process.env.AZURE_CLIENT_ID || '',
-      clientSecret: process.env.AZURE_CLIENT_SECRET || '',
-      tenantId: process.env.AZURE_TENANT_ID || 'common',
+      clientSecret: process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET || '',
+      issuer: `https://login.microsoftonline.com/${process.env.AZURE_TENANT_ID}`,
     }),
   ],
   callbacks: {

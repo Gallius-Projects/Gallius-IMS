@@ -20,6 +20,7 @@ model sidebarLinks {
   name             String             @unique
   path             String             @unique
   icon             String
+  category         String
   createdAt        DateTime           @default(now())
   sidebarLinkRoles sidebarLinkRoles[]
   accounts         accounts?          @relation(fields: [accountsUuid], references: [uuid])
@@ -43,6 +44,29 @@ model roles {
   id        Int      @id @default(autoincrement())
   role      String   @unique
   createdAt DateTime @default(now())
+
+  allowGradingSystem                 Boolean? @default(false)
+  allowInventorySystemAccess         Boolean? @default(false)
+  allowInventorySystemAdd            Boolean? @default(false)
+  allowInventorySystemEdit           Boolean? @default(false)
+  allowInventorySystemDelete         Boolean? @default(false)
+  allowInventorySystemVoid           Boolean? @default(false)
+  allowInventorySystemViewAuditTrail Boolean? @default(false)
+  allowRequestForPurchaseAccess      Boolean? @default(false)
+  allowRequestForPurchaseAdd         Boolean? @default(false)
+  allowRequestForPurchaseEdit        Boolean? @default(false)
+  allowRequestForPurchaseCancel      Boolean? @default(false)
+  allowRequestForPurchasePost        Boolean? @default(false)
+  allowRequestForPurchaseSendEmail   Boolean? @default(false)
+  allowFixedAssetAccess              Boolean? @default(false)
+  allowFixedAssetAdd                 Boolean? @default(false)
+  allowFixedAssetEdit                Boolean? @default(false)
+  allowFixedAssetCancel              Boolean? @default(false)
+  allowFixedAssetPost                Boolean? @default(false)
+  allowFixedAssetSendEmail           Boolean? @default(false)
+  allowUMAccess                      Boolean? @default(false)
+  allowUMAdd                         Boolean? @default(false)
+  allowUMEdit                        Boolean? @default(false)
 
   sidebarLinkRoles sidebarLinkRoles[]
   accounts         accounts[]

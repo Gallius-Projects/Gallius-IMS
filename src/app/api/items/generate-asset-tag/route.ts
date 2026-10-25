@@ -32,7 +32,7 @@ export async function GET(req: Request) {
           locationId: parseInt(locationId),
         },
       },
-      orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+      orderBy: [{ updatedAt: 'desc' }],
       include: {
         updatedItem: true,
       },

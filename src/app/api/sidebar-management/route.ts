@@ -44,7 +44,7 @@ export async function GET(req: Request) {
               },
             },
           },
-          orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+          orderBy: { updatedAt: 'desc' },
           take: 1,
         },
       },
@@ -56,7 +56,6 @@ export async function GET(req: Request) {
       return {
         ...link,
         access: link.sidebarLinkRoles.map((role) => role?.role?.role),
-        createdAt: latestLog?.createdAt,
         updatedAt: latestLog?.updatedAt,
         updatedBy: latestLog?.involvedUser?.employee
           ? latestLog?.involvedUser?.employee.firstName +
@@ -88,7 +87,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { name, path, icon, access } = body;
+    const { name, path, icon, category, access } = body;
 
     if (!name) {
       return NextResponse.json(
@@ -102,6 +101,7 @@ export async function POST(req: Request) {
         name,
         path,
         icon,
+        category,
         sidebarLinkRoles: {
           create: access.map((roleId: any) => ({
             roleId,

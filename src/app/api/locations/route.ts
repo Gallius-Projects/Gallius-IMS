@@ -37,7 +37,7 @@ export async function GET(req: Request) {
               },
             },
           },
-          orderBy: [{ updatedAt: 'desc' }],
+          orderBy: { updatedAt: 'desc' },
           take: 1,
         },
       },
@@ -48,7 +48,6 @@ export async function GET(req: Request) {
 
       return {
         ...location,
-        createdAt: latestLog?.createdAt,
         updatedAt: latestLog?.updatedAt,
         updatedBy: latestLog?.involvedUser?.employee
           ? latestLog?.involvedUser?.employee.firstName +

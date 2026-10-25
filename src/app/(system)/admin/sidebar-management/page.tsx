@@ -147,12 +147,18 @@ export default function SidebarManagement() {
   }, []);
 
   useEffect(() => {
-    const filteredLinks = sidebarLinks.filter(
-      (sidebar: SidebarLinks) =>
-        sidebar.name.toLowerCase().includes(search.toLowerCase()) ||
-        sidebar.path.toLowerCase().includes(search.toLowerCase()) ||
-        sidebar.icon.toLowerCase().includes(search.toLowerCase())
-    );
+    let filteredLinks = sidebarLinks;
+    if (search) {
+      filteredLinks = sidebarLinks.filter(
+        (sidebar: SidebarLinks) =>
+          sidebar.name.toLowerCase().includes(search.toLowerCase()) ||
+          sidebar.path.toLowerCase().includes(search.toLowerCase()) ||
+          sidebar.icon.toLowerCase().includes(search.toLowerCase())
+      );
+    } else {
+      filteredLinks = sidebarLinks;
+    }
+
     setFilteredSidebarLinks(filteredLinks);
   }, [search, sidebarLinks]);
 

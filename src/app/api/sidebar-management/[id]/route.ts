@@ -41,7 +41,7 @@ export async function GET(
               },
             },
           },
-          orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+          orderBy: { updatedAt: 'desc' },
           take: 1,
         },
       },
@@ -92,7 +92,7 @@ export async function PUT(
 
     const body = await req.json();
 
-    const { name, path, icon, access } = body;
+    const { name, path, icon, category, access } = body;
 
     if (!name) {
       return NextResponse.json(
@@ -117,6 +117,7 @@ export async function PUT(
           name,
           path,
           icon,
+          category,
         },
       });
 

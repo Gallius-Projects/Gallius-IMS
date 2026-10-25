@@ -59,7 +59,6 @@ export async function GET(req: Request) {
       return {
         ...employee,
         accountStatus: employee?.accounts?.status,
-        createdAt: latestLog?.createdAt,
         updatedAt: latestLog?.updatedAt,
         updatedBy: latestLog?.involvedUser?.employee
           ? latestLog?.involvedUser?.employee.firstName +
@@ -95,23 +94,24 @@ export async function POST(req: Request) {
       firstName,
       lastName,
       middleName,
+      suffix,
       employeeId,
       officeId,
       departmentId,
       positionId,
+      status,
     } = body;
 
     if (
       !firstName ||
       !lastName ||
-      !middleName ||
       !employeeId ||
       !officeId ||
       !departmentId ||
       !positionId
     ) {
       return NextResponse.json(
-        { error: 'All employee fields are required' },
+        { error: 'All required employee fields must not be empty' },
         { status: 400 }
       );
     }
@@ -121,7 +121,9 @@ export async function POST(req: Request) {
         firstName,
         lastName,
         middleName,
+        suffix,
         employeeId,
+        status,
         office: { connect: { id: parseInt(officeId) } },
         department: { connect: { id: parseInt(departmentId) } },
         position: { connect: { id: parseInt(positionId) } },

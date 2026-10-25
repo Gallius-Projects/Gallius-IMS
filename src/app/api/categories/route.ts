@@ -48,7 +48,6 @@ export async function GET(req: Request) {
 
       return {
         ...category,
-        createdAt: latestLog?.createdAt,
         updatedAt: latestLog?.updatedAt,
         updatedBy: latestLog?.involvedUser?.employee
           ? latestLog?.involvedUser?.employee?.firstName +

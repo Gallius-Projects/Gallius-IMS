@@ -225,6 +225,42 @@ export default function ViewItemsModal({
               {viewingDetails.remarks || 'No remarks provided.'}
             </div>
           </div>
+
+          {/* Logs */}
+          <div>
+            <span className="mb-2 block text-xs font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
+              History
+            </span>
+            <div
+              className={`max-h-40 overflow-y-auto rounded-xl border border-slate-200/40 bg-slate-50 p-4 text-sm leading-relaxed whitespace-pre-wrap dark:border-slate-800/40 dark:bg-slate-950/30 ${
+                viewingDetails?.inventoryLogs?.length > 0
+                  ? 'text-slate-600 dark:text-slate-300'
+                  : 'text-slate-400 dark:text-slate-500'
+              }`}
+            >
+              {viewingDetails?.inventoryLogs?.length > 0 ? (
+                <div className="flex flex-col gap-2">
+                  {viewingDetails?.inventoryLogs?.map((log: any) => (
+                    <div key={log.id} className="mb-2 flex flex-col gap-1">
+                      <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                        {log?.activity}
+                      </span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">
+                        {log?.involvedUser?.employee?.firstName +
+                          ' ' +
+                          log?.involvedUser?.employee?.lastName}
+                      </span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">
+                        {log?.updatedAt}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                'No logs provided.'
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Modal Footer */}

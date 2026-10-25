@@ -82,6 +82,8 @@ export default function AddItemsModal({
     }
   }, [formError]);
 
+  console.log(formData?.isNew);
+
   return (
     <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
       <div className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">

@@ -856,7 +856,7 @@ export async function POST(req: Request) {
         {
           name: 'Employees',
           path: '/admin/employees',
-          icon: 'IDCard',
+          icon: 'IdCard',
           access: [2, 1],
         },
         {

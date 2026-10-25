@@ -1,7 +1,7 @@
 'use client';
 
 import * as Lucide from 'lucide-react';
-import { Edit, Eye, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Edit, Eye, Loader2, Plus, Trash2 } from 'lucide-react';
 
 export default function TableTemplate({
   rows,
@@ -13,7 +13,7 @@ export default function TableTemplate({
   handleDetailOpen = () => {},
   handleEditOpen = () => {},
   handleDeleteOpen = () => {},
-  canCreateAccount = false,
+  canCreateEditAccount = false,
   canView = false,
   canEdit = false,
   canDelete = false,
@@ -27,7 +27,7 @@ export default function TableTemplate({
   handleDetailOpen?: (row: any) => void;
   handleEditOpen?: (row: any) => void;
   handleDeleteOpen?: (id: number) => void;
-  canCreateAccount?: boolean;
+  canCreateEditAccount?: boolean;
   canView?: boolean;
   canEdit?: boolean;
   canDelete?: boolean;
@@ -131,7 +131,7 @@ export default function TableTemplate({
                 {(canView || canEdit || canDelete) && (
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-2">
-                      {canCreateAccount && !row?.accounts?.uuid && (
+                      {canCreateEditAccount && !row?.accounts?.uuid && (
                         <button
                           onClick={() => handleCreateAccountOpen(row)}
                           className="dark:hover:bg-slate-850 cursor-pointer rounded-lg border border-slate-200/50 bg-white p-1.5 text-slate-400 transition-all hover:bg-slate-50 hover:text-indigo-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500 dark:hover:text-indigo-400"
@@ -141,7 +141,7 @@ export default function TableTemplate({
                         </button>
                       )}
 
-                      {canCreateAccount && row?.accounts?.uuid && (
+                      {canCreateEditAccount && row?.accounts?.uuid && (
                         <button
                           onClick={() => handleEditAccountOpen(row)}
                           className="dark:hover:bg-slate-850 cursor-pointer rounded-lg border border-slate-200/50 bg-white p-1.5 text-slate-400 transition-all hover:bg-slate-50 hover:text-indigo-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500 dark:hover:text-indigo-400"

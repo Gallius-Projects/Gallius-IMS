@@ -285,6 +285,7 @@ export default function ItemsPage() {
       console.log('Generating new asset tag');
       if (!formData.categoryId || !formData.officeId || !formData.locationId) {
         setFormError('Please select a tenant, category, and location');
+
         setFormData((prev) => {
           return {
             ...prev,
@@ -308,11 +309,10 @@ export default function ItemsPage() {
         });
 
         const generatedAssetTag = response.data;
-
-        setFormData({
-          ...formData,
+        setFormData((prev) => ({
+          ...prev,
           newAssetTag: generatedAssetTag,
-        });
+        }));
       }
     }
   };
@@ -390,7 +390,7 @@ export default function ItemsPage() {
     },
   ];
 
-  console.log(formData);
+  // console.log(formData);
 
   return (
     <div className="flex max-h-screen min-h-screen flex-col bg-slate-50/50 px-4 py-8 font-sans text-slate-900 transition-all duration-300 sm:px-6 lg:px-8 dark:bg-slate-950 dark:text-slate-100">

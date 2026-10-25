@@ -80,8 +80,32 @@ export default function RolesPage() {
   const handleEditOpen = (role: Role) => {
     setFormMode('edit');
     setSelectedRoleId(role.id);
+
     setFormData({
-      name: role.name,
+      name: role.role,
+      allowGradingSystem: role.allowGradingSystem,
+      allowInventorySystemAccess: role.allowInventorySystemAccess,
+      allowInventorySystemAdd: role.allowInventorySystemAdd,
+      allowInventorySystemEdit: role.allowInventorySystemEdit,
+      allowInventorySystemDelete: role.allowInventorySystemDelete,
+      allowInventorySystemVoid: role.allowInventorySystemVoid,
+      allowInventorySystemViewAuditTrail:
+        role.allowInventorySystemViewAuditTrail,
+      allowRequestForPurchaseAccess: role.allowRequestForPurchaseAccess,
+      allowRequestForPurchaseAdd: role.allowRequestForPurchaseAdd,
+      allowRequestForPurchaseEdit: role.allowRequestForPurchaseEdit,
+      allowRequestForPurchaseCancel: role.allowRequestForPurchaseCancel,
+      allowRequestForPurchasePost: role.allowRequestForPurchasePost,
+      allowRequestForPurchaseSendEmail: role.allowRequestForPurchaseSendEmail,
+      allowFixedAssetAccess: role.allowFixedAssetAccess,
+      allowFixedAssetAdd: role.allowFixedAssetAdd,
+      allowFixedAssetEdit: role.allowFixedAssetEdit,
+      allowFixedAssetCancel: role.allowFixedAssetCancel,
+      allowFixedAssetPost: role.allowFixedAssetPost,
+      allowFixedAssetSendEmail: role.allowFixedAssetSendEmail,
+      allowUMAccess: role.allowUMAccess,
+      allowUMAdd: role.allowUMAdd,
+      allowUMEdit: role.allowUMEdit,
     });
 
     setFormError('');
@@ -342,32 +366,396 @@ export default function RolesPage() {
                       className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                     />
                   </div>
-                </div>
-              </div>
 
-              {/* Modal Footer */}
-              <div className="flex items-center justify-end gap-3 border-t border-slate-200/60 bg-slate-50 px-6 py-4 dark:border-slate-800/60 dark:bg-slate-900/50">
-                <button
-                  type="button"
-                  onClick={() => handleClose()}
-                  className="cursor-pointer rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 transition-all hover:bg-slate-100 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-md transition-all hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-75 dark:bg-indigo-500 dark:hover:bg-indigo-400"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    'Save'
-                  )}
-                </button>
+                  {/* Permissions */}
+                  <div className="col-span-2">
+                    <h6 className="mb-2 text-xs font-bold text-slate-500 dark:text-slate-400">
+                      Permissions
+                    </h6>
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950">
+                      {/* Grading System Permissions */}
+                      <div className="mb-4">
+                        <h6 className="mb-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                          Grading System
+                        </h6>
+                        <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
+                          <label className="flex cursor-pointer items-center gap-2 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={formData.allowGradingSystem}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  allowGradingSystem: e.target.checked || false,
+                                })
+                              }
+                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            />
+                            Access
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Inventory System Permissions */}
+                      <div className="mb-4">
+                        <h6 className="mb-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                          Inventory System
+                        </h6>
+                        <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
+                          <label className="flex cursor-pointer items-center gap-2 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={formData.allowInventorySystemAccess}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  allowInventorySystemAccess:
+                                    e.target.checked || false,
+                                })
+                              }
+                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            />
+                            Access
+                          </label>
+                          <label className="flex cursor-pointer items-center gap-2 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={formData.allowInventorySystemAdd}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  allowInventorySystemAdd:
+                                    e.target.checked || false,
+                                })
+                              }
+                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            />
+                            Add
+                          </label>
+                          <label className="flex cursor-pointer items-center gap-2 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={formData.allowInventorySystemEdit}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  allowInventorySystemEdit:
+                                    e.target.checked || false,
+                                })
+                              }
+                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            />
+                            Edit
+                          </label>
+                          <label className="flex cursor-pointer items-center gap-2 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={formData.allowInventorySystemDelete}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  allowInventorySystemDelete:
+                                    e.target.checked || false,
+                                })
+                              }
+                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            />
+                            Delete
+                          </label>
+                          <label className="flex cursor-pointer items-center gap-2 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={formData.allowInventorySystemVoid}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  allowInventorySystemVoid:
+                                    e.target.checked || false,
+                                })
+                              }
+                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            />
+                            Void
+                          </label>
+                          <label className="flex cursor-pointer items-center gap-2 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={
+                                formData.allowInventorySystemViewAuditTrail
+                              }
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  allowInventorySystemViewAuditTrail:
+                                    e.target.checked || false,
+                                })
+                              }
+                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            />
+                            View Audit Trail
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Request for Purchase Permissions */}
+                      <div className="mb-4">
+                        <h6 className="mb-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                          Request for Purchase
+                        </h6>
+                        <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
+                          <label className="flex cursor-pointer items-center gap-2 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={formData.allowRequestForPurchaseAccess}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  allowRequestForPurchaseAccess:
+                                    e.target.checked || false,
+                                })
+                              }
+                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            />
+                            Access
+                          </label>
+                          <label className="flex cursor-pointer items-center gap-2 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={formData.allowRequestForPurchaseAdd}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  allowRequestForPurchaseAdd:
+                                    e.target.checked || false,
+                                })
+                              }
+                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            />
+                            Add
+                          </label>
+                          <label className="flex cursor-pointer items-center gap-2 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={formData.allowRequestForPurchaseEdit}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  allowRequestForPurchaseEdit:
+                                    e.target.checked || false,
+                                })
+                              }
+                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            />
+                            Edit
+                          </label>
+                          <label className="flex cursor-pointer items-center gap-2 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={formData.allowRequestForPurchaseDelete}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  allowRequestForPurchaseDelete:
+                                    e.target.checked || false,
+                                })
+                              }
+                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            />
+                            Delete
+                          </label>
+                          <label className="flex cursor-pointer items-center gap-2 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={formData.allowRequestForPurchaseVoid}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  allowRequestForPurchaseVoid:
+                                    e.target.checked || false,
+                                })
+                              }
+                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            />
+                            Void
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Fixed Asset Permissions */}
+                      <div className="mb-4">
+                        <h6 className="mb-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                          Fixed Asset
+                        </h6>
+                        <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
+                          <label className="flex cursor-pointer items-center gap-2 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={formData.allowFixedAssetAccess}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  allowFixedAssetAccess:
+                                    e.target.checked || false,
+                                })
+                              }
+                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            />
+                            Access
+                          </label>
+                          <label className="flex cursor-pointer items-center gap-2 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={formData.allowFixedAssetAdd}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  allowFixedAssetAdd: e.target.checked || false,
+                                })
+                              }
+                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            />
+                            Add
+                          </label>
+                          <label className="flex cursor-pointer items-center gap-2 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={formData.allowFixedAssetEdit}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  allowFixedAssetEdit:
+                                    e.target.checked || false,
+                                })
+                              }
+                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            />
+                            Edit
+                          </label>
+                          <label className="flex cursor-pointer items-center gap-2 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={formData.allowFixedAssetCancel}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  allowFixedAssetCancel:
+                                    e.target.checked || false,
+                                })
+                              }
+                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            />
+                            Cancel
+                          </label>
+                          <label className="flex cursor-pointer items-center gap-2 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={formData.allowFixedAssetPost}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  allowFixedAssetPost:
+                                    e.target.checked || false,
+                                })
+                              }
+                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            />
+                            Post
+                          </label>
+                          <label className="flex cursor-pointer items-center gap-2 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={formData.allowFixedAssetSendEmail}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  allowFixedAssetSendEmail:
+                                    e.target.checked || false,
+                                })
+                              }
+                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            />
+                            Send Email
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* User Management Permissions */}
+                      <div className="mb-4">
+                        <h6 className="mb-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                          User Management
+                        </h6>
+                        <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
+                          <label className="flex cursor-pointer items-center gap-2 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={formData.allowUMAccess}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  allowUMAccess: e.target.checked || false,
+                                })
+                              }
+                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            />
+                            Access
+                          </label>
+                          <label className="flex cursor-pointer items-center gap-2 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={formData.allowUMAdd}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  allowUMAdd: e.target.checked || false,
+                                })
+                              }
+                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            />
+                            Add
+                          </label>
+                          <label className="flex cursor-pointer items-center gap-2 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={formData.allowUMEdit}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  allowUMEdit: e.target.checked || false,
+                                })
+                              }
+                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            />
+                            Edit
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex w-full items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleClose()}
+                    className="cursor-pointer rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 transition-all hover:bg-slate-100 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-md transition-all hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-75 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      'Save'
+                    )}
+                  </button>
+                </div>
               </div>
             </form>
           </div>
