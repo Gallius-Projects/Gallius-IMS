@@ -1,27 +1,16 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Plus, Search, Trash2, AlertCircle, LucideIdCard } from 'lucide-react';
 import axiosInstance from '@/lib/axiosInstance';
 import { useUserContext } from '@/context/UserContext';
 import TableTemplate from '@/app/components/ui-templates/table-template';
 import AddEmployee from '@/app/components/modals/employees/add-employee-modal';
 import EditEmployee from '@/app/components/modals/employees/edit-employee-modal';
-import AddAccountModal from '@/app/components/modals/employees/account/add-account-modal';
-import EditAccountModal from '@/app/components/modals/employees/account/edit-account-modal';
-
-interface Employee {
-  id: number;
-  employeeId: string;
-  firstName: string;
-  lastName: string;
-  middleName: string;
-  suffix: string;
-  officeId: number;
-  departmentId: number;
-  positionId: number;
-  status: boolean;
-}
+import AddAccountModal from '@/app/components/modals/accounts/add-account-modal';
+import EditAccountModal from '@/app/components/modals/accounts/edit-account-modal';
+import { Employees, EmployeeFormData } from '@/types/employees';
+import { ConfirmationDialog } from '@/app/components/ui-templates/confirmation-dialog';
 
 interface Account {
   id: number;
@@ -38,7 +27,7 @@ export default function EmployeesPage() {
   const [search, setSearch] = useState('');
 
   // Data states
-  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [employees, setEmployees] = useState<Employees[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -53,15 +42,15 @@ export default function EmployeesPage() {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(
     null
   );
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<EmployeeFormData>({
     employeeId: '',
     firstName: '',
     lastName: '',
     middleName: '',
     suffix: '',
-    officeId: '',
-    departmentId: '',
-    positionId: '',
+    officeId: null,
+    departmentId: null,
+    positionId: null,
     status: false,
   });
 
@@ -93,10 +82,10 @@ export default function EmployeesPage() {
       });
 
       setEmployees(response.data);
-    } catch (err: any) {
+    } catch (err: { message: string } | unknown) {
       console.error('Fetch employees error:', err);
       setError(
-        err.message ||
+        (err as { message: string }).message ||
           'Could not connect to the database. Make sure MySQL is running.'
       );
     } finally {
@@ -105,11 +94,14 @@ export default function EmployeesPage() {
   }, [search]);
 
   useEffect(() => {
-    fetchEmployees();
+    const delayDebounceFn = setTimeout(() => {
+      fetchEmployees();
+    }, 300); // Debounce search
+    return () => clearTimeout(delayDebounceFn);
   }, [fetchEmployees]);
 
   // Open form for account creation
-  const handleCreateAccountOpen = (employee: Employee) => {
+  const handleCreateAccountOpen = (employee: Employees) => {
     setAccountFormData({
       username: '',
       password: '',
@@ -121,7 +113,7 @@ export default function EmployeesPage() {
   };
 
   // Open form for account editing
-  const handleEditAccountOpen = async (employee: Employee) => {
+  const handleEditAccountOpen = async (employee: Employees) => {
     const getOldAccount = await axiosInstance.get(
       `/accounts/${employee?.accounts?.uuid}`
     );
@@ -152,16 +144,16 @@ export default function EmployeesPage() {
       lastName: '',
       middleName: '',
       suffix: '',
-      officeId: '',
-      departmentId: '',
-      positionId: '',
+      officeId: null,
+      departmentId: null,
+      positionId: null,
       status: false,
     });
     setIsAddFormOpen(true);
   };
 
   // Open form for editing
-  const handleEditOpen = async (employee: Employee) => {
+  const handleEditOpen = async (employee: Employees) => {
     const getOldEmployee = await axiosInstance.get(
       `/employees/${employee?.id}`
     );
@@ -190,8 +182,10 @@ export default function EmployeesPage() {
       setIsDeleteOpen(false);
       setDeletingEmployeeId(null);
       fetchEmployees();
-    } catch (err: any) {
-      alert(err.message || 'Failed to delete employee');
+    } catch (err: { message: string } | unknown) {
+      alert(
+        (err as { message: string }).message || 'Failed to delete employee'
+      );
     }
   };
 
@@ -204,9 +198,9 @@ export default function EmployeesPage() {
       lastName: '',
       middleName: '',
       suffix: '',
-      officeId: '',
-      departmentId: '',
-      positionId: '',
+      officeId: null,
+      departmentId: null,
+      positionId: null,
       status: false,
     });
     setSelectedEmployeeId(null);
@@ -216,7 +210,10 @@ export default function EmployeesPage() {
   // Trigger fetch when parameters change
   useEffect(() => {
     if (isAuthenticated) {
-      fetchEmployees();
+      const delayDebounceFn = setTimeout(() => {
+        fetchEmployees();
+      }, 300); // Debounce search
+      return () => clearTimeout(delayDebounceFn);
     }
   }, [fetchEmployees, isAuthenticated]);
 
@@ -398,38 +395,16 @@ export default function EmployeesPage() {
 
       {/* DELETE CONFIRMATION MODAL */}
       {isDeleteOpen && (
-        <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
-            <div className="space-y-4 p-6 text-center">
-              <div className="inline-flex rounded-full border border-rose-100 bg-rose-50 p-3 text-rose-600 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-400">
-                <Trash2 className="h-6 w-6" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  Delete Employee Confirmation
-                </h3>
-                <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                  Are you sure you want to remove this employee? This action is
-                  permanent and cannot be undone.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center justify-end gap-3 border-t border-slate-200/60 bg-slate-50 px-6 py-4 dark:border-slate-800/60 dark:bg-slate-900/50">
-              <button
-                onClick={() => setIsDeleteOpen(false)}
-                className="cursor-pointer rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 transition-all hover:bg-slate-100 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteConfirm}
-                className="cursor-pointer rounded-xl bg-rose-600 px-4 py-2 text-xs font-semibold text-white shadow-md transition-all hover:bg-rose-500"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmationDialog
+          isOpen={isDeleteOpen}
+          onClose={() => setIsDeleteOpen(false)}
+          onConfirm={handleDeleteConfirm}
+          title="Delete Employee"
+          description={`Are you sure you want to delete ${employees.find((employee) => employee.id === deletingEmployeeId)?.firstName}?`}
+          isLoading={isLoading}
+          type="delete"
+          iconColor="text-rose-600 dark:text-rose-400"
+        />
       )}
     </div>
   );

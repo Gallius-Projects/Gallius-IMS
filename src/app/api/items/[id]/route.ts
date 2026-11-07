@@ -30,7 +30,11 @@ export async function GET(
         location: true,
         office: true,
         supplier: true,
-        assignedEmp: true,
+        assignedEmp: {
+          include: {
+            department: true,
+          },
+        },
         inventoryLogs: {
           include: {
             involvedUser: {
@@ -95,7 +99,7 @@ export async function PUT(
       locationId,
       officeId,
       supplierId,
-      deployedBy,
+      deployedById,
       assignedTo,
       description,
       remarks,
@@ -173,8 +177,8 @@ export async function PUT(
         assignedEmp: assignedTo
           ? { connect: { id: parseInt(assignedTo) } }
           : { disconnect: true },
-        deployedBy: deployedBy
-          ? { connect: { id: parseInt(deployedBy) } }
+        deployedBy: deployedById
+          ? { connect: { id: parseInt(deployedById) } }
           : { disconnect: true },
         // ...(assignedTo
         //   ? { assignedEmp: { connect: { id: parseInt(assignedTo) } } }

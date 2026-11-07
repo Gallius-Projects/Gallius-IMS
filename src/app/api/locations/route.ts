@@ -17,7 +17,18 @@ export async function GET(req: Request) {
     const search = searchParams.get('search') || '';
 
     // Build Prisma query filters
-    const whereClause: any = {};
+    const whereClause: {
+      name?: string;
+      abbreviation?: string;
+      OR?: (
+        | {
+            name: { contains: string };
+          }
+        | {
+            abbreviation: { contains: string };
+          }
+      )[];
+    } = {};
 
     if (search) {
       whereClause.OR = [
@@ -58,10 +69,13 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json(locationsWithLatestLog);
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Fetch locations error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch locations' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to fetch locations',
+      },
       { status: 500 }
     );
   }
@@ -108,10 +122,13 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(newLocation, { status: 201 });
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Create location error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to create location' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to create location',
+      },
       { status: 500 }
     );
   }

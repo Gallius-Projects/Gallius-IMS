@@ -4,7 +4,7 @@ import axiosInstance from '@/lib/axiosInstance';
 import { AlertCircle, Eye, EyeOff, Loader2, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
-export default function AddAccountModal({
+export default function EditAccountModal({
   accountFormData,
   setAccountFormData,
   handleClose,
@@ -14,13 +14,15 @@ export default function AddAccountModal({
   dataToUpdate,
 }: {
   accountFormData: any;
-  setAccountFormData: (accountFormData: any) => void;
+  setAccountFormData: (formData: any) => void;
   handleClose: () => void;
   fetchEmployees: () => void;
   isSubmitting: boolean;
   setIsSubmitting: (submitting: boolean) => void;
-  dataToUpdate?: any;
+  dataToUpdate: any;
 }) {
+  const modalRef = useRef<HTMLDivElement>(null);
+
   const { roles } = useLibrariesContext();
 
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -29,6 +31,26 @@ export default function AddAccountModal({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [formError, setFormError] = useState('');
+
+  useEffect(() => {
+    if (dataToUpdate) {
+      console.log(dataToUpdate.status);
+
+      setAccountFormData({
+        id: dataToUpdate.id || '',
+        username: dataToUpdate.username || '',
+        password: '',
+        roleId: dataToUpdate.roleId || '',
+        status: dataToUpdate.status ? dataToUpdate.status : false,
+      });
+    }
+  }, [dataToUpdate, setAccountFormData]);
+
+  useEffect(() => {
+    if (confirmPassword !== accountFormData.password) {
+      setFormError('Passwords do not match');
+    }
+  }, [confirmPassword]);
 
   // Form submission handler
   const handleAccountFormSubmit = async (e: React.FormEvent) => {
@@ -43,29 +65,23 @@ export default function AddAccountModal({
     }
 
     try {
-      await axiosInstance.post('/accounts', {
+      await axiosInstance.put(`/accounts/${dataToUpdate.uuid}`, {
         ...accountFormData,
-        employeeId: dataToUpdate?.id,
+        employeeId: dataToUpdate?.employeeId,
       });
 
       handleClose();
       fetchEmployees();
-    } catch (err: any) {
-      setFormError(err.message || 'Failed to save employee');
+    } catch (err: { message: string } | unknown) {
+      setFormError(
+        (err as { message: string }).message || 'Failed to save employee'
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const verifyPasswords = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (confirmPassword !== accountFormData.password) {
-      setFormError('Passwords do not match');
-    } else {
-      setFormError('');
-      handleAccountFormSubmit(e);
-    }
-  };
+  console.log(accountFormData);
 
   return (
     <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
@@ -73,10 +89,7 @@ export default function AddAccountModal({
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-slate-200/60 px-6 py-4 dark:border-slate-800/60">
           <h3 className="text-base font-bold text-slate-900 dark:text-white">
-            Create Account for{' '}
-            {dataToUpdate
-              ? `${dataToUpdate?.firstName} ${dataToUpdate?.lastName}`
-              : 'Employee'}
+            Edit Account
           </h3>
           <button
             onClick={() => handleClose()}
@@ -87,7 +100,7 @@ export default function AddAccountModal({
         </div>
 
         {/* Modal Body / Form */}
-        <form onSubmit={verifyPasswords}>
+        <form onSubmit={handleAccountFormSubmit}>
           <div className="max-h-[70vh] space-y-4 overflow-y-auto p-6">
             {formError && (
               <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-600 dark:border-red-900/30 dark:bg-red-950/20 dark:text-red-400">
@@ -121,7 +134,7 @@ export default function AddAccountModal({
                 </label>
                 <div className="relative">
                   <input
-                    type={showPassword ? 'text' : 'password'}
+                    type="password"
                     placeholder="**********"
                     value={accountFormData.password}
                     onChange={(e) =>

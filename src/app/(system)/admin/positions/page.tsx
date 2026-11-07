@@ -14,10 +14,18 @@ import TableTemplate from '@/app/components/ui-templates/table-template';
 import AddPositionModal from '@/app/components/modals/positions/add-position-modal';
 import EditPositionModal from '@/app/components/modals/positions/edit-position-modal';
 import { useLibrariesContext } from '@/context/LibrariesContext';
+import { ConfirmationDialog } from '@/app/components/ui-templates/confirmation-dialog';
 
 interface Position {
+  id: number | null;
   name: string;
-  departmentId: number;
+  departmentId: number | null;
+  department: {
+    name: string;
+  };
+  accountLogs: {
+    updatedAt: string;
+  }[];
 }
 
 export default function PositionsPage() {
@@ -41,9 +49,12 @@ export default function PositionsPage() {
   const [selectedPositionId, setSelectedPositionId] = useState<number | null>(
     null
   );
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Position>({
+    id: null,
     name: '',
-    departmentId: '',
+    departmentId: null,
+    department: { name: '' },
+    accountLogs: [],
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -53,7 +64,7 @@ export default function PositionsPage() {
     null
   );
 
-  const [dataToUpdate, setDataToUpdate] = useState<Position[]>([]);
+  const [dataToUpdate, setDataToUpdate] = useState<Position | null>(null);
 
   // Fetch Departments callback
   const fetchPositions = useCallback(async () => {
@@ -61,14 +72,14 @@ export default function PositionsPage() {
     setIsLoading(true);
     setError('');
     try {
-      const params: any = {};
-      if (search) params.search = search;
-      const response = await axiosInstance.get('/positions', { params });
+      const response = await axiosInstance.get('/positions', {
+        params: { search },
+      });
       setPositions(response.data);
-    } catch (err: any) {
+    } catch (err: { message: string } | unknown) {
       console.error('Fetch positions error:', err);
       setError(
-        err.message ||
+        (err as { message: string }).message ||
           'Could not connect to the database. Make sure MySQL is running.'
       );
     } finally {
@@ -89,8 +100,11 @@ export default function PositionsPage() {
   // Open form for creation
   const handleCreateOpen = () => {
     setFormData({
+      id: null,
       name: '',
-      departmentId: '',
+      departmentId: null,
+      department: { name: '' },
+      accountLogs: [],
     });
     setIsAddFormOpen(true);
   };
@@ -125,8 +139,10 @@ export default function PositionsPage() {
       setIsDeleteOpen(false);
       setDeletingPositionId(null);
       fetchPositions();
-    } catch (err: any) {
-      alert(err.message || 'Failed to delete position');
+    } catch (err: { message: string } | unknown) {
+      alert(
+        (err as { message: string }).message || 'Failed to delete position'
+      );
     }
   };
 
@@ -141,7 +157,10 @@ export default function PositionsPage() {
   // Trigger fetch when parameters change
   useEffect(() => {
     if (isAuthenticated) {
-      fetchPositions();
+      const delayDebounceFn = setTimeout(() => {
+        fetchPositions();
+      }, 100);
+      return () => clearTimeout(delayDebounceFn);
     }
   }, [fetchPositions, isAuthenticated]);
 
@@ -279,38 +298,16 @@ export default function PositionsPage() {
 
       {/* DELETE CONFIRMATION MODAL */}
       {isDeleteOpen && (
-        <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
-            <div className="space-y-4 p-6 text-center">
-              <div className="inline-flex rounded-full border border-rose-100 bg-rose-50 p-3 text-rose-600 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-400">
-                <Trash2 className="h-6 w-6" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  Delete Department Confirmation
-                </h3>
-                <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                  Are you sure you want to remove this department? This action
-                  is permanent and cannot be undone.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center justify-end gap-3 border-t border-slate-200/60 bg-slate-50 px-6 py-4 dark:border-slate-800/60 dark:bg-slate-900/50">
-              <button
-                onClick={() => setIsDeleteOpen(false)}
-                className="cursor-pointer rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 transition-all hover:bg-slate-100 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteConfirm}
-                className="cursor-pointer rounded-xl bg-rose-600 px-4 py-2 text-xs font-semibold text-white shadow-md transition-all hover:bg-rose-500"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmationDialog
+          isOpen={isDeleteOpen}
+          onClose={() => setIsDeleteOpen(false)}
+          onConfirm={handleDeleteConfirm}
+          title="Delete Position"
+          description={`Are you sure you want to delete ${positions.find((position) => position.id === deletingPositionId)?.name}?`}
+          isLoading={isLoading}
+          type="delete"
+          iconColor="text-rose-600 dark:text-rose-400"
+        />
       )}
     </div>
   );

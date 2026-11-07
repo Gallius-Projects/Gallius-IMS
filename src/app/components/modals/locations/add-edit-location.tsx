@@ -1,9 +1,10 @@
+import { LocationFormData } from '@/types/locations';
 import { Loader2, X, AlertCircle } from 'lucide-react';
 
 interface AddEditLocationModalProps {
   formMode: 'create' | 'edit';
-  formData: any;
-  setFormData: (formData: any) => void;
+  formData: LocationFormData;
+  setFormData: React.Dispatch<React.SetStateAction<LocationFormData>>;
   formError: string;
   isSubmitting: boolean;
   handleFormSubmit: (e: React.FormEvent) => void;

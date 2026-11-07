@@ -1,39 +1,21 @@
 import { useUserContext } from '@/context/UserContext';
-import axiosInstance from '@/lib/axiosInstance';
-import * as Lucide from 'lucide-react';
 import {
   LucideAward,
-  LucideBarChart4,
   LucideBuilding,
   LucideBuilding2,
   LucideCog,
   LucideHome,
+  LucideIdCard,
   LucideMapPin,
   LucideMonitorCog,
   LucideTags,
   LucideTruck,
-  LucideUserCog,
-  LucideUsers,
+  LucideUser2,
+  LucideUserRoundCog,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
 
 type Role = 'superadmin' | 'admin' | 'user';
-
-type Directory = {
-  name: string;
-  path: string;
-  icon: React.ElementType;
-  access: Role[];
-};
-
-interface SidebarLinks {
-  id: number;
-  name: string;
-  path: string;
-  icon: string;
-  access: string[];
-}
 
 export default function Sidebar({
   sideBarRef,
@@ -45,31 +27,105 @@ export default function Sidebar({
   userRole: Role;
 }) {
   const router = useRouter();
-  const { user, isAuthenticated } = useUserContext();
+  const { user } = useUserContext();
 
-  const [sidebarLinks, setSidebarLinks] = useState<SidebarLinks[]>([]);
+  const visibleDirectories = [
+    {
+      name: 'Dashboard',
+      path: '/',
+      icon: LucideHome,
+      category: 'home',
+      access: ['superadmin', 'admin', 'user'],
+    },
+    {
+      name: 'Inventory',
+      path: '/inventory/items',
+      icon: LucideMonitorCog,
+      category: 'inventory',
+      access: ['admin', 'superadmin'],
+    },
+    {
+      name: 'Employees',
+      path: '/admin/employees',
+      icon: LucideIdCard,
+      category: 'user-management',
+      access: ['superadmin'],
+    },
+    {
+      name: 'Accounts',
+      path: '/admin/accounts',
+      icon: LucideUser2,
+      category: 'user-management',
+      access: ['superadmin'],
+    },
+    {
+      name: 'Departments',
+      path: '/admin/departments',
+      icon: LucideBuilding2,
+      category: 'libraries',
+      access: ['superadmin'],
+    },
+    {
+      name: 'Categories',
+      path: '/admin/categories',
+      icon: LucideTags,
+      category: 'libraries',
+      access: ['superadmin'],
+    },
+    {
+      name: 'Brands',
+      path: '/admin/brands',
+      icon: LucideAward,
+      category: 'libraries',
+      access: ['superadmin'],
+    },
+    {
+      name: 'Locations',
+      path: '/admin/locations',
+      icon: LucideMapPin,
+      category: 'libraries',
+      access: ['superadmin'],
+    },
+    {
+      name: 'Offices',
+      path: '/admin/offices',
+      icon: LucideBuilding,
+      category: 'libraries',
+      access: ['superadmin'],
+    },
+    {
+      name: 'Suppliers',
+      path: '/admin/suppliers',
+      icon: LucideTruck,
+      category: 'libraries',
+      access: ['superadmin'],
+    },
+    {
+      name: 'Roles',
+      path: '/admin/roles',
+      icon: LucideCog,
+      category: 'user-management',
+      access: ['superadmin'],
+    },
+    {
+      name: 'Departments',
+      path: '/admin/departments',
+      icon: LucideBuilding2,
+      category: 'user-management',
+      access: ['superadmin'],
+    },
+    {
+      name: 'Positions',
+      path: '/admin/positions',
+      icon: LucideUserRoundCog,
+      category: 'user-management',
+      access: ['superadmin'],
+    },
+  ];
 
-  const directories: Directory[] = sidebarLinks.map((sidebar: any) => {
-    return {
-      ...sidebar,
-      access: sidebar?.sidebarLinkRoles?.map((role: any) => role.role.role),
-    };
-  });
-
-  const visibleDirectories = directories.filter((directory) =>
+  const filteredDirectories = visibleDirectories.filter((directory) =>
     directory.access.includes(userRole)
   );
-
-  const fetchSidebarLinks = useCallback(async () => {
-    const response = await axiosInstance.get('/sidebar-management');
-    setSidebarLinks(response.data);
-  }, []);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchSidebarLinks();
-    }
-  }, [fetchSidebarLinks, isAuthenticated]);
 
   return (
     <aside
@@ -86,7 +142,7 @@ export default function Sidebar({
       </div>
 
       <nav className="flex flex-col border-t border-slate-200 py-4 dark:border-slate-800">
-        {visibleDirectories
+        {filteredDirectories
           .sort((a, b) => {
             // Home always comes first
             if (a.path === '/') return -1;
@@ -96,8 +152,6 @@ export default function Sidebar({
             return b.access.length - a.access.length;
           })
           .map((directory) => {
-            const Icon = Lucide[directory.icon as keyof typeof Lucide];
-
             return (
               <button
                 key={directory.name}
@@ -107,7 +161,7 @@ export default function Sidebar({
                 }}
                 className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left transition-all duration-200 hover:translate-x-2 hover:bg-slate-100 hover:shadow-md dark:hover:bg-slate-800"
               >
-                {Icon && <Icon size={20} />}
+                {directory.icon && <directory.icon size={20} />}
 
                 <span className="text-sm">{directory.name}</span>
               </button>

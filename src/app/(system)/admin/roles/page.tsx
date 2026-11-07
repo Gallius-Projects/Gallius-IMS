@@ -1,23 +1,12 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import {
-  Plus,
-  Search,
-  Trash2,
-  Edit,
-  AlertCircle,
-  X,
-  Loader2,
-  LucideCog,
-} from 'lucide-react';
+import { Plus, Search, AlertCircle, X, Loader2, LucideCog } from 'lucide-react';
 import axiosInstance from '@/lib/axiosInstance';
 import { useUserContext } from '@/context/UserContext';
-
-interface Role {
-  id: number;
-  name: string;
-}
+import TableTemplate from '@/app/components/ui-templates/table-template';
+import { Roles, RoleFormData } from '@/types/roles';
+import { ConfirmationDialog } from '@/app/components/ui-templates/confirmation-dialog';
 
 export default function RolesPage() {
   // Auth check
@@ -26,7 +15,7 @@ export default function RolesPage() {
   const [search, setSearch] = useState('');
 
   // Data states
-  const [roles, setRoles] = useState<Role[]>([]);
+  const [roles, setRoles] = useState<Roles[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -37,8 +26,34 @@ export default function RolesPage() {
   // Form states
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
   const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
+  const [formData, setFormData] = useState<RoleFormData>({
+    role: '',
+    allowGradingSystem: false,
+    allowInventorySystemAccess: false,
+    allowInventorySystemAdd: false,
+    allowInventorySystemEdit: false,
+    allowInventorySystemDelete: false,
+    allowInventorySystemVoid: false,
+    allowInventorySystemViewAuditTrail: false,
+    allowRequestForPurchaseAccess: false,
+    allowRequestForPurchaseAdd: false,
+    allowRequestForPurchaseEdit: false,
+    allowRequestForPurchaseCancel: false,
+    allowRequestForPurchasePost: false,
+    allowRequestForPurchaseSendEmail: false,
+    allowFixedAssetAccess: false,
+    allowFixedAssetAdd: false,
+    allowFixedAssetEdit: false,
+    allowFixedAssetCancel: false,
+    allowFixedAssetPost: false,
+    allowFixedAssetSendEmail: false,
+    allowUMAccess: false,
+    allowUMAdd: false,
+    allowUMEdit: false,
+    allowLibrariesAccess: false,
+    allowLibrariesAdd: false,
+    allowLibrariesEdit: false,
+    allowLibrariesDelete: false,
   });
 
   const [formError, setFormError] = useState('');
@@ -55,10 +70,10 @@ export default function RolesPage() {
     try {
       const response = await axiosInstance.get('/roles');
       setRoles(response.data);
-    } catch (err: any) {
+    } catch (err: { message: string } | unknown) {
       console.error('Fetch roles error:', err);
       setError(
-        err.message ||
+        (err as { message: string }).message ||
           'Could not connect to the database. Make sure MySQL is running.'
       );
     } finally {
@@ -69,7 +84,33 @@ export default function RolesPage() {
   // Open form for creation
   const handleCreateOpen = () => {
     setFormData({
-      name: '',
+      role: '',
+      allowGradingSystem: false,
+      allowInventorySystemAccess: false,
+      allowInventorySystemAdd: false,
+      allowInventorySystemEdit: false,
+      allowInventorySystemDelete: false,
+      allowInventorySystemVoid: false,
+      allowInventorySystemViewAuditTrail: false,
+      allowRequestForPurchaseAccess: false,
+      allowRequestForPurchaseAdd: false,
+      allowRequestForPurchaseEdit: false,
+      allowRequestForPurchaseCancel: false,
+      allowRequestForPurchasePost: false,
+      allowRequestForPurchaseSendEmail: false,
+      allowFixedAssetAccess: false,
+      allowFixedAssetAdd: false,
+      allowFixedAssetEdit: false,
+      allowFixedAssetCancel: false,
+      allowFixedAssetPost: false,
+      allowFixedAssetSendEmail: false,
+      allowUMAccess: false,
+      allowUMAdd: false,
+      allowUMEdit: false,
+      allowLibrariesAccess: false,
+      allowLibrariesAdd: false,
+      allowLibrariesEdit: false,
+      allowLibrariesDelete: false,
     });
     setFormError('');
     setFormMode('create');
@@ -77,12 +118,12 @@ export default function RolesPage() {
   };
 
   // Open form for editing
-  const handleEditOpen = (role: Role) => {
+  const handleEditOpen = (role: Roles) => {
     setFormMode('edit');
     setSelectedRoleId(role.id);
 
     setFormData({
-      name: role.role,
+      role: role.role,
       allowGradingSystem: role.allowGradingSystem,
       allowInventorySystemAccess: role.allowInventorySystemAccess,
       allowInventorySystemAdd: role.allowInventorySystemAdd,
@@ -106,6 +147,10 @@ export default function RolesPage() {
       allowUMAccess: role.allowUMAccess,
       allowUMAdd: role.allowUMAdd,
       allowUMEdit: role.allowUMEdit,
+      allowLibrariesAccess: role.allowLibrariesAccess,
+      allowLibrariesAdd: role.allowLibrariesAdd,
+      allowLibrariesEdit: role.allowLibrariesEdit,
+      allowLibrariesDelete: role.allowLibrariesDelete,
     });
 
     setFormError('');
@@ -124,7 +169,7 @@ export default function RolesPage() {
     setFormError('');
     setIsSubmitting(true);
 
-    if (!formData.name) {
+    if (!formData.role) {
       setFormError('Role name is required');
       setIsSubmitting(false);
       return;
@@ -132,20 +177,22 @@ export default function RolesPage() {
 
     try {
       if (formMode === 'create') {
-        await axiosInstance.post('/admin/roles', {
+        await axiosInstance.post('/roles', {
           ...formData,
           updatedBy: user?.id ?? '',
         });
       } else {
-        await axiosInstance.put(`/admin/roles/${selectedRoleId}`, {
+        await axiosInstance.put(`/roles/${selectedRoleId}`, {
           ...formData,
           updatedBy: user?.id ?? '',
         });
       }
       setIsFormOpen(false);
       fetchRoles();
-    } catch (err: any) {
-      setFormError(err.message || 'Failed to save role');
+    } catch (err: { message: string } | unknown) {
+      setFormError(
+        (err as { message: string }).message || 'Failed to save role'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -163,8 +210,8 @@ export default function RolesPage() {
       setIsDeleteOpen(false);
       setDeletingRoleId(null);
       fetchRoles();
-    } catch (err: any) {
-      alert(err.message || 'Failed to delete role');
+    } catch (err: { message: string } | unknown) {
+      alert((err as { message: string }).message || 'Failed to delete role');
     }
   };
 
@@ -172,7 +219,33 @@ export default function RolesPage() {
     setIsFormOpen(false);
     setFormMode('create');
     setFormData({
-      name: '',
+      role: '',
+      allowGradingSystem: false,
+      allowInventorySystemAccess: false,
+      allowInventorySystemAdd: false,
+      allowInventorySystemEdit: false,
+      allowInventorySystemDelete: false,
+      allowInventorySystemVoid: false,
+      allowInventorySystemViewAuditTrail: false,
+      allowRequestForPurchaseAccess: false,
+      allowRequestForPurchaseAdd: false,
+      allowRequestForPurchaseEdit: false,
+      allowRequestForPurchaseCancel: false,
+      allowRequestForPurchasePost: false,
+      allowRequestForPurchaseSendEmail: false,
+      allowFixedAssetAccess: false,
+      allowFixedAssetAdd: false,
+      allowFixedAssetEdit: false,
+      allowFixedAssetCancel: false,
+      allowFixedAssetPost: false,
+      allowFixedAssetSendEmail: false,
+      allowUMAccess: false,
+      allowUMAdd: false,
+      allowUMEdit: false,
+      allowLibrariesAccess: false,
+      allowLibrariesAdd: false,
+      allowLibrariesEdit: false,
+      allowLibrariesDelete: false,
     });
     setFormError('');
     setSelectedRoleId(null);
@@ -188,6 +261,17 @@ export default function RolesPage() {
       return () => clearTimeout(delayDebounceFn);
     }
   }, [fetchRoles, isAuthenticated]);
+
+  const columns = [
+    {
+      header: 'Role Name',
+      accessor: 'role',
+      dataType: 'string',
+      fontStyle: 'semibold',
+      fontSize: 'sm',
+      emphasizeLevel: 'medium',
+    },
+  ];
 
   return (
     <div className="flex max-h-screen min-h-screen flex-col bg-slate-50/50 px-4 py-8 font-sans text-slate-900 transition-all duration-300 sm:px-6 lg:px-8 dark:bg-slate-950 dark:text-slate-100">
@@ -247,79 +331,16 @@ export default function RolesPage() {
         </div>
 
         {/* Table Container */}
-        <div className="overflow-x-auto rounded-xl border border-slate-200/50 dark:border-slate-800/50">
-          <table className="w-full border-collapse text-left">
-            <thead>
-              <tr className="border-b border-slate-200/60 bg-slate-50 dark:border-slate-800/60 dark:bg-slate-950">
-                <th className="px-5 py-3.5 text-xs font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                  Role Name
-                </th>
-                <th className="px-5 py-3.5 text-right text-xs font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200/40 dark:divide-slate-800/40">
-              {isLoading ? (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="px-5 py-12 text-center text-slate-400"
-                  >
-                    <div className="flex items-center justify-center gap-2">
-                      <Loader2 className="h-5 w-5 animate-spin text-indigo-600 dark:text-indigo-400" />
-                      <span>Loading roles...</span>
-                    </div>
-                  </td>
-                </tr>
-              ) : roles.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="px-5 py-12 text-center text-sm text-slate-400 dark:text-slate-500"
-                  >
-                    No roles found. Try adjusting filters or create a new role.
-                  </td>
-                </tr>
-              ) : (
-                roles.map((role) => (
-                  <tr
-                    key={role.id}
-                    className="group transition-all hover:bg-slate-50/50 dark:hover:bg-slate-800/20"
-                  >
-                    <td className="px-5 py-4">
-                      <span className="block text-sm font-semibold text-slate-900 dark:text-white">
-                        {role?.role.charAt(0).toUpperCase() +
-                          role?.role.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="flex items-center justify-end gap-2">
-                        {/* Edit Button */}
-                        <button
-                          onClick={() => handleEditOpen(role)}
-                          className="dark:hover:bg-slate-850 cursor-pointer rounded-lg border border-slate-200/50 bg-white p-1.5 text-slate-400 transition-all hover:bg-slate-50 hover:text-indigo-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500 dark:hover:text-indigo-400"
-                          title="Edit Role"
-                        >
-                          <Edit className="h-3.5 w-3.5" />
-                        </button>
-
-                        {/* Delete Button */}
-                        <button
-                          onClick={() => handleDeleteOpen(role.id)}
-                          className="cursor-pointer rounded-lg border border-slate-200/50 bg-white p-1.5 text-slate-400 transition-all hover:bg-rose-50 hover:text-rose-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-500 dark:hover:bg-rose-950/20 dark:hover:text-rose-400"
-                          title="Delete Role"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        <TableTemplate
+          rows={roles}
+          columns={columns}
+          isLoading={isLoading}
+          tableName="Roles"
+          handleEditOpen={handleEditOpen}
+          handleDeleteOpen={handleDeleteOpen}
+          canEdit={user?.role === 'superadmin' || user?.role === 'admin'}
+          canDelete={user?.role === 'superadmin' || user?.role === 'admin'}
+        />
       </main>
 
       {/* FORM MODAL (Add / Edit) */}
@@ -359,9 +380,9 @@ export default function RolesPage() {
                       type="text"
                       required
                       placeholder="e.g. Super Admin"
-                      value={formData.name}
+                      value={formData.role}
                       onChange={(e) =>
-                        setFormData({ ...formData, name: e.target.value })
+                        setFormData({ ...formData, role: e.target.value })
                       }
                       className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                     />
@@ -548,7 +569,7 @@ export default function RolesPage() {
                             />
                             Edit
                           </label>
-                          <label className="flex cursor-pointer items-center gap-2 text-xs">
+                          {/* <label className="flex cursor-pointer items-center gap-2 text-xs">
                             <input
                               type="checkbox"
                               checked={formData.allowRequestForPurchaseDelete}
@@ -577,7 +598,7 @@ export default function RolesPage() {
                               className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
                             />
                             Void
-                          </label>
+                          </label> */}
                         </div>
                       </div>
 
@@ -729,6 +750,73 @@ export default function RolesPage() {
                           </label>
                         </div>
                       </div>
+
+                      {/* Libraries Permissions */}
+                      <div className="mb-4">
+                        <h6 className="mb-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                          Libraries
+                        </h6>
+                        <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
+                          <label className="flex cursor-pointer items-center gap-2 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={formData.allowLibrariesAccess}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  allowLibrariesAccess:
+                                    e.target.checked || false,
+                                })
+                              }
+                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            />
+                            Access
+                          </label>
+                          <label className="flex cursor-pointer items-center gap-2 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={formData.allowLibrariesAdd}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  allowLibrariesAdd: e.target.checked || false,
+                                })
+                              }
+                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            />
+                            Add
+                          </label>
+                          <label className="flex cursor-pointer items-center gap-2 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={formData.allowLibrariesEdit}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  allowLibrariesEdit: e.target.checked || false,
+                                })
+                              }
+                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            />
+                            Edit
+                          </label>
+                          <label className="flex cursor-pointer items-center gap-2 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={formData.allowLibrariesDelete}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  allowLibrariesDelete:
+                                    e.target.checked || false,
+                                })
+                              }
+                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800"
+                            />
+                            Delete
+                          </label>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -764,38 +852,16 @@ export default function RolesPage() {
 
       {/* DELETE CONFIRMATION MODAL */}
       {isDeleteOpen && (
-        <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
-            <div className="space-y-4 p-6 text-center">
-              <div className="inline-flex rounded-full border border-rose-100 bg-rose-50 p-3 text-rose-600 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-400">
-                <Trash2 className="h-6 w-6" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  Delete Category Confirmation
-                </h3>
-                <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                  Are you sure you want to remove this category? This action is
-                  permanent and cannot be undone.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center justify-end gap-3 border-t border-slate-200/60 bg-slate-50 px-6 py-4 dark:border-slate-800/60 dark:bg-slate-900/50">
-              <button
-                onClick={() => setIsDeleteOpen(false)}
-                className="cursor-pointer rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 transition-all hover:bg-slate-100 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteConfirm}
-                className="cursor-pointer rounded-xl bg-rose-600 px-4 py-2 text-xs font-semibold text-white shadow-md transition-all hover:bg-rose-500"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmationDialog
+          isOpen={isDeleteOpen}
+          onClose={() => setIsDeleteOpen(false)}
+          onConfirm={handleDeleteConfirm}
+          title="Delete Role"
+          description={`Are you sure you want to delete ${roles.find((role) => role.id === deletingRoleId)?.role}?`}
+          isLoading={isLoading}
+          type="delete"
+          iconColor="text-rose-600 dark:text-rose-400"
+        />
       )}
     </div>
   );

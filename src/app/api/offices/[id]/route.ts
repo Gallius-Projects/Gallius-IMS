@@ -31,10 +31,14 @@ export async function GET(
     }
 
     return NextResponse.json(item);
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Fetch single office error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch office details' },
+      {
+        error:
+          (error as { message: string }).message ||
+          'Failed to fetch office details',
+      },
       { status: 500 }
     );
   }
@@ -61,7 +65,7 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const { name, abbreviation, updatedBy } = body;
+    const { name, abbreviation } = body;
 
     if (!name) {
       return NextResponse.json(
@@ -75,15 +79,28 @@ export async function PUT(
       data: {
         name,
         abbreviation: abbreviation || '',
-        updatedByUUID: updatedBy,
+      },
+    });
+
+    await prisma.adminLogs.create({
+      data: {
+        activity: `Office "${updatedItem.name}" updated`,
+        updatedOffice: {
+          connect: {
+            id: updatedItem.id,
+          },
+        },
       },
     });
 
     return NextResponse.json(updatedItem);
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Update office error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to update office' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to update office',
+      },
       { status: 500 }
     );
   }
@@ -117,10 +134,13 @@ export async function DELETE(
       success: true,
       message: 'office deleted successfully',
     });
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Delete office error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to delete office' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to delete office',
+      },
       { status: 500 }
     );
   }

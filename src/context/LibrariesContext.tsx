@@ -1,107 +1,35 @@
 'use client';
 
 import { createContext, useContext, useState } from 'react';
+import { Categories } from '@/types/categories';
+import { Brands } from '@/types/brands';
+import { Locations } from '@/types/locations';
+import { Suppliers } from '@/types/suppliers';
+import { Offices } from '@/types/offices';
+import { Employees } from '@/types/employees';
+import { Departments } from '@/types/departments';
+import { Positions } from '@/types/positions';
+import { Roles } from '@/types/roles';
 
 const LibrariesContext = createContext<{
-  categories: { id: number; name: string; abbreviation: string } | null;
-  setCategories: (
-    categories: { id: number; name: string; abbreviation: string } | null
-  ) => void;
-  brands: { id: number; name: string } | null;
-  setBrands: (brands: { id: number; name: string } | null) => void;
-  locations: { id: number; name: string; abbreviation: string } | null;
-  setLocations: (locations: {
-    id: number;
-    name: string;
-    abbreviation: string;
-  }) => void;
-  suppliers: {
-    id: number;
-    name: string;
-    contactPerson: string;
-    contactNumber: string;
-    email: string;
-    address: string;
-  } | null;
-  setSuppliers: (suppliers: {
-    id: number;
-    name: string;
-    contactPerson: string;
-    contactNumber: string;
-    email: string;
-    address: string;
-  }) => void;
-  offices: {
-    id: number;
-    name: string;
-    abbreviation: string;
-  } | null;
-  setOffices: (offices: {
-    id: number;
-    name: string;
-    abbreviation: string;
-  }) => void;
-  employees: {
-    id: number;
-    firstName: string;
-    lastName: string;
-    middleName: string;
-    suffix: string;
-    officeId: number;
-    departmentId: number;
-    positionId: number;
-    status: boolean;
-  } | null;
-  setEmployees: (employees: {
-    id: number;
-    firstName: string;
-    lastName: string;
-    middleName: string;
-    suffix: string;
-    officeId: number;
-    departmentId: number;
-    positionId: number;
-    status: boolean;
-  }) => void;
-  departments: {
-    id: number;
-    name: string;
-    abbreviation: string;
-  } | null;
-  setDepartments: (
-    departments: {
-      id: number;
-      name: string;
-      abbreviation: string;
-    } | null
-  ) => void;
-  positions: {
-    id: number;
-    name: string;
-    departmentId: number;
-    department: {
-      id: number;
-      name: string;
-      abbreviation: string;
-    };
-  } | null;
-  setPositions: (
-    positions: {
-      id: number;
-      name: string;
-      departmentId: number;
-      department: {
-        id: number;
-        name: string;
-        abbreviation: string;
-      };
-    } | null
-  ) => void;
-  roles: {
-    id: number;
-    role: string;
-  } | null;
-  setRoles: (roles: { id: number; role: string }) => void;
+  categories: Categories[];
+  setCategories: React.Dispatch<React.SetStateAction<Categories[]>>;
+  brands: Brands[];
+  setBrands: React.Dispatch<React.SetStateAction<Brands[]>>;
+  locations: Locations[];
+  setLocations: React.Dispatch<React.SetStateAction<Locations[]>>;
+  suppliers: Suppliers[];
+  setSuppliers: React.Dispatch<React.SetStateAction<Suppliers[]>>;
+  offices: Offices[];
+  setOffices: React.Dispatch<React.SetStateAction<Offices[]>>;
+  employees: Employees[];
+  setEmployees: React.Dispatch<React.SetStateAction<Employees[]>>;
+  departments: Departments[];
+  setDepartments: React.Dispatch<React.SetStateAction<Departments[]>>;
+  positions: Positions[];
+  setPositions: React.Dispatch<React.SetStateAction<Positions[]>>;
+  roles: Roles[];
+  setRoles: React.Dispatch<React.SetStateAction<Roles[]>>;
 } | null>(null);
 
 export const LibrariesProvider = ({
@@ -109,83 +37,15 @@ export const LibrariesProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const [categories, setCategories] = useState<
-    {
-      id: number;
-      name: string;
-      abbreviation: string;
-    }[]
-  >([]);
-  const [brands, setBrands] = useState<{ id: number; name: string }[] | null>(
-    []
-  );
-  const [locations, setLocations] = useState<
-    | {
-        id: number;
-        name: string;
-        abbreviation: string;
-      }[]
-    | null
-  >([]);
-  const [suppliers, setSuppliers] = useState<
-    | {
-        id: number;
-        name: string;
-        contactPerson: string;
-        contactNumber: string;
-        email: string;
-        address: string;
-      }[]
-    | null
-  >([]);
-  const [offices, setOffices] = useState<
-    | {
-        id: number;
-        name: string;
-        abbreviation: string;
-      }[]
-    | null
-  >([]);
-  const [employees, setEmployees] = useState<
-    | {
-        id: number;
-        firstName: string;
-        lastName: string;
-        middleName: string;
-        suffix: string;
-        officeId: number;
-        departmentId: number;
-        positionId: number;
-        status: boolean;
-      }[]
-    | null
-  >([]);
-
-  const [departments, setDepartments] = useState<
-    {
-      id: number;
-      name: string;
-      abbreviation: string;
-    }[]
-  >([]);
-  const [positions, setPositions] = useState<
-    {
-      id: number;
-      name: string;
-      departmentId: number;
-      department: {
-        id: number;
-        name: string;
-        abbreviation: string;
-      };
-    }[]
-  >([]);
-  const [roles, setRoles] = useState<
-    {
-      id: number;
-      role: string;
-    }[]
-  >([]);
+  const [categories, setCategories] = useState<Categories[]>([]);
+  const [brands, setBrands] = useState<Brands[]>([]);
+  const [locations, setLocations] = useState<Locations[]>([]);
+  const [suppliers, setSuppliers] = useState<Suppliers[]>([]);
+  const [offices, setOffices] = useState<Offices[]>([]);
+  const [employees, setEmployees] = useState<Employees[]>([]);
+  const [departments, setDepartments] = useState<Departments[]>([]);
+  const [positions, setPositions] = useState<Positions[]>([]);
+  const [roles, setRoles] = useState<Roles[]>([]);
 
   return (
     <LibrariesContext.Provider

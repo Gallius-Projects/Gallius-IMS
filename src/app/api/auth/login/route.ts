@@ -30,7 +30,7 @@ export async function POST(req: Request) {
       suppliersCount = await prisma.suppliers.count();
       officesCount = await prisma.offices.count();
       sidebarLinksCount = await prisma.sidebarLinks.count();
-    } catch (dbError: any) {
+    } catch (dbError: unknown) {
       console.error('Database connection failed:', dbError);
       return NextResponse.json(
         {
@@ -190,7 +190,7 @@ export async function POST(req: Request) {
               },
             });
           }
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('Department creation failed:', error);
         }
       }
@@ -304,7 +304,7 @@ export async function POST(req: Request) {
               },
             });
           }
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('Position creation failed:', error);
         }
       }
@@ -313,12 +313,90 @@ export async function POST(req: Request) {
         const roles = [
           {
             role: 'superadmin',
+            allowGradingSystem: true,
+            allowInventorySystemAccess: true,
+            allowInventorySystemAdd: true,
+            allowInventorySystemEdit: true,
+            allowInventorySystemDelete: true,
+            allowInventorySystemVoid: true,
+            allowInventorySystemViewAuditTrail: true,
+            allowRequestForPurchaseAccess: true,
+            allowRequestForPurchaseAdd: true,
+            allowRequestForPurchaseEdit: true,
+            allowRequestForPurchaseCancel: true,
+            allowRequestForPurchasePost: true,
+            allowRequestForPurchaseSendEmail: true,
+            allowFixedAssetAccess: true,
+            allowFixedAssetAdd: true,
+            allowFixedAssetEdit: true,
+            allowFixedAssetCancel: true,
+            allowFixedAssetPost: true,
+            allowFixedAssetSendEmail: true,
+            allowUMAccess: true,
+            allowUMAdd: true,
+            allowUMEdit: true,
+            allowLibrariesAccess: true,
+            allowLibrariesAdd: true,
+            allowLibrariesEdit: true,
+            allowLibrariesDelete: true,
           },
           {
             role: 'admin',
+            allowGradingSystem: true,
+            allowInventorySystemAccess: true,
+            allowInventorySystemAdd: true,
+            allowInventorySystemEdit: true,
+            allowInventorySystemDelete: false,
+            allowInventorySystemVoid: false,
+            allowInventorySystemViewAuditTrail: true,
+            allowRequestForPurchaseAccess: true,
+            allowRequestForPurchaseAdd: true,
+            allowRequestForPurchaseEdit: true,
+            allowRequestForPurchaseCancel: false,
+            allowRequestForPurchasePost: false,
+            allowRequestForPurchaseSendEmail: false,
+            allowFixedAssetAccess: true,
+            allowFixedAssetAdd: true,
+            allowFixedAssetEdit: true,
+            allowFixedAssetCancel: false,
+            allowFixedAssetPost: false,
+            allowFixedAssetSendEmail: false,
+            allowUMAccess: false,
+            allowUMAdd: false,
+            allowUMEdit: false,
+            allowLibrariesAccess: true,
+            allowLibrariesAdd: true,
+            allowLibrariesEdit: true,
+            allowLibrariesDelete: false,
           },
           {
             role: 'user',
+            allowGradingSystem: false,
+            allowInventorySystemAccess: true,
+            allowInventorySystemAdd: false,
+            allowInventorySystemEdit: false,
+            allowInventorySystemDelete: false,
+            allowInventorySystemVoid: false,
+            allowInventorySystemViewAuditTrail: false,
+            allowRequestForPurchaseAccess: false,
+            allowRequestForPurchaseAdd: false,
+            allowRequestForPurchaseEdit: false,
+            allowRequestForPurchaseCancel: false,
+            allowRequestForPurchasePost: false,
+            allowRequestForPurchaseSendEmail: false,
+            allowFixedAssetAccess: false,
+            allowFixedAssetAdd: false,
+            allowFixedAssetEdit: false,
+            allowFixedAssetCancel: false,
+            allowFixedAssetPost: false,
+            allowFixedAssetSendEmail: false,
+            allowUMAccess: false,
+            allowUMAdd: false,
+            allowUMEdit: false,
+            allowLibrariesAccess: false,
+            allowLibrariesAdd: false,
+            allowLibrariesEdit: false,
+            allowLibrariesDelete: false,
           },
         ];
 
@@ -339,7 +417,7 @@ export async function POST(req: Request) {
               },
             });
           }
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('Role creation failed:', error);
         }
       }
@@ -387,7 +465,7 @@ export async function POST(req: Request) {
             },
           },
         });
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('User creation failed:', error);
       }
     }
@@ -513,7 +591,7 @@ export async function POST(req: Request) {
             },
           });
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Category creation failed:', error);
       }
     }
@@ -557,7 +635,7 @@ export async function POST(req: Request) {
             },
           });
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Brand creation failed:', error);
       }
     }
@@ -732,7 +810,7 @@ export async function POST(req: Request) {
             },
           });
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Supplier creation failed:', error);
       }
     }
@@ -822,7 +900,7 @@ export async function POST(req: Request) {
             },
           });
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Location creation failed:', error);
       }
     }
@@ -839,123 +917,136 @@ export async function POST(req: Request) {
       );
     }
 
-    if (sidebarLinksCount === 0) {
-      const directories = [
-        {
-          name: 'Home',
-          path: '/',
-          icon: 'Home',
-          access: [3, 2, 1],
-        },
-        {
-          name: 'Inventory',
-          path: '/inventory/items',
-          icon: 'MonitorCog',
-          access: [2, 1],
-        },
-        {
-          name: 'Employees',
-          path: '/admin/employees',
-          icon: 'IdCard',
-          access: [2, 1],
-        },
-        {
-          name: 'Departments',
-          path: '/admin/departments',
-          icon: 'Building2',
-          access: [2, 1],
-        },
-        {
-          name: 'Categories',
-          path: '/admin/categories',
-          icon: 'Tags',
-          access: [2, 1],
-        },
-        {
-          name: 'Brands',
-          path: '/admin/brands',
-          icon: 'Award',
-          access: [2, 1],
-        },
-        {
-          name: 'Locations',
-          path: '/admin/locations',
-          icon: 'MapPin',
-          access: [2, 1],
-        },
-        {
-          name: 'Offices',
-          path: '/admin/offices',
-          icon: 'Building',
-          access: [2, 1],
-        },
-        {
-          name: 'Suppliers',
-          path: '/admin/suppliers',
-          icon: 'Truck',
-          access: [2, 1],
-        },
-        {
-          name: 'Roles',
-          path: '/admin/roles',
-          icon: 'Cog',
-          access: [1],
-        },
-        {
-          name: 'Departments',
-          path: '/admin/departments',
-          icon: 'Building2',
-          access: [1],
-        },
-        {
-          name: 'Positions',
-          path: '/admin/positions',
-          icon: 'UserRoundCog',
-          access: [1],
-        },
-        {
-          name: 'Sidebar Links',
-          path: '/admin/sidebar-management',
-          icon: 'LucidePanelLeft',
-          access: [1],
-        },
-      ];
+    // if (sidebarLinksCount === 0) {
+    //   const directories = [
+    //     {
+    //       name: 'Dashboard',
+    //       path: '/',
+    //       icon: 'Home',
+    //       category: 'home',
+    //       access: [3, 2, 1],
+    //     },
+    //     {
+    //       name: 'Inventory',
+    //       path: '/inventory/items',
+    //       icon: 'MonitorCog',
+    //       category: 'inventory',
+    //       access: [2, 1],
+    //     },
+    //     {
+    //       name: 'Employees',
+    //       path: '/admin/employees',
+    //       icon: 'IdCard',
+    //       category: 'user-management',
+    //       access: [2, 1],
+    //     },
+    //     {
+    //       name: 'Departments',
+    //       path: '/admin/departments',
+    //       icon: 'Building2',
+    //       category: 'libraries',
+    //       access: [2, 1],
+    //     },
+    //     {
+    //       name: 'Categories',
+    //       path: '/admin/categories',
+    //       icon: 'Tags',
+    //       category: 'libraries',
+    //       access: [2, 1],
+    //     },
+    //     {
+    //       name: 'Brands',
+    //       path: '/admin/brands',
+    //       icon: 'Award',
+    //       category: 'libraries',
+    //       access: [2, 1],
+    //     },
+    //     {
+    //       name: 'Locations',
+    //       path: '/admin/locations',
+    //       icon: 'MapPin',
+    //       category: 'libraries',
+    //       access: [2, 1],
+    //     },
+    //     {
+    //       name: 'Offices',
+    //       path: '/admin/offices',
+    //       icon: 'Building',
+    //       category: 'libraries',
+    //       access: [2, 1],
+    //     },
+    //     {
+    //       name: 'Suppliers',
+    //       path: '/admin/suppliers',
+    //       icon: 'Truck',
+    //       category: 'libraries',
+    //       access: [2, 1],
+    //     },
+    //     {
+    //       name: 'Roles',
+    //       path: '/admin/roles',
+    //       icon: 'Cog',
+    //       category: 'user-management',
+    //       access: [1],
+    //     },
+    //     {
+    //       name: 'Departments',
+    //       path: '/admin/departments',
+    //       icon: 'Building2',
+    //       category: 'user-management',
+    //       access: [1],
+    //     },
+    //     {
+    //       name: 'Positions',
+    //       path: '/admin/positions',
+    //       icon: 'UserRoundCog',
+    //       category: 'user-management',
+    //       access: [1],
+    //     },
+    //     {
+    //       name: 'Sidebar Links',
+    //       path: '/admin/sidebar-management',
+    //       icon: 'LucidePanelLeft',
+    //       category: 'setting',
+    //       access: [1],
+    //     },
+    //   ];
 
-      try {
-        for (const directoryData of directories) {
-          const sidebarLink = await Promise.all(
-            directories.map((directory) =>
-              prisma.sidebarLinks.create({
-                data: {
-                  name: directory.name,
-                  path: directory.path,
-                  icon: directory.icon,
+    //   try {
+    //     for (const directoryData of directories) {
+    //       const sidebarLink = await Promise.all(
+    //         directories.map((directory) =>
+    //           prisma.sidebarLinks.create({
+    //             data: {
+    //               name: directory.name,
+    //               path: directory.path,
+    //               icon: directory.icon,
+    //               category: directory.category,
+    //               sidebarLinkRoles: {
+    //                 create: directory.access.map((roleId) => ({
+    //                   roleId,
+    //                 })),
+    //               },
+    //             },
+    //           })
+    //         )
+    //       );
 
-                  sidebarLinkRoles: {
-                    create: directory.access.map((roleId) => ({
-                      roleId,
-                    })),
-                  },
-                },
-              })
-            )
-          );
-
-          await prisma.adminLogs.create({
-            data: {
-              activity: `Sidebar Link "${sidebarLink.name}" created`,
-              updatedSidebarLink: {
-                connect: {
-                  id: sidebarLink.id,
-                },
-              },
-            },
-          });
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    }
+    //       await prisma.adminLogs.create({
+    //         data: {
+    //           activity: `Sidebar Link "${sidebarLink.name}" created`,
+    //           updatedSidebarLink: {
+    //             connect: {
+    //               id: sidebarLink.id,
+    //             },
+    //           },
+    //         },
+    //       });
+    //     }
+    //   } catch (error) {
+    //     console.error(error);
+    //   }
+    // }
 
     if (!user.status) {
       return NextResponse.json(
@@ -977,10 +1068,14 @@ export async function POST(req: Request) {
         role: user?.role?.role,
       },
     });
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Login route error:', error);
     return NextResponse.json(
-      { error: error.message || 'An unexpected error occurred during login.' },
+      {
+        error:
+          (error as { message: string }).message ||
+          'An unexpected error occurred during login.',
+      },
       { status: 500 }
     );
   }

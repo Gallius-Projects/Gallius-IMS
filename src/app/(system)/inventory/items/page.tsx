@@ -14,34 +14,9 @@ import { useUserContext } from '@/context/UserContext';
 import { useLibrariesContext } from '@/context/LibrariesContext';
 import TableTemplate from '@/app/components/ui-templates/table-template';
 import ViewItemsModal from '@/app/components/modals/items/view-items-modal';
-import AddEditItemsModal from '@/app/components/modals/items/add-items-modal';
+import AddItemsModal from '@/app/components/modals/items/add-items-modal';
 import EditItemsModal from '@/app/components/modals/items/edit-items-modal';
-
-interface InventoryItem {
-  id: number;
-  name: string;
-  oldAssetTag: string;
-  newAssetTag: string;
-  serialNumber: string;
-  hostname: string;
-  status: string;
-  categoryId: number;
-  category: { id: number; name: string } | null;
-  brandId: number;
-  brand: { id: number; name: string } | null;
-  locationId: number;
-  location: { id: number; name: string } | null;
-  officeId: number;
-  office: { id: number; name: string } | null;
-  invoiceNo?: string;
-  dateDeployed?: string;
-  datePurchased?: string;
-  assetCondition?: string;
-  isNew?: boolean;
-  assignedTo: number;
-  description: string;
-  remarks: string;
-}
+import { InventoryItem, ItemFormData } from '@/types/items';
 
 export default function ItemsPage() {
   // Auth check
@@ -67,9 +42,8 @@ export default function ItemsPage() {
   const [editNewAsset, setEditNewAsset] = useState(false);
 
   // Form states
-  const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ItemFormData>({
     name: '',
     oldAssetTag: '',
     newAssetTag: '',
@@ -79,14 +53,15 @@ export default function ItemsPage() {
     categoryId: null,
     brandId: null,
     locationId: null,
-    supplierId: null,
     officeId: null,
-    isNew: true,
-    datePurchased: null,
-    dateDeployed: null,
+    supplierId: null,
     invoiceNo: '',
+    dateDeployed: null,
+    datePurchased: null,
     assetCondition: '',
+    isNew: true,
     assignedTo: null,
+    deployedById: null,
     description: '',
     remarks: '',
   });
@@ -100,7 +75,7 @@ export default function ItemsPage() {
   );
   const [deletingItemId, setDeletingItemId] = useState<number | null>(null);
 
-  const [itemToUpdate, setItemToUpdate] = useState<any>(null);
+  const [itemToUpdate, setItemToUpdate] = useState<InventoryItem | null>(null);
 
   // Statuses list
   const statuses = [
@@ -142,18 +117,15 @@ export default function ItemsPage() {
     setIsLoading(true);
     setError('');
     try {
-      const params: any = {};
-      if (search) params.search = search;
-      if (selectedCategory) params.category = selectedCategory;
-      if (selectedStatus) params.status = selectedStatus;
-
-      const response = await axiosInstance.get('/items', { params });
+      const response = await axiosInstance.get('/items', {
+        params: { search },
+      });
       // console.log(response.data);
       setItems(response.data);
-    } catch (err: any) {
+    } catch (err: { message: string } | unknown) {
       console.error('Fetch items error:', err);
       setError(
-        err.message ||
+        (err as { message: string }).message ||
           'Could not connect to the database. Make sure MySQL is running.'
       );
     } finally {
@@ -173,19 +145,19 @@ export default function ItemsPage() {
       categoryId: null,
       brandId: null,
       locationId: null,
-      supplierId: null,
       officeId: null,
-      isNew: true,
-      datePurchased: null,
-      dateDeployed: null,
+      supplierId: null,
       invoiceNo: '',
+      dateDeployed: null,
+      datePurchased: null,
       assetCondition: '',
+      isNew: true,
       assignedTo: null,
+      deployedById: null,
       description: '',
       remarks: '',
     });
     setFormError('');
-    setFormMode('create');
     // setEditNewAsset(true);
     setIsFormCreateOpen(true);
   };
@@ -196,7 +168,6 @@ export default function ItemsPage() {
       const response = await axiosInstance.get(`/items/${item.id}`);
       const oldItemData = response.data;
 
-      setFormMode('edit');
       setSelectedItemId(item.id);
       setItemToUpdate(oldItemData);
 
@@ -232,32 +203,6 @@ export default function ItemsPage() {
   };
 
   // Form submission handler
-  const handleFormSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError('');
-    setIsSubmitting(true);
-
-    if (!formData.name) {
-      setFormError('Item name is required');
-      setIsSubmitting(false);
-      return;
-    }
-
-    try {
-      if (formMode === 'create') {
-        await axiosInstance.post('/items', formData);
-        setIsFormCreateOpen(false);
-      } else {
-        await axiosInstance.put(`/items/${selectedItemId}`, formData);
-        setIsFormEditOpen(false);
-      }
-      fetchItems();
-    } catch (err: any) {
-      setFormError(err.message || 'Failed to save inventory item');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   // Delete item handler
   const handleDeleteConfirm = async () => {
@@ -267,8 +212,8 @@ export default function ItemsPage() {
       setIsDeleteOpen(false);
       setDeletingItemId(null);
       fetchItems();
-    } catch (err: any) {
-      alert(err.message || 'Failed to delete item');
+    } catch (err: { message: string } | unknown) {
+      alert((err as { message: string }).message || 'Failed to delete item');
     }
   };
 
@@ -280,47 +225,13 @@ export default function ItemsPage() {
     setItemToUpdate(null);
   };
 
-  const handleGenerateAssetTag = async () => {
-    if (user?.role.includes('superadmin') || user?.role.includes('admin')) {
-      console.log('Generating new asset tag');
-      if (!formData.categoryId || !formData.officeId || !formData.locationId) {
-        setFormError('Please select a tenant, category, and location');
-
-        setFormData((prev) => {
-          return {
-            ...prev,
-            newAssetTag: '',
-          };
-        });
-        setTimeout(() => {
-          setFormError('');
-        }, 8000);
-        return;
-      }
-      if (formData.categoryId && formData.officeId && formData.locationId) {
-        const params = {
-          officeId: formData.officeId,
-          categoryId: formData.categoryId,
-          locationId: formData.locationId,
-        };
-
-        const response = await axiosInstance.get(`/items/generate-asset-tag`, {
-          params,
-        });
-
-        const generatedAssetTag = response.data;
-        setFormData((prev) => ({
-          ...prev,
-          newAssetTag: generatedAssetTag,
-        }));
-      }
-    }
-  };
-
   // Trigger fetch when parameters change
   useEffect(() => {
     if (isAuthenticated) {
-      fetchItems();
+      const delayDebounceFn = setTimeout(() => {
+        fetchItems();
+      }, 300); // Debounce search
+      return () => clearTimeout(delayDebounceFn);
     }
   }, [fetchItems, isAuthenticated]);
 
@@ -521,38 +432,34 @@ export default function ItemsPage() {
 
       {/* FORM MODAL (Add / Edit) */}
       {isFormCreateOpen && (
-        <AddEditItemsModal
-          formMode={formMode}
+        <AddItemsModal
           formData={formData}
           setFormData={setFormData}
           formError={formError}
           setFormError={setFormError}
           isSubmitting={isSubmitting}
+          setIsSubmitting={setIsSubmitting}
           statuses={statuses}
           editNewAsset={editNewAsset}
           setEditNewAsset={setEditNewAsset}
-          handleGenerateAssetTag={handleGenerateAssetTag}
-          categories={categories}
           handleClose={handleClose}
-          handleFormSubmit={handleFormSubmit}
+          fetchItems={fetchItems}
         />
       )}
 
       {isFormEditOpen && (
         <EditItemsModal
-          isOpen={isFormEditOpen}
           formData={formData}
           setFormData={setFormData}
           formError={formError}
           setFormError={setFormError}
           isSubmitting={isSubmitting}
+          setIsSubmitting={setIsSubmitting}
           statuses={statuses}
           editNewAsset={editNewAsset}
           setEditNewAsset={setEditNewAsset}
-          handleGenerateAssetTag={handleGenerateAssetTag}
-          categories={categories}
           handleClose={handleClose}
-          handleFormSubmit={handleFormSubmit}
+          fetchItems={fetchItems}
           itemToUpdate={itemToUpdate}
         />
       )}

@@ -7,12 +7,7 @@ import { useUserContext } from '@/context/UserContext';
 import TableTemplate from '@/app/components/ui-templates/table-template';
 import { ConfirmationDialog } from '@/app/components/ui-templates/confirmation-dialog';
 import AddEditLocationModal from '@/app/components/modals/locations/add-edit-location';
-
-interface Location {
-  id: number;
-  name: string;
-  abbreviation: string;
-}
+import { Locations, LocationFormData } from '@/types/locations';
 
 export default function LocationsPage() {
   // Auth check
@@ -21,7 +16,7 @@ export default function LocationsPage() {
   const [search, setSearch] = useState('');
 
   // Data states
-  const [locations, setLocations] = useState<Location[]>([]);
+  const [locations, setLocations] = useState<Locations[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -34,7 +29,8 @@ export default function LocationsPage() {
   const [selectedLocationId, setSelectedLocationId] = useState<number | null>(
     null
   );
-  const [formData, setFormData] = useState({
+
+  const [formData, setFormData] = useState<LocationFormData>({
     name: '',
     abbreviation: '',
   });
@@ -53,15 +49,14 @@ export default function LocationsPage() {
     setIsLoading(true);
     setError('');
     try {
-      const params: any = {};
-      if (search) params.search = search;
-
-      const response = await axiosInstance.get('/locations', { params });
+      const response = await axiosInstance.get('/locations', {
+        params: { search },
+      });
       setLocations(response.data);
-    } catch (err: any) {
+    } catch (err: { message: string } | unknown) {
       console.error('Fetch locations error:', err);
       setError(
-        err.message ||
+        (err as { message: string }).message ||
           'Could not connect to the database. Make sure MySQL is running.'
       );
     } finally {
@@ -81,12 +76,12 @@ export default function LocationsPage() {
   };
 
   // Open form for editing
-  const handleEditOpen = (location: Location) => {
+  const handleEditOpen = (location: Locations) => {
     setFormMode('edit');
     setSelectedLocationId(location.id);
     setFormData({
-      name: location.name || '',
-      abbreviation: location.abbreviation || '',
+      name: location?.name || '',
+      abbreviation: location?.abbreviation || '',
     });
 
     setFormError('');
@@ -125,8 +120,10 @@ export default function LocationsPage() {
       }
       setIsFormOpen(false);
       fetchLocations();
-    } catch (err: any) {
-      setFormError(err.message || 'Failed to save location');
+    } catch (err: { message: string } | unknown) {
+      setFormError(
+        (err as { message: string }).message || 'Failed to save location'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -144,8 +141,10 @@ export default function LocationsPage() {
       setIsDeleteOpen(false);
       setDeletingLocationId(null);
       fetchLocations();
-    } catch (err: any) {
-      alert(err.message || 'Failed to delete location');
+    } catch (err: { message: string } | unknown) {
+      alert(
+        (err as { message: string }).message || 'Failed to delete location'
+      );
     }
   };
 

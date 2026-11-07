@@ -3,35 +3,38 @@ import { useEffect, useRef, useState } from 'react';
 
 export default function SearchableDropdown({
   label,
-  data,
-  value = '',
+  data = [],
+  value,
   onChange,
   placeholder = 'Select',
   required = false,
 }: {
   label: string;
-  data: any[];
-  value: string;
-  onChange: (formData: any) => void;
+  data: unknown[];
+  value: number | null;
+  onChange: (value: number | null) => void;
   placeholder: string;
-  required: boolean;
+  required?: boolean;
 }) {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [search, setSearch] = useState('');
   const [showOptions, setShowOptions] = useState(false);
 
-  const filteredItems = data.filter((item: any) => {
+  const filteredItems = data?.filter((item: unknown) => {
     const itemName =
-      `${item.name || item.value || `${item.firstName} ${item.lastName}`}`.toLowerCase();
+      `${item?.name || item?.value || `${item?.firstName} ${item?.lastName}`}`.toLowerCase();
 
     return itemName.includes(search.toLowerCase());
   });
 
   useEffect(() => {
-    const selectedItem = data.find((item: any) => item.id === value);
+    const selectedItem = data?.find((item: unknown) => item?.id === value);
 
-    setSearch(selectedItem?.name || selectedItem?.value || '');
+    const delayDebounceFn = setTimeout(() => {
+      setSearch(selectedItem?.name || selectedItem?.value || '');
+    }, 300); // Debounce search
+    return () => clearTimeout(delayDebounceFn);
   }, [value]);
 
   useEffect(() => {

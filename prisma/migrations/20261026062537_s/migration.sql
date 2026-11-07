@@ -51,6 +51,10 @@ CREATE TABLE `roles` (
     `allowUMAccess` BOOLEAN NULL DEFAULT false,
     `allowUMAdd` BOOLEAN NULL DEFAULT false,
     `allowUMEdit` BOOLEAN NULL DEFAULT false,
+    `allowLibrariesAccess` BOOLEAN NULL DEFAULT false,
+    `allowLibrariesAdd` BOOLEAN NULL DEFAULT false,
+    `allowLibrariesEdit` BOOLEAN NULL DEFAULT false,
+    `allowLibrariesDelete` BOOLEAN NULL DEFAULT false,
 
     UNIQUE INDEX `roles_role_key`(`role`),
     PRIMARY KEY (`id`)
@@ -172,6 +176,7 @@ CREATE TABLE `inventoryItems` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `supplierId` INTEGER NULL,
 
+    UNIQUE INDEX `inventoryItems_oldAssetTag_key`(`oldAssetTag`),
     UNIQUE INDEX `inventoryItems_hostname_key`(`hostname`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

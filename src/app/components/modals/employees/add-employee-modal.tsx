@@ -66,9 +66,11 @@ export default function AddEmployee({
 
       fetchEmployees();
       handleClose();
-    } catch (err: any) {
+    } catch (err: { message: string } | unknown) {
       console.log(err);
-      setFormError(err?.message || 'Failed to save employee');
+      setFormError(
+        (err as { message: string }).message || 'Failed to save employee'
+      );
     } finally {
       setIsSubmitting(false);
     }

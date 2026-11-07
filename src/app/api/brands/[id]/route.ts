@@ -44,10 +44,13 @@ export async function GET(
     }
 
     return NextResponse.json(brand);
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Fetch single brand error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch brand' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to fetch brand',
+      },
       { status: 500 }
     );
   }
@@ -128,10 +131,13 @@ export async function PUT(
     });
 
     return NextResponse.json({ updatedBrand, changes });
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Update brand error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to update brand' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to update brand',
+      },
       { status: 500 }
     );
   }
@@ -165,10 +171,13 @@ export async function DELETE(
       success: true,
       message: 'Brand deleted successfully',
     });
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Delete brand error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to delete brand' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to delete brand',
+      },
       { status: 500 }
     );
   }

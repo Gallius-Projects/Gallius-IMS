@@ -17,7 +17,17 @@ export async function GET(req: Request) {
     const search = searchParams.get('search') || '';
 
     // Build Prisma query filters
-    const whereClause: any = {};
+    const whereClause: {
+      name?: string;
+      OR?: (
+        | {
+            name: { contains: string };
+          }
+        | {
+            abbreviation: { contains: string };
+          }
+      )[];
+    } = {};
 
     if (search) {
       whereClause.OR = [
@@ -58,10 +68,14 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json(categoriesWithLatestLog);
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Fetch categories error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch categories' },
+      {
+        error:
+          (error as { message: string }).message ||
+          'Failed to fetch categories',
+      },
       { status: 500 }
     );
   }
@@ -108,10 +122,13 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(newCategory, { status: 201 });
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Create category error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to create category' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to create category',
+      },
       { status: 500 }
     );
   }

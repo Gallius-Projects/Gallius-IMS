@@ -4,16 +4,25 @@ import SearchableDropdown from '../../ui-templates/searchable-dropdown';
 import { useLibrariesContext } from '@/context/LibrariesContext';
 import axiosInstance from '@/lib/axiosInstance';
 
-interface AddPositionProps {
-  formData: {
+interface Position {
+  id: number | null;
+  name: string;
+  departmentId: number | null;
+  department: {
     name: string;
-    departmentId?: number;
   };
-  setFormData: (formData: { name: string; departmentId?: number }) => void;
+  accountLogs: {
+    updatedAt: string;
+  }[];
+}
+
+interface AddPositionProps {
+  formData: Position;
+  setFormData: React.Dispatch<React.SetStateAction<Position>>;
   fetchPositions: () => void;
   handleClose: () => void;
   isSubmitting: boolean;
-  setIsSubmitting: (isSubmitting: boolean) => void;
+  setIsSubmitting: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export default function AddPosition({
@@ -44,8 +53,10 @@ export default function AddPosition({
 
       fetchPositions();
       handleClose();
-    } catch (err: any) {
-      setFormError(err.message || 'Failed to save position');
+    } catch (err: { message: string } | unknown) {
+      setFormError(
+        (err as { message: string }).message || 'Failed to save position'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -101,8 +112,8 @@ export default function AddPosition({
                   placeholder="Select Department"
                   data={departments}
                   value={formData.departmentId}
-                  onChange={(value) =>
-                    setFormData({ ...formData, departmentId: parseInt(value) })
+                  onChange={(value: number) =>
+                    setFormData({ ...formData, departmentId: value })
                   }
                   required
                 />

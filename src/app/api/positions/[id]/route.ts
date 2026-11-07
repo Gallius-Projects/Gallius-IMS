@@ -37,10 +37,14 @@ export async function GET(
     }
 
     return NextResponse.json(position);
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Fetch single position error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch position details' },
+      {
+        error:
+          (error as { message: string }).message ||
+          'Failed to fetch position details',
+      },
       { status: 500 }
     );
   }
@@ -96,7 +100,9 @@ export async function PUT(
 
     const changes = [];
 
-    for (const key of Object.keys(normalizedBody)) {
+    for (const key of Object.keys(
+      normalizedBody
+    ) as (keyof typeof position)[]) {
       if (normalizedBody[key] !== position[key]) {
         changes.push({
           field: key,
@@ -142,10 +148,13 @@ export async function PUT(
     });
 
     return NextResponse.json({ updatedPosition, changes });
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Update position error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to update position' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to update position',
+      },
       { status: 500 }
     );
   }
@@ -182,10 +191,13 @@ export async function DELETE(
       success: true,
       message: 'Position deleted successfully',
     });
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Delete position error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to delete position' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to delete position',
+      },
       { status: 500 }
     );
   }

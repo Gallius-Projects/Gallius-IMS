@@ -29,10 +29,13 @@ export async function GET(
     const { passwordHash, ...accountData } = account;
 
     return NextResponse.json(accountData);
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Fetch single account error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch account' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to fetch account',
+      },
       { status: 500 }
     );
   }
@@ -80,10 +83,13 @@ export async function PUT(
     });
 
     return NextResponse.json(updatedAccount);
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Update account error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to update account' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to update account',
+      },
       { status: 500 }
     );
   }
@@ -104,7 +110,7 @@ export async function DELETE(
     }
 
     const { uuid } = await params;
-    if (isNaN(uuid)) {
+    if (!uuid) {
       return NextResponse.json(
         { error: 'Invalid account ID' },
         { status: 400 }
@@ -119,10 +125,13 @@ export async function DELETE(
       success: true,
       message: 'Account deleted successfully',
     });
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Delete account error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to delete account' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to delete account',
+      },
       { status: 500 }
     );
   }

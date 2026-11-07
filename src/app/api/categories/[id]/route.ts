@@ -50,10 +50,13 @@ export async function GET(
     }
 
     return NextResponse.json(category);
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Fetch single category error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch category' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to fetch category',
+      },
       { status: 500 }
     );
   }
@@ -114,10 +117,13 @@ export async function PUT(
     });
 
     return NextResponse.json(updatedCategory);
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Update category error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to update category' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to update category',
+      },
       { status: 500 }
     );
   }
@@ -154,10 +160,13 @@ export async function DELETE(
       success: true,
       message: 'Category deleted successfully',
     });
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Delete category error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to delete category' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to delete category',
+      },
       { status: 500 }
     );
   }

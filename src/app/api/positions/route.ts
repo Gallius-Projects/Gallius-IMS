@@ -16,8 +16,10 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const search = searchParams.get('search') || '';
 
-    // Build Prisma query filters
-    const whereClause: any = {};
+    const whereClause: {
+      name?: string;
+      OR?: { name: { contains: string } }[];
+    } = {};
 
     if (search) {
       whereClause.OR = [{ name: { contains: search } }];
@@ -56,10 +58,13 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json(positionsWithLatestLog);
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Fetch position error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch positions' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to fetch positions',
+      },
       { status: 500 }
     );
   }
@@ -115,10 +120,13 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(newPosition, { status: 201 });
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Create position error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to create position' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to create position',
+      },
       { status: 500 }
     );
   }

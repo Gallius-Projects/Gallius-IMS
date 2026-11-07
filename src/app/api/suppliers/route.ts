@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getAuthUser } from '@/lib/auth';
+import { Prisma } from '@/generated/prisma/client';
 
 // GET: Retrieve inventory items
 export async function GET(req: Request) {
@@ -15,44 +16,9 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const search = searchParams.get('search') || '';
-    const name = searchParams.get('name') || '';
-    const email = searchParams.get('email') || '';
-    const address = searchParams.get('address') || '';
-    const contactPerson = searchParams.get('contactPerson') || '';
-    const contactNumber = searchParams.get('contactNumber') || '';
-    const createdAt = searchParams.get('createdAt') || '';
-    const updatedAt = searchParams.get('updatedAt') || '';
 
     // Build Prisma query filters
-    const whereClause: any = {};
-
-    if (name) {
-      whereClause.name = name;
-    }
-
-    if (email) {
-      whereClause.email = email;
-    }
-
-    if (address) {
-      whereClause.address = address;
-    }
-
-    if (contactPerson) {
-      whereClause.contactPerson = contactPerson;
-    }
-
-    if (contactNumber) {
-      whereClause.contactNumber = contactNumber;
-    }
-
-    if (createdAt) {
-      whereClause.createdAt = createdAt;
-    }
-
-    if (updatedAt) {
-      whereClause.updatedAt = updatedAt;
-    }
+    const whereClause: Prisma.suppliersWhereInput = {};
 
     if (search) {
       whereClause.OR = [
@@ -82,10 +48,13 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json(suppliers);
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Fetch suppliers error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch suppliers' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to fetch suppliers',
+      },
       { status: 500 }
     );
   }
@@ -135,10 +104,13 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(newSupplier, { status: 201 });
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Create supplier error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to create supplier' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to create supplier',
+      },
       { status: 500 }
     );
   }

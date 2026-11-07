@@ -67,6 +67,10 @@ model roles {
   allowUMAccess                      Boolean? @default(false)
   allowUMAdd                         Boolean? @default(false)
   allowUMEdit                        Boolean? @default(false)
+  allowLibrariesAccess               Boolean? @default(false)
+  allowLibrariesAdd                  Boolean? @default(false)
+  allowLibrariesEdit                 Boolean? @default(false)
+  allowLibrariesDelete               Boolean? @default(false)
 
   sidebarLinkRoles sidebarLinkRoles[]
   accounts         accounts[]
@@ -163,7 +167,7 @@ model offices {
 model inventoryItems {
   id             Int             @id @default(autoincrement())
   name           String
-  oldAssetTag    String?
+  oldAssetTag    String?         @unique
   newAssetTag    String?
   serialNumber   String?
   description    String?         @db.Text

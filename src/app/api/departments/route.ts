@@ -18,17 +18,19 @@ export async function GET(req: Request) {
     const name = searchParams.get('name') || '';
 
     // Build Prisma query filters
-    const whereClause: any = {};
+    const whereClause: {
+      name?: string;
+      OR?: {
+        name: { contains: string };
+      }[];
+    } = {};
 
     if (name) {
       whereClause.name = name;
     }
 
     if (search) {
-      whereClause.OR = [
-        { name: { contains: search } },
-        { quantity: { contains: search } },
-      ];
+      whereClause.OR = [{ name: { contains: search } }];
     }
 
     const departments = await prisma.departments.findMany({
@@ -62,13 +64,15 @@ export async function GET(req: Request) {
       };
     });
 
-    console.log(departmentsWithLatestLog[0].updatedBy);
-
     return NextResponse.json(departmentsWithLatestLog);
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Fetch departments error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch departments' },
+      {
+        error:
+          (error as { message: string }).message ||
+          'Failed to fetch departments',
+      },
       { status: 500 }
     );
   }
@@ -86,7 +90,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { name, updatedBy } = body;
+    const { name } = body;
 
     if (!name) {
       return NextResponse.json(
@@ -98,15 +102,30 @@ export async function POST(req: Request) {
     const newDepartment = await prisma.departments.create({
       data: {
         name,
-        updatedByUUID: updatedBy,
+      },
+    });
+
+    await prisma.accountLogs.create({
+      data: {
+        activity: `Department "${name}" created`,
+        updatedDepartment: {
+          connect: { id: newDepartment.id },
+        },
+        involvedUser: {
+          connect: { uuid: user.userId },
+        },
       },
     });
 
     return NextResponse.json(newDepartment, { status: 201 });
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Create department error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to create department' },
+      {
+        error:
+          (error as { message: string }).message ||
+          'Failed to create department',
+      },
       { status: 500 }
     );
   }

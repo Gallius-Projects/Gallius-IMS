@@ -4,9 +4,9 @@ import { createContext, useContext, useState } from 'react';
 
 const UserContext = createContext<{
   user: { id: string; username: string; role: string } | null;
-  setUser: (
-    user: { id: string; username: string; role: string } | null
-  ) => void;
+  setUser: React.Dispatch<
+    React.SetStateAction<{ id: string; username: string; role: string }[]>
+  >;
   isAuthenticated: boolean;
   setIsAuthenticated: (isAuthenticated: boolean) => void;
 } | null>(null);

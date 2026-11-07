@@ -1,28 +1,27 @@
 import SearchableDropdown from '@/app/components/ui-templates/searchable-dropdown';
 import { useLibrariesContext } from '@/context/LibrariesContext';
 import axiosInstance from '@/lib/axiosInstance';
+import { Accounts, AccountsFormData } from '@/types/accounts';
 import { AlertCircle, Eye, EyeOff, Loader2, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 
-export default function EditAccountModal({
-  accountFormData,
-  setAccountFormData,
+export default function AddAccountModal({
+  formData,
+  setFormData,
   handleClose,
-  fetchEmployees,
+  fetchAccounts,
   isSubmitting,
   setIsSubmitting,
   dataToUpdate,
 }: {
-  accountFormData: any;
-  setAccountFormData: (formData: any) => void;
+  formData: AccountsFormData;
+  setFormData: (formData: AccountsFormData) => void;
   handleClose: () => void;
-  fetchEmployees: () => void;
+  fetchAccounts: () => void;
   isSubmitting: boolean;
   setIsSubmitting: (submitting: boolean) => void;
-  dataToUpdate: any;
+  dataToUpdate?: Accounts;
 }) {
-  const modalRef = useRef<HTMLDivElement>(null);
-
   const { roles } = useLibrariesContext();
 
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -32,54 +31,44 @@ export default function EditAccountModal({
 
   const [formError, setFormError] = useState('');
 
-  useEffect(() => {
-    if (dataToUpdate) {
-      console.log(dataToUpdate.status);
-
-      setAccountFormData({
-        id: dataToUpdate.id || '',
-        username: dataToUpdate.username || '',
-        password: '',
-        roleId: dataToUpdate.roleId || '',
-        status: dataToUpdate.status ? dataToUpdate.status : false,
-      });
-    }
-  }, [dataToUpdate, setAccountFormData]);
-
-  useEffect(() => {
-    if (confirmPassword !== accountFormData.password) {
-      setFormError('Passwords do not match');
-    }
-  }, [confirmPassword]);
-
   // Form submission handler
   const handleAccountFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError('');
     setIsSubmitting(true);
 
-    if (!accountFormData.username) {
+    if (!formData.username) {
       setFormError('Employee username is required');
       setIsSubmitting(false);
       return;
     }
 
     try {
-      await axiosInstance.put(`/accounts/${dataToUpdate.uuid}`, {
-        ...accountFormData,
-        employeeId: dataToUpdate?.employeeId,
+      await axiosInstance.post('/accounts', {
+        ...formData,
+        employeeId: dataToUpdate?.id,
       });
 
       handleClose();
-      fetchEmployees();
-    } catch (err: any) {
-      setFormError(err.message || 'Failed to save employee');
+      fetchAccounts();
+    } catch (err: { message: string } | unknown) {
+      setFormError(
+        (err as { message: string }).message || 'Failed to save employee'
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  console.log(accountFormData);
+  const verifyPasswords = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (confirmPassword !== formData.password) {
+      setFormError('Passwords do not match');
+    } else {
+      setFormError('');
+      handleAccountFormSubmit(e);
+    }
+  };
 
   return (
     <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
@@ -87,7 +76,7 @@ export default function EditAccountModal({
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-slate-200/60 px-6 py-4 dark:border-slate-800/60">
           <h3 className="text-base font-bold text-slate-900 dark:text-white">
-            Edit Account
+            Creating Account
           </h3>
           <button
             onClick={() => handleClose()}
@@ -98,7 +87,7 @@ export default function EditAccountModal({
         </div>
 
         {/* Modal Body / Form */}
-        <form onSubmit={handleAccountFormSubmit}>
+        <form onSubmit={verifyPasswords}>
           <div className="max-h-[70vh] space-y-4 overflow-y-auto p-6">
             {formError && (
               <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-600 dark:border-red-900/30 dark:bg-red-950/20 dark:text-red-400">
@@ -115,10 +104,10 @@ export default function EditAccountModal({
                 <input
                   type="text"
                   placeholder="e.g. john.doe"
-                  value={accountFormData.username}
+                  value={formData.username}
                   onChange={(e) =>
-                    setAccountFormData({
-                      ...accountFormData,
+                    setFormData({
+                      ...formData,
                       username: e.target.value,
                     })
                   }
@@ -132,12 +121,12 @@ export default function EditAccountModal({
                 </label>
                 <div className="relative">
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     placeholder="**********"
-                    value={accountFormData.password}
+                    value={formData.password}
                     onChange={(e) =>
-                      setAccountFormData({
-                        ...accountFormData,
+                      setFormData({
+                        ...formData,
                         password: e.target.value,
                       })
                     }
@@ -167,10 +156,10 @@ export default function EditAccountModal({
                   ...role,
                   name: role.role,
                 }))}
-                value={accountFormData.roleId}
+                value={formData.roleId}
                 onChange={(value) =>
-                  setAccountFormData({
-                    ...accountFormData,
+                  setFormData({
+                    ...formData,
                     roleId: value,
                   })
                 }
@@ -216,11 +205,11 @@ export default function EditAccountModal({
                   <button
                     type="button"
                     onClick={() => {
-                      setAccountFormData({ ...accountFormData, status: true });
+                      setFormData({ ...formData, status: true });
                     }}
-                    aria-pressed={accountFormData.status}
+                    aria-pressed={formData.status}
                     className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-all duration-200 ${
-                      accountFormData.status
+                      formData.status
                         ? 'bg-violet-600 text-white shadow-sm'
                         : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'
                     }`}
@@ -231,11 +220,11 @@ export default function EditAccountModal({
                   <button
                     type="button"
                     onClick={() => {
-                      setAccountFormData({ ...accountFormData, status: false });
+                      setFormData({ ...formData, status: false });
                     }}
-                    aria-pressed={!accountFormData.status}
+                    aria-pressed={!formData.status}
                     className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-all duration-200 ${
-                      !accountFormData.status
+                      !formData.status
                         ? 'bg-violet-600 text-white shadow-sm'
                         : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'
                     }`}

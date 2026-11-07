@@ -44,10 +44,13 @@ export async function GET(
     }
 
     return NextResponse.json(employee);
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Fetch single employee error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch employee' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to fetch employee',
+      },
       { status: 500 }
     );
   }
@@ -99,9 +102,20 @@ export async function PUT(
       where: { id: employeeId },
     });
 
-    const changes = [];
+    if (!employee) {
+      return NextResponse.json(
+        { error: 'Employee not found' },
+        { status: 404 }
+      );
+    }
 
-    for (const key of Object.keys(body)) {
+    const changes: {
+      field: string;
+      oldValue: unknown;
+      newValue: unknown;
+    }[] = [];
+
+    for (const key of Object.keys(body) as (keyof typeof employee)[]) {
       if (body[key] !== employee[key]) {
         changes.push({
           field: key,
@@ -139,10 +153,13 @@ export async function PUT(
     });
 
     return NextResponse.json({ updatedEmployee, changes });
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Update employee error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to update employee' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to update employee',
+      },
       { status: 500 }
     );
   }
@@ -179,10 +196,13 @@ export async function DELETE(
       success: true,
       message: 'Employee deleted successfully',
     });
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Delete employee error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to delete employee' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to delete employee',
+      },
       { status: 500 }
     );
   }

@@ -4,18 +4,27 @@ import { AlertCircle, Loader2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import SearchableDropdown from '../../ui-templates/searchable-dropdown';
 
-interface EditPositionProps {
-  formData: {
+interface Position {
+  id: number | null;
+  name: string;
+  departmentId: number | null;
+  department: {
     name: string;
-    departmentId: number;
   };
-  setFormData: (formData: { name: string; departmentId: number }) => void;
+  accountLogs: {
+    updatedAt: string;
+  }[];
+}
+
+interface EditPositionProps {
+  formData: Position;
+  setFormData: React.Dispatch<React.SetStateAction<Position>>;
   fetchPositions: () => void;
   handleClose: () => void;
   isSubmitting: boolean;
-  setIsSubmitting: (isSubmitting: boolean) => void;
-  selectedPositionId: number;
-  dataToUpdate: any;
+  setIsSubmitting: React.Dispatch<React.SetStateAction<boolean>>;
+  selectedPositionId: number | null;
+  dataToUpdate: Position | null;
 }
 
 export default function EditPosition({
@@ -33,8 +42,11 @@ export default function EditPosition({
 
   useEffect(() => {
     setFormData({
-      name: dataToUpdate.name,
-      departmentId: dataToUpdate.departmentId,
+      id: dataToUpdate?.id || null,
+      name: dataToUpdate?.name || '',
+      departmentId: dataToUpdate?.departmentId || null,
+      department: dataToUpdate?.department || { name: '' },
+      accountLogs: dataToUpdate?.accountLogs || [],
     });
   }, [dataToUpdate]);
 
@@ -54,8 +66,10 @@ export default function EditPosition({
 
       fetchPositions();
       handleClose();
-    } catch (err: any) {
-      setFormError(err.message || 'Failed to save position');
+    } catch (err: { message: string } | unknown) {
+      setFormError(
+        (err as { message: string }).message || 'Failed to save position'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -112,8 +126,8 @@ export default function EditPosition({
                   placeholder="Select Department"
                   data={departments}
                   value={formData.departmentId}
-                  onChange={(value) =>
-                    setFormData({ ...formData, departmentId: parseInt(value) })
+                  onChange={(value: number) =>
+                    setFormData({ ...formData, departmentId: value })
                   }
                   required
                 />

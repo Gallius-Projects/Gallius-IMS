@@ -91,8 +91,11 @@ export default function EditEmployee({
 
       fetchEmployees();
       handleClose();
-    } catch (err: any) {
-      setFormError(err.response.data.error || 'Failed to save employee');
+    } catch (err: { response: { data: { error: string } } } | unknown) {
+      setFormError(
+        (err as { response: { data: { error: string } } }).response.data
+          .error || 'Failed to save employee'
+      );
     } finally {
       setIsSubmitting(false);
     }

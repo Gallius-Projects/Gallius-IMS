@@ -1,6 +1,7 @@
 import { hashPassword, getAuthUser } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { Prisma } from '@/generated/prisma/client';
 
 // GET: Retrieve accounts
 export async function GET(req: Request) {
@@ -17,7 +18,7 @@ export async function GET(req: Request) {
     const search = searchParams.get('search') || '';
 
     // Build Prisma query filters
-    const whereClause: any = {};
+    const whereClause: Prisma.accountsWhereInput = {};
 
     if (search) {
       whereClause.OR = [
@@ -43,14 +44,17 @@ export async function GET(req: Request) {
 
     // Filter out the passwordHash from the response
     accounts.forEach((account) => {
-      delete (account as any).passwordHash;
+      delete (account as unknown as { passwordHash?: string }).passwordHash;
     });
 
     return NextResponse.json(accounts);
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Fetch employees error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch employees' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to fetch employees',
+      },
       { status: 500 }
     );
   }
@@ -88,10 +92,13 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(newAccount, { status: 201 });
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Create employee error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to create employee' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to create employee',
+      },
       { status: 500 }
     );
   }

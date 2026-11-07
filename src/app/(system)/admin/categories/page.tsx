@@ -1,28 +1,13 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import {
-  Plus,
-  Search,
-  Trash2,
-  Edit,
-  AlertCircle,
-  X,
-  Loader2,
-  LucidePackage,
-} from 'lucide-react';
+import { Plus, Search, AlertCircle, LucidePackage } from 'lucide-react';
 import axiosInstance from '@/lib/axiosInstance';
 import { useUserContext } from '@/context/UserContext';
 import TableTemplate from '@/app/components/ui-templates/table-template';
 import { ConfirmationDialog } from '@/app/components/ui-templates/confirmation-dialog';
 import AddEditCategory from '@/app/components/modals/categories/add-edit-category';
-
-interface Category {
-  id: number;
-  name: string;
-  abbreviation: string;
-  quantity: number;
-}
+import { Categories, CategoryFormData } from '@/types/categories';
 
 export default function CategoriesPage() {
   // Auth check
@@ -31,7 +16,7 @@ export default function CategoriesPage() {
   const [search, setSearch] = useState('');
 
   // Data states
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<Categories[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -44,7 +29,7 @@ export default function CategoriesPage() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
     null
   );
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CategoryFormData>({
     name: '',
     abbreviation: '',
     quantity: 0,
@@ -64,15 +49,14 @@ export default function CategoriesPage() {
     setIsLoading(true);
     setError('');
     try {
-      const params: any = {};
-      if (search) params.search = search;
-
-      const response = await axiosInstance.get('/categories', { params });
+      const response = await axiosInstance.get('/categories', {
+        params: { search },
+      });
       setCategories(response.data);
-    } catch (err: any) {
+    } catch (err: { message: string } | unknown) {
       console.error('Fetch categories error:', err);
       setError(
-        err.message ||
+        (err as { message: string }).message ||
           'Could not connect to the database. Make sure MySQL is running.'
       );
     } finally {
@@ -93,7 +77,7 @@ export default function CategoriesPage() {
   };
 
   // Open form for editing
-  const handleEditOpen = (category: Category) => {
+  const handleEditOpen = (category: Categories) => {
     setFormMode('edit');
     setSelectedCategoryId(category.id);
     setFormData({
@@ -138,8 +122,10 @@ export default function CategoriesPage() {
       }
       setIsFormOpen(false);
       fetchCategories();
-    } catch (err: any) {
-      setFormError(err.message || 'Failed to save category');
+    } catch (err: { message: string } | unknown) {
+      setFormError(
+        (err as { message: string }).message || 'Failed to save category'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -157,8 +143,10 @@ export default function CategoriesPage() {
       setIsDeleteOpen(false);
       setDeletingCategoryId(null);
       fetchCategories();
-    } catch (err: any) {
-      alert(err.message || 'Failed to delete category');
+    } catch (err: { message: string } | unknown) {
+      alert(
+        (err as { message: string }).message || 'Failed to delete category'
+      );
     }
   };
 

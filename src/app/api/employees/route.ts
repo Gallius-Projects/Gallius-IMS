@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getAuthUser } from '@/lib/auth';
+import { Prisma } from '@/generated/prisma/client';
 
 // GET: Retrieve employees
 export async function GET(req: Request) {
@@ -16,8 +17,7 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const search = searchParams.get('search') || '';
 
-    // Build Prisma query filters
-    const whereClause: any = {};
+    const whereClause: Prisma.employeesWhereInput = {};
 
     if (search) {
       whereClause.OR = [
@@ -26,10 +26,50 @@ export async function GET(req: Request) {
         { middleName: { contains: search } },
         { suffix: { contains: search } },
         { accounts: { username: { contains: search } } },
-        { involvedUser: { employee: { firstName: { contains: search } } } },
-        { involvedUser: { employee: { lastName: { contains: search } } } },
-        { involvedUser: { employee: { middleName: { contains: search } } } },
-        { involvedUser: { employee: { suffix: { contains: search } } } },
+        {
+          accountLogs: {
+            some: {
+              involvedUser: {
+                employee: {
+                  firstName: { contains: search },
+                },
+              },
+            },
+          },
+        },
+        {
+          accountLogs: {
+            some: {
+              involvedUser: {
+                employee: {
+                  lastName: { contains: search },
+                },
+              },
+            },
+          },
+        },
+        {
+          accountLogs: {
+            some: {
+              involvedUser: {
+                employee: {
+                  middleName: { contains: search },
+                },
+              },
+            },
+          },
+        },
+        {
+          accountLogs: {
+            some: {
+              involvedUser: {
+                employee: {
+                  suffix: { contains: search },
+                },
+              },
+            },
+          },
+        },
       ];
     }
 
@@ -58,7 +98,6 @@ export async function GET(req: Request) {
 
       return {
         ...employee,
-        accountStatus: employee?.accounts?.status,
         updatedAt: latestLog?.updatedAt,
         updatedBy: latestLog?.involvedUser?.employee
           ? latestLog?.involvedUser?.employee.firstName +
@@ -69,10 +108,13 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json(employeesWithLatestLog);
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Fetch employees error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch employees' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to fetch employees',
+      },
       { status: 500 }
     );
   }
@@ -143,10 +185,13 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(newEmployee, { status: 201 });
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Create employee error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to create employee' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to create employee',
+      },
       { status: 500 }
     );
   }

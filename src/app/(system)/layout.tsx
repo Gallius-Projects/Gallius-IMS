@@ -146,7 +146,7 @@ export default function MainLayout({
       {/* Header */}
       <Header />
       {/* space-y-8 */}
-      <main className="animate-fade-in max-h-screen min-h-screen min-w-0 flex-1 overflow-y-hidden">
+      <main className="animate-fade-in min-w-0 flex-1 overflow-y-hidden">
         {children}
       </main>
 

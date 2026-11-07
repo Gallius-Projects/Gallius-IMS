@@ -51,8 +51,11 @@ export default function LoginPage() {
 
       // Redirect to dashboard
       router.push('/');
-    } catch (err: any) {
-      setError(err.message || 'Login failed. Please verify credentials.');
+    } catch (err: { message: string } | unknown) {
+      setError(
+        (err as { message: string }).message ||
+          'Login failed. Please verify credentials.'
+      );
     } finally {
       setIsLoading(false);
     }

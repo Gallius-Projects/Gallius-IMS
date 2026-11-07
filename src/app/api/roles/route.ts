@@ -16,11 +16,13 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const search = searchParams.get('search') || '';
 
-    // Build Prisma query filters
-    const whereClause: any = {};
+    const whereClause: {
+      role?: string;
+      OR?: { role: { contains: string } }[];
+    } = {};
 
     if (search) {
-      whereClause.OR = [{ name: { contains: search } }];
+      whereClause.OR = [{ role: { contains: search } }];
     }
 
     const roles = await prisma.roles.findMany({
@@ -52,10 +54,13 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json(roles);
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Fetch offices error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch offices' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to fetch offices',
+      },
       { status: 500 }
     );
   }
@@ -73,9 +78,37 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { name } = body;
+    const {
+      role,
+      allowGradingSystem,
+      allowInventorySystemAccess,
+      allowInventorySystemAdd,
+      allowInventorySystemEdit,
+      allowInventorySystemDelete,
+      allowInventorySystemVoid,
+      allowInventorySystemViewAuditTrail,
+      allowRequestForPurchaseAccess,
+      allowRequestForPurchaseAdd,
+      allowRequestForPurchaseEdit,
+      allowRequestForPurchaseCancel,
+      allowRequestForPurchasePost,
+      allowRequestForPurchaseSendEmail,
+      allowFixedAssetAccess,
+      allowFixedAssetAdd,
+      allowFixedAssetEdit,
+      allowFixedAssetCancel,
+      allowFixedAssetPost,
+      allowFixedAssetSendEmail,
+      allowUMAccess,
+      allowUMAdd,
+      allowUMEdit,
+      allowLibrariesAccess,
+      allowLibrariesAdd,
+      allowLibrariesEdit,
+      allowLibrariesDelete,
+    } = body;
 
-    if (!name) {
+    if (!role) {
       return NextResponse.json(
         { error: 'Role name is required' },
         { status: 400 }
@@ -84,16 +117,39 @@ export async function POST(req: Request) {
 
     const newRole = await prisma.roles.create({
       data: {
-        name,
-        updatedBy: {
-          connect: { uuid: user?.userId },
-        },
+        role,
+        allowGradingSystem,
+        allowInventorySystemAccess,
+        allowInventorySystemAdd,
+        allowInventorySystemEdit,
+        allowInventorySystemDelete,
+        allowInventorySystemVoid,
+        allowInventorySystemViewAuditTrail,
+        allowRequestForPurchaseAccess,
+        allowRequestForPurchaseAdd,
+        allowRequestForPurchaseEdit,
+        allowRequestForPurchaseCancel,
+        allowRequestForPurchasePost,
+        allowRequestForPurchaseSendEmail,
+        allowFixedAssetAccess,
+        allowFixedAssetAdd,
+        allowFixedAssetEdit,
+        allowFixedAssetCancel,
+        allowFixedAssetPost,
+        allowFixedAssetSendEmail,
+        allowUMAccess,
+        allowUMAdd,
+        allowUMEdit,
+        allowLibrariesAccess,
+        allowLibrariesAdd,
+        allowLibrariesEdit,
+        allowLibrariesDelete,
       },
     });
 
     await prisma.accountLogs.create({
       data: {
-        activity: `Role "${name}" created`,
+        activity: `Role "${role}" created`,
         updatedRole: {
           connect: { id: newRole.id },
         },
@@ -104,10 +160,13 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(newRole, { status: 201 });
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Create role error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to create role' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to create role',
+      },
       { status: 500 }
     );
   }

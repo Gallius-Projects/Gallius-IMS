@@ -37,10 +37,14 @@ export async function GET(
     }
 
     return NextResponse.json(item);
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Fetch single location error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch location details' },
+      {
+        error:
+          (error as { message: string }).message ||
+          'Failed to fetch location details',
+      },
       { status: 500 }
     );
   }
@@ -85,10 +89,13 @@ export async function PUT(
     });
 
     return NextResponse.json(updatedItem);
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Update location error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to update location' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to update location',
+      },
       { status: 500 }
     );
   }
@@ -125,10 +132,13 @@ export async function DELETE(
       success: true,
       message: 'location deleted successfully',
     });
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Delete location error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to delete location' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to delete location',
+      },
       { status: 500 }
     );
   }

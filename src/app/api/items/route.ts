@@ -48,7 +48,11 @@ export async function GET(req: Request) {
         location: true,
         office: true,
         supplier: true,
-        assignedEmp: true,
+        assignedEmp: {
+          include: {
+            department: true,
+          },
+        },
         inventoryLogs: {
           include: {
             involvedUser: {
@@ -112,7 +116,7 @@ export async function POST(req: Request) {
       locationId,
       officeId,
       supplierId,
-      deployedBy,
+      deployedById,
       datePurchased,
       dateDeployed,
       invoiceNo,
@@ -130,13 +134,15 @@ export async function POST(req: Request) {
       );
     }
 
-    const duplicateHostname = await prisma.inventoryItems.findFirst({
-      where: { hostname: hostname || '' },
+    const duplicatedDetails = await prisma.inventoryItems.findFirst({
+      where: {
+        OR: [{ hostname: hostname || '' }, { oldAssetTag: oldAssetTag }],
+      },
     });
 
-    if (duplicateHostname) {
+    if (duplicatedDetails) {
       return NextResponse.json(
-        { error: 'Hostname already exists' },
+        { error: 'Hostname or Old Asset Tag already exists' },
         { status: 400 }
       );
     }
@@ -174,8 +180,8 @@ export async function POST(req: Request) {
         ...(assignedTo
           ? { assignedEmp: { connect: { id: parseInt(assignedTo) } } }
           : {}),
-        ...(deployedBy
-          ? { deployedBy: { connect: { id: parseInt(deployedBy) } } }
+        ...(deployedById
+          ? { deployedBy: { connect: { id: parseInt(deployedById) } } }
           : {}),
       },
     });

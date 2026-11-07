@@ -11,27 +11,11 @@ import {
   LucideX,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import InventoryDeploymentAnalytics, {
+  DashboardInventoryItem,
+} from '@/app/components/dashboard/inventory-deployment-analytics';
 
-interface InventoryItem {
-  id: number;
-  name: string;
-  oldAssetTag: string;
-  newAssetTag: string;
-  serialNumber: string;
-  description: string;
-  hostname: string;
-  categoryId: number;
-  category: { id: number; name: string } | null;
-  brandId: number;
-  brand: { id: number; name: string } | null;
-  locationId: number;
-  location: { id: number; name: string } | null;
-  officeId: number;
-  office: { id: number; name: string } | null;
-  status: string;
-  assignedTo: number;
-  remarks: string;
-}
+export type InventoryItem = DashboardInventoryItem;
 
 export default function Dashboard() {
   // Auth check
@@ -48,14 +32,12 @@ export default function Dashboard() {
     setIsLoading(true);
     setError('');
     try {
-      const params: any = {};
-
-      const response = await axiosInstance.get('/items', { params });
+      const response = await axiosInstance.get('/items');
       setItems(response.data);
-    } catch (err: any) {
+    } catch (err: { message: string } | unknown) {
       console.error('Fetch items error:', err);
       setError(
-        err.message ||
+        (err as { message: string }).message ||
           'Could not connect to the database. Make sure MySQL is running.'
       );
     } finally {
@@ -86,7 +68,7 @@ export default function Dashboard() {
   ).length;
 
   return (
-    <div className="flex max-h-screen min-h-screen flex-col bg-slate-50/50 px-4 py-8 font-sans text-slate-900 transition-all duration-300 sm:px-6 lg:px-8 dark:bg-slate-950 dark:text-slate-100">
+    <div className="flex flex-col overflow-y-auto bg-slate-50/50 px-4 py-8 pb-16 font-sans text-slate-900 transition-all duration-300 sm:px-6 lg:px-8 dark:bg-slate-950 dark:text-slate-100">
       {isLoading && (
         <div className="flex items-center justify-center">Loading...</div>
       )}
@@ -100,7 +82,7 @@ export default function Dashboard() {
       </div>
 
       <section className="flex flex-col gap-4">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {/* Card 1 */}
           <div className="group relative min-w-[192px] overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-slate-700 dark:bg-slate-800">
             {/* Decorative background */}
@@ -136,6 +118,7 @@ export default function Dashboard() {
               </p>
             </div>
           </div>
+
           {/* Card 2 - Deployed Items */}
           <div className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-slate-700 dark:bg-slate-800">
             {/* Decorative background */}
@@ -177,6 +160,7 @@ export default function Dashboard() {
               </p>
             </div>
           </div>
+
           {/* Card 3 - Spare Items */}
           <div className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-slate-700 dark:bg-slate-800">
             {/* Decorative background */}
@@ -218,6 +202,7 @@ export default function Dashboard() {
               </p>
             </div>
           </div>
+
           {/* Card 4 - Defective Items */}
           <div className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-slate-700 dark:bg-slate-800">
             {/* Decorative background */}
@@ -302,6 +287,11 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* Graphical Representation & Filter Section */}
+      <section className="mt-8 mb-8">
+        <InventoryDeploymentAnalytics items={items} isLoading={isLoading} />
       </section>
     </div>
   );

@@ -1,5 +1,6 @@
 import { useUserContext } from '@/context/UserContext';
 import { AlertCircle, Loader2, X } from 'lucide-react';
+import { Employees } from '@/types/employees';
 
 import dayjs from 'dayjs';
 import SearchableDropdown from '../../ui-templates/searchable-dropdown';
@@ -7,95 +8,70 @@ import { useEffect, useRef } from 'react';
 import Dropdown from '../../ui-templates/dropdown';
 import { useLibrariesContext } from '@/context/LibrariesContext';
 import DatePicker from 'react-datepicker';
+import axiosInstance from '@/lib/axiosInstance';
+import { InventoryItem, ItemFormData } from '@/types/items';
 
 interface EditItemsModalProps {
-  formMode?: 'create' | 'edit';
-  isOpen: boolean;
-  formData?: {
-    name: string;
-    oldAssetTag: string;
-    serialNumber: string;
-    description: string;
-    hostname: string;
-    categoryId: number | null;
-    category: { id: number; name: string } | null;
-    brandId: number | null;
-    brand: { id: number; name: string } | null;
-    locationId: number | null;
-    location: { id: number; name: string } | null;
-    officeId: number | null;
-    office: { id: number; name: string } | null;
-    supplierId: number | null;
-    supplier: { id: number; name: string } | null;
-    status: string;
-    assignedTo: number | null;
-    remarks: string;
-    datePurchased: Date | null;
-    dateDeployed: Date | null;
-    invoiceNo: string;
-    assetCondition: string;
-    isNew: boolean;
-  };
-  setFormData?: (formData: any) => void;
-  formError?: string;
-  setFormError?: (formError: string) => void;
+  formData: ItemFormData;
+  setFormData: React.Dispatch<React.SetStateAction<ItemFormData>>;
+  formError: string;
+  setFormError: React.Dispatch<React.SetStateAction<string>>;
   isSubmitting?: boolean;
-  statuses?: { label: string; value: string }[];
+  setIsSubmitting: React.Dispatch<React.SetStateAction<boolean>>;
+  statuses?: { value: string; name: string; color: string }[];
   editNewAsset?: boolean;
-  setEditNewAsset?: (editNewAsset: boolean) => void;
-  handleGenerateAssetTag?: () => void;
-  categories?: any;
+  setEditNewAsset: React.Dispatch<React.SetStateAction<boolean>>;
   handleClose: () => void;
-  handleFormSubmit: (e: React.FormEvent) => void;
-  itemToUpdate: any;
+  fetchItems?: () => void;
+  itemToUpdate: InventoryItem | null;
 }
 
 export default function EditItemsModal({
-  formMode,
-  isOpen = false,
-  formData = {
-    name: '',
-    oldAssetTag: '',
-    serialNumber: '',
-    description: '',
-    hostname: '',
-    categoryId: null,
-    category: null,
-    brandId: null,
-    brand: null,
-    locationId: null,
-    location: null,
-    officeId: null,
-    office: null,
-    status: '',
-    assignedTo: null,
-    remarks: '',
-    datePurchased: null,
-    dateDeployed: null,
-    invoiceNo: '',
-    assetCondition: '',
-    isNew: true,
-  },
+  formData,
   setFormData = () => {},
   formError = '',
+  setFormError,
   isSubmitting = false,
-  statuses,
+  setIsSubmitting,
+  statuses = [],
   editNewAsset,
   setEditNewAsset,
-  categories,
-  handleGenerateAssetTag = () => {},
   handleClose,
-  handleFormSubmit,
-  itemToUpdate,
+  fetchItems = () => {},
+  itemToUpdate = null,
 }: EditItemsModalProps) {
   const { user } = useUserContext();
-  const { brands, locations, suppliers, offices, employees } =
+  const { categories, brands, locations, suppliers, offices, employees } =
     useLibrariesContext();
 
   const modalRef = useRef<HTMLDivElement>(null);
 
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError('');
+    setIsSubmitting(true);
+
+    if (!formData.name) {
+      setFormError('Item name is required');
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      await axiosInstance.put(`/items/${itemToUpdate?.id}`, formData);
+
+      handleClose();
+      fetchItems();
+    } catch (err: { message: string } | unknown) {
+      setFormError(
+        (err as { message: string }).message || 'Failed to save inventory item'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   useEffect(() => {
-    // console.log(itemToUpdate);
     setFormData({
       name: itemToUpdate?.name || '',
       oldAssetTag: itemToUpdate?.oldAssetTag || '',
@@ -114,10 +90,11 @@ export default function EditItemsModal({
       assetCondition: itemToUpdate?.assetCondition || '',
       isNew: itemToUpdate?.isNew ?? true,
       assignedTo: itemToUpdate?.assignedEmp?.id || null,
+      deployedById: itemToUpdate?.deployedById || null,
       description: itemToUpdate?.description || '',
       remarks: itemToUpdate?.remarks || '',
     });
-  }, [itemToUpdate, isOpen]);
+  }, [itemToUpdate]);
 
   const assetConditions = [
     { id: 1, name: 'Excellent' },
@@ -126,6 +103,68 @@ export default function EditItemsModal({
     { id: 4, name: 'Poor' },
     { id: 5, name: 'Broken' },
   ];
+
+  const handleAssetTag = async () => {
+    // console.log(formData);
+
+    if (user?.role.includes('superadmin') || user?.role.includes('admin')) {
+      // if (!formData.categoryId || !formData.officeId || !formData.locationId) {
+      //   setFormError('Please select a tenant, category, and location');
+
+      //   setFormData((prev) => {
+      //     return {
+      //       ...prev,
+      //       newAssetTag: '',
+      //     };
+      //   });
+      //   setTimeout(() => {
+      //     setFormError('');
+      //   }, 8000);
+      //   return;
+      // }
+      if (
+        formData.categoryId &&
+        formData.officeId &&
+        formData.locationId &&
+        formData.isNew
+      ) {
+        // console.log('Generating new asset tag');
+        const params = {
+          officeId: formData.officeId,
+          categoryId: formData.categoryId,
+          locationId: formData.locationId,
+        };
+
+        const response = await axiosInstance.get(`/items/generate-asset-tag`, {
+          params,
+        });
+
+        const generatedAssetTag = response.data;
+        setFormData((prev) => ({
+          ...prev,
+          newAssetTag: generatedAssetTag,
+        }));
+      }
+
+      // console.log('triggered: isNew', formData?.isNew);
+
+      if (!formData?.isNew) {
+        setFormData((prev) => ({
+          ...prev,
+          newAssetTag: '',
+        }));
+      }
+    }
+  };
+
+  useEffect(() => {
+    handleAssetTag();
+  }, [
+    formData.categoryId,
+    formData.officeId,
+    formData.locationId,
+    formData.isNew,
+  ]);
 
   useEffect(() => {
     if (formError) {
@@ -196,10 +235,10 @@ export default function EditItemsModal({
                 placeholder="Select Category"
                 data={categories}
                 value={formData.categoryId || null}
-                onChange={(value: any) => {
+                onChange={(value: number | null) => {
                   setFormData({
                     ...formData,
-                    categoryId: parseInt(value),
+                    categoryId: value,
                   });
                 }}
                 required
@@ -211,10 +250,10 @@ export default function EditItemsModal({
                 placeholder="Select Brand"
                 data={brands}
                 value={formData.brandId || null}
-                onChange={(value: any) => {
+                onChange={(value: number | null) => {
                   setFormData({
                     ...formData,
-                    brandId: parseInt(value),
+                    brandId: value,
                   });
                 }}
                 required
@@ -226,10 +265,10 @@ export default function EditItemsModal({
                 placeholder="Select Supplier"
                 data={suppliers}
                 value={formData.supplierId || null}
-                onChange={(value: any) => {
+                onChange={(value: number | null) => {
                   setFormData({
                     ...formData,
-                    supplierId: parseInt(value),
+                    supplierId: value,
                   });
                 }}
                 required
@@ -241,10 +280,10 @@ export default function EditItemsModal({
                 placeholder="Select Tenant"
                 data={offices}
                 value={formData.officeId || null}
-                onChange={(value: any) => {
+                onChange={(value: number | null) => {
                   setFormData({
                     ...formData,
-                    officeId: parseInt(value),
+                    officeId: value,
                   });
                 }}
                 required
@@ -254,12 +293,12 @@ export default function EditItemsModal({
               <SearchableDropdown
                 label="Location"
                 placeholder="Select Location"
-                data={locations}
+                data={locations.sort((a, b) => a.name.localeCompare(b.name))}
                 value={formData.locationId || null}
-                onChange={(value: any) => {
+                onChange={(value: number | null) => {
                   setFormData({
                     ...formData,
-                    locationId: parseInt(value),
+                    locationId: value,
                   });
                 }}
                 required
@@ -269,23 +308,19 @@ export default function EditItemsModal({
               <Dropdown
                 label="Status"
                 placeholder="Select Status"
-                data={statuses}
-                value={
-                  formData?.status
-                    ? statuses.find(
-                        (item) =>
-                          item.name.toLowerCase() ===
-                          formData?.status?.toLowerCase()
-                      )?.name
-                    : ''
-                }
-                onChange={(value: any) => {
-                  console.log(value);
-
-                  setFormData({
+                data={statuses.map(
+                  (item: { value: string; name: string }, index: number) => ({
+                    id: index,
+                    value: item?.value,
+                    label: item?.name,
+                  })
+                )}
+                value={formData?.status || ''}
+                onChange={(value: string) => {
+                  setFormData(() => ({
                     ...formData,
-                    status: value ? value?.name?.toUpperCase() : '',
-                  });
+                    status: value ? value?.toUpperCase() : '',
+                  }));
                 }}
                 required
               />
@@ -304,7 +339,7 @@ export default function EditItemsModal({
                         ...formData,
                         isNew: true,
                       });
-                      handleGenerateAssetTag();
+                      handleAssetTag();
                     }}
                     aria-pressed={formData.isNew}
                     className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-all duration-200 ${
@@ -346,13 +381,13 @@ export default function EditItemsModal({
                   {(user?.role.includes('superadmin') ||
                     user?.role.includes('admin')) && (
                     <div className="flex flex-row items-center gap-2">
-                      <button
+                      {/* <button
                         type="button"
                         className="cursor-pointer text-xs text-slate-500 hover:text-slate-600 hover:underline dark:text-slate-400 dark:hover:text-slate-200"
                         onClick={() => handleGenerateAssetTag()}
                       >
                         Generate
-                      </button>
+                      </button> */}
                       <button
                         type="button"
                         onClick={() => setEditNewAsset(!editNewAsset)}
@@ -368,7 +403,7 @@ export default function EditItemsModal({
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Click 'Generate' to generate an asset tag"
+                    placeholder="Automatically Generated once Category, Tenant and Location are selected."
                     value={formData.newAssetTag || ''}
                     disabled={!editNewAsset}
                     onChange={(e) => {
@@ -388,8 +423,8 @@ export default function EditItemsModal({
 
                   <div className="absolute top-1/2 right-3 flex -translate-y-1/2 gap-2">
                     {formData?.newAssetTag &&
-                      (user.role.includes('superadmin') ||
-                        user.role.includes('admin')) && (
+                      (user?.role.includes('superadmin') ||
+                        user?.role.includes('admin')) && (
                         <button
                           type="button"
                           onClick={() => {
@@ -489,15 +524,15 @@ export default function EditItemsModal({
               <SearchableDropdown
                 label="Assigned to"
                 placeholder="Select Employee"
-                data={employees.map((emp: any) => ({
+                data={employees.map((emp: Employees) => ({
                   ...emp,
                   name: `${emp?.firstName} ${emp?.lastName}`,
                 }))}
                 value={formData.assignedTo || null}
-                onChange={(value: any) => {
+                onChange={(value: number | null) => {
                   setFormData({
                     ...formData,
-                    assignedTo: parseInt(value),
+                    assignedTo: value,
                   });
                 }}
               />
@@ -506,15 +541,15 @@ export default function EditItemsModal({
               <SearchableDropdown
                 label="Deployed by"
                 placeholder="Select Deployer"
-                data={employees.map((emp: any) => ({
+                data={employees.map((emp: Employees) => ({
                   ...emp,
                   name: `${emp?.firstName} ${emp?.lastName}`,
                 }))}
-                value={formData.deployedBy || null}
-                onChange={(value: any) => {
+                value={formData.deployedById || null}
+                onChange={(value: number | null) => {
                   setFormData({
                     ...formData,
-                    deployedBy: parseInt(value),
+                    deployedById: value,
                   });
                 }}
               />
@@ -532,11 +567,11 @@ export default function EditItemsModal({
                         ? new Date(formData.datePurchased)
                         : null
                     }
-                    onChange={(date) => {
-                      setFormData((prev) => ({
-                        ...prev,
+                    onChange={(date: Date | null) => {
+                      setFormData({
+                        ...formData,
                         datePurchased: date ? dayjs(date).toISOString() : null,
-                      }));
+                      });
                     }}
                     dateFormat="MM-dd-yyyy"
                     showPopperArrow={false}
@@ -575,11 +610,11 @@ export default function EditItemsModal({
                         ? new Date(formData.dateDeployed)
                         : null
                     }
-                    onChange={(date) => {
-                      setFormData((prev) => ({
-                        ...prev,
+                    onChange={(date: Date | null) => {
+                      setFormData({
+                        ...formData,
                         dateDeployed: date ? dayjs(date).toISOString() : null,
-                      }));
+                      });
                     }}
                     dateFormat="MM-dd-yyyy"
                     showPopperArrow={false}
@@ -629,21 +664,19 @@ export default function EditItemsModal({
               <Dropdown
                 label="Asset Condition"
                 placeholder="Select Asset Condition"
-                data={assetConditions}
-                value={
-                  formData?.assetCondition
-                    ? assetConditions.find(
-                        (item) =>
-                          item.name?.toLowerCase() ===
-                          formData?.assetCondition?.toLowerCase()
-                      )?.name
-                    : ''
-                }
-                onChange={(value: any) => {
-                  setFormData({
+                data={assetConditions.map(
+                  (item: { id: number; name: string }) => ({
+                    id: item?.id,
+                    value: item?.name?.toUpperCase(),
+                    label: item?.name,
+                  })
+                )}
+                value={formData?.assetCondition || ''}
+                onChange={(value: string) => {
+                  setFormData(() => ({
                     ...formData,
-                    assetCondition: value ? value?.name?.toUpperCase() : '',
-                  });
+                    assetCondition: value ? value?.toUpperCase() : '',
+                  }));
                 }}
                 required
               />

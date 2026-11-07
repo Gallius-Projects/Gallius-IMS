@@ -51,10 +51,14 @@ export async function GET(
     }
 
     return NextResponse.json(department);
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Fetch single department error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch department' },
+      {
+        error:
+          (error as { message: string }).message ||
+          'Failed to fetch department',
+      },
       { status: 500 }
     );
   }
@@ -141,10 +145,14 @@ export async function PUT(
     });
 
     return NextResponse.json(updatedDepartment);
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Update department error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to update department' },
+      {
+        error:
+          (error as { message: string }).message ||
+          'Failed to update department',
+      },
       { status: 500 }
     );
   }
@@ -181,10 +189,14 @@ export async function DELETE(
       success: true,
       message: 'Department deleted successfully',
     });
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Delete department error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to delete department' },
+      {
+        error:
+          (error as { message: string }).message ||
+          'Failed to delete department',
+      },
       { status: 500 }
     );
   }

@@ -4,21 +4,36 @@ import { useEffect, useRef, useState } from 'react';
 export default function Dropdown({
   label,
   data,
-  value,
+  value = '',
   onChange,
   placeholder = 'Select',
   required = false,
 }: {
   label: string;
-  data: any[];
-  value: any;
-  onChange: (formData: any) => void;
+  data: { id: number; label: string; value: string }[];
+  value: string | null;
+  onChange: (value: string) => void;
   placeholder: string;
   required: boolean;
 }) {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // const [valueDisplay, setValueDisplay] = useState<string>(value);
   const [showOptions, setShowOptions] = useState(false);
+
+  // useEffect(() => {
+  //   if (value) {
+  //     const foundValue = data.find(
+  //       (item) => item.value.toLowerCase() === value.toLowerCase()
+  //     );
+
+  //     setValueDisplay(foundValue?.label || '');
+  //   }
+  // }, [value, data]);
+
+  const valueDisplay =
+    data.find((item) => item.value.toLowerCase() === value?.toLowerCase())
+      ?.label ?? '';
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -50,20 +65,20 @@ export default function Dropdown({
       <div className="relative">
         <input
           type="text"
-          value={value}
+          value={valueDisplay}
           placeholder={placeholder}
           onFocus={() => setShowOptions(true)}
-          onChange={(e) => {
-            onChange(e.target.value);
-            setShowOptions(false);
-          }}
+          // onChange={(e) => {
+          //   onChange(e.target.value);
+          //   setShowOptions(false);
+          // }}
           required
           className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 pr-10 text-sm text-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-white"
         />
 
         {/* Clear button */}
         <div className="absolute top-1/2 right-3 flex -translate-y-1/2 gap-2">
-          {value && (
+          {valueDisplay && (
             <button
               type="button"
               onClick={() => {
@@ -98,17 +113,17 @@ export default function Dropdown({
         {showOptions && (
           <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-950">
             {data.length > 0 ? (
-              data.map((item: any) => (
+              data.map((item: { id: number; label: string; value: string }) => (
                 <button
-                  key={item.id || item.name}
+                  key={item?.id}
                   type="button"
                   onClick={() => {
-                    onChange(item);
+                    onChange(item?.value);
                     setShowOptions(false);
                   }}
                   className="hover:shadow-b block w-full cursor-pointer px-3.5 py-2.5 text-left text-sm text-slate-900 hover:bg-slate-100 hover:shadow-md dark:text-white dark:hover:bg-slate-800"
                 >
-                  {item.name}
+                  {item?.label}
                 </button>
               ))
             ) : (

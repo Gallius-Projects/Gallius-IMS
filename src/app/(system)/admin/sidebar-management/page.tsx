@@ -18,7 +18,6 @@ import {
   Database,
   Folder,
   FileText,
-  Plus,
   Search,
   Trash2,
   AlertCircle,
@@ -34,13 +33,28 @@ import {
 import axiosInstance from '@/lib/axiosInstance';
 import { useUserContext } from '@/context/UserContext';
 import TableTemplate from '@/app/components/ui-templates/table-template';
+import { useLibrariesContext } from '@/context/LibrariesContext';
+import { ConfirmationDialog } from '@/app/components/ui-templates/confirmation-dialog';
 
-interface SidebarLinks {
+interface SidebarLinkRole {
+  roleId: number;
+}
+
+interface SidebarLink {
   id: number;
   name: string;
   path: string;
   icon: string;
-  access: string[];
+  category: string;
+  sidebarLinkRoles: SidebarLinkRole[];
+}
+
+interface SidebarLinkFormData {
+  name: string;
+  path: string;
+  icon: string;
+  category: string;
+  access: number[];
 }
 
 export default function SidebarManagement() {
@@ -49,13 +63,15 @@ export default function SidebarManagement() {
 
   // Auth check
   const { user, isAuthenticated } = useUserContext();
+  // Access roles state
+  const { roles } = useLibrariesContext();
 
   const [search, setSearch] = useState('');
 
   // Data states
-  const [sidebarLinks, setSidebarLinks] = useState<SidebarLinks[]>([]);
+  const [sidebarLinks, setSidebarLinks] = useState<SidebarLink[]>([]);
   const [filteredSidebarLinks, setFilteredSidebarLinks] = useState<
-    SidebarLinks[]
+    SidebarLink[]
   >([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -69,10 +85,12 @@ export default function SidebarManagement() {
   const [selectedSidebarId, setSelectedSidebarId] = useState<number | null>(
     null
   );
-  const [formData, setFormData] = useState({
+
+  const [formData, setFormData] = useState<SidebarLinkFormData>({
     name: '',
     path: '',
     icon: '',
+    category: '',
     access: [],
   });
 
@@ -88,8 +106,6 @@ export default function SidebarManagement() {
   const [iconSearch, setIconSearch] = useState('');
   const [selectedIcon, setSelectedIcon] = useState('Home');
 
-  // Access roles state
-  const [roles, setRoles] = useState<Role[]>([]);
   const [showRoles, setShowRoles] = useState(false);
 
   const commonIcons = [
@@ -117,15 +133,6 @@ export default function SidebarManagement() {
     icon.name.toLowerCase().includes(iconSearch.toLowerCase())
   );
 
-  useEffect(() => {
-    const fetchRoles = async () => {
-      const response = await axiosInstance.get('/roles');
-      setRoles(response.data);
-    };
-
-    fetchRoles();
-  }, []);
-
   // Fetch Offices callback
   const fetchSidebarLinks = useCallback(async () => {
     if (!localStorage.getItem('auth_token')) return;
@@ -135,10 +142,10 @@ export default function SidebarManagement() {
       const response = await axiosInstance.get('/sidebar-management');
 
       setSidebarLinks(response.data);
-    } catch (err: any) {
+    } catch (err: { message: string } | unknown) {
       console.error('Fetch sidebar links error:', err);
       setError(
-        err.message ||
+        (err as { message: string }).message ||
           'Could not connect to the database. Make sure MySQL is running.'
       );
     } finally {
@@ -150,7 +157,7 @@ export default function SidebarManagement() {
     let filteredLinks = sidebarLinks;
     if (search) {
       filteredLinks = sidebarLinks.filter(
-        (sidebar: SidebarLinks) =>
+        (sidebar: SidebarLink) =>
           sidebar.name.toLowerCase().includes(search.toLowerCase()) ||
           sidebar.path.toLowerCase().includes(search.toLowerCase()) ||
           sidebar.icon.toLowerCase().includes(search.toLowerCase())
@@ -159,24 +166,27 @@ export default function SidebarManagement() {
       filteredLinks = sidebarLinks;
     }
 
-    setFilteredSidebarLinks(filteredLinks);
+    const delayDebounceFn = setTimeout(() => {
+      setFilteredSidebarLinks(filteredLinks);
+    }, 300); // Debounce search
+    return () => clearTimeout(delayDebounceFn);
   }, [search, sidebarLinks]);
 
   // Open form for creation
-  const handleCreateOpen = () => {
-    setFormData({
-      name: '',
-      path: '',
-      icon: '',
-      access: [],
-    });
-    setFormError('');
-    setFormMode('create');
-    setIsFormOpen(true);
-  };
+  // const handleCreateOpen = () => {
+  //   setFormData({
+  //     name: '',
+  //     path: '',
+  //     icon: '',
+  //     access: [],
+  //   });
+  //   setFormError('');
+  //   setFormMode('create');
+  //   setIsFormOpen(true);
+  // };
 
   // Open form for editing
-  const handleEditOpen = (sidebar: SidebarLinks) => {
+  const handleEditOpen = (sidebar: SidebarLink) => {
     setFormMode('edit');
     setSelectedSidebarId(sidebar.id);
     setFormData({
@@ -224,8 +234,10 @@ export default function SidebarManagement() {
       }
       setIsFormOpen(false);
       fetchSidebarLinks();
-    } catch (err: any) {
-      setFormError(err.message || 'Failed to save sidebar link');
+    } catch (err: { message: string } | unknown) {
+      setFormError(
+        (err as { message: string }).message || 'Failed to save sidebar link'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -243,8 +255,10 @@ export default function SidebarManagement() {
       setIsDeleteOpen(false);
       setDeletingSidebarId(null);
       fetchSidebarLinks();
-    } catch (err: any) {
-      alert(err.message || 'Failed to delete sidebar link');
+    } catch (err: { message: string } | unknown) {
+      alert(
+        (err as { message: string }).message || 'Failed to delete sidebar link'
+      );
     }
   };
 
@@ -255,6 +269,7 @@ export default function SidebarManagement() {
       name: '',
       path: '',
       icon: '',
+      category: '',
       access: [],
     });
     setFormError('');
@@ -268,12 +283,12 @@ export default function SidebarManagement() {
   ) => {
     const { checked } = e.target;
     if (checked) {
-      setFormData((prev: any) => ({
+      setFormData((prev: SidebarLinkFormData) => ({
         ...prev,
         access: [...prev.access, id],
       }));
     } else {
-      setFormData((prev: any) => ({
+      setFormData((prev: SidebarLinkFormData) => ({
         ...prev,
         access: prev.access.filter((accId: number) => accId !== id),
       }));
@@ -283,7 +298,10 @@ export default function SidebarManagement() {
   // Trigger fetch when parameters change
   useEffect(() => {
     if (isAuthenticated) {
-      fetchSidebarLinks();
+      const delayDebounceFn = setTimeout(() => {
+        fetchSidebarLinks();
+      }, 300); // Debounce search
+      return () => clearTimeout(delayDebounceFn);
     }
   }, [fetchSidebarLinks, isAuthenticated]);
 
@@ -620,10 +638,12 @@ export default function SidebarManagement() {
                                       type="button"
                                       title={item.name}
                                       onClick={() => {
-                                        setFormData((prev: any) => ({
-                                          ...prev,
-                                          icon: item.name,
-                                        }));
+                                        setFormData(
+                                          (prev: SidebarLinkFormData) => ({
+                                            ...prev,
+                                            icon: item.name,
+                                          })
+                                        );
                                         setSelectedIcon(item.name);
                                         setShowIcons(false);
                                       }}
@@ -676,7 +696,7 @@ export default function SidebarManagement() {
 
                                 <div>
                                   <p className="font-medium">
-                                    Use "{iconSearch}"
+                                    Use {iconSearch}
                                   </p>
 
                                   <p className="text-xs text-slate-400">
@@ -723,38 +743,16 @@ export default function SidebarManagement() {
 
       {/* DELETE CONFIRMATION MODAL */}
       {isDeleteOpen && (
-        <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900">
-            <div className="space-y-4 p-6 text-center">
-              <div className="inline-flex rounded-full border border-rose-100 bg-rose-50 p-3 text-rose-600 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-400">
-                <Trash2 className="h-6 w-6" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  Delete Supplier Confirmation
-                </h3>
-                <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                  Are you sure you want to remove this supplier? This action is
-                  permanent and cannot be undone.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center justify-end gap-3 border-t border-slate-200/60 bg-slate-50 px-6 py-4 dark:border-slate-800/60 dark:bg-slate-900/50">
-              <button
-                onClick={() => setIsDeleteOpen(false)}
-                className="cursor-pointer rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 transition-all hover:bg-slate-100 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteConfirm}
-                className="cursor-pointer rounded-xl bg-rose-600 px-4 py-2 text-xs font-semibold text-white shadow-md transition-all hover:bg-rose-500"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmationDialog
+          isOpen={isDeleteOpen}
+          onClose={() => setIsDeleteOpen(false)}
+          onConfirm={handleDeleteConfirm}
+          title="Delete Sidebar Link"
+          description={`Are you sure you want to delete this sidebar link?`}
+          isLoading={isLoading}
+          type="delete"
+          iconColor="text-rose-600 dark:text-rose-400"
+        />
       )}
     </div>
   );

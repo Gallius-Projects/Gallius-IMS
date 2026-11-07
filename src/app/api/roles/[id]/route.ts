@@ -44,10 +44,14 @@ export async function GET(
     }
 
     return NextResponse.json(item);
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Fetch single role error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch role details' },
+      {
+        error:
+          (error as { message: string }).message ||
+          'Failed to fetch role details',
+      },
       { status: 500 }
     );
   }
@@ -74,26 +78,54 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const { name } = body;
+    const {
+      role,
+      allowGradingSystem,
+      allowInventorySystemAccess,
+      allowInventorySystemAdd,
+      allowInventorySystemEdit,
+      allowInventorySystemDelete,
+      allowInventorySystemVoid,
+      allowInventorySystemViewAuditTrail,
+      allowRequestForPurchaseAccess,
+      allowRequestForPurchaseAdd,
+      allowRequestForPurchaseEdit,
+      allowRequestForPurchaseCancel,
+      allowRequestForPurchasePost,
+      allowRequestForPurchaseSendEmail,
+      allowFixedAssetAccess,
+      allowFixedAssetAdd,
+      allowFixedAssetEdit,
+      allowFixedAssetCancel,
+      allowFixedAssetPost,
+      allowFixedAssetSendEmail,
+      allowUMAccess,
+      allowUMAdd,
+      allowUMEdit,
+      allowLibrariesAccess,
+      allowLibrariesAdd,
+      allowLibrariesEdit,
+      allowLibrariesDelete,
+    } = body;
 
-    if (!name) {
+    if (!role) {
       return NextResponse.json(
         { error: 'role name is required' },
         { status: 400 }
       );
     }
 
-    const role = await prisma.roles.findUnique({
+    const uniqueRole = await prisma.roles.findUnique({
       where: { id: roleId },
     });
 
     const changes = [];
 
-    if (name !== role?.name) {
+    if (role !== uniqueRole?.role) {
       changes.push({
-        field: 'name',
-        oldValue: role?.name,
-        newValue: name,
+        field: 'role',
+        oldValue: uniqueRole?.role,
+        newValue: role,
       });
     }
 
@@ -104,13 +136,39 @@ export async function PUT(
     const updatedRole = await prisma.roles.update({
       where: { id: roleId },
       data: {
-        name,
+        role,
+        allowGradingSystem,
+        allowInventorySystemAccess,
+        allowInventorySystemAdd,
+        allowInventorySystemEdit,
+        allowInventorySystemDelete,
+        allowInventorySystemVoid,
+        allowInventorySystemViewAuditTrail,
+        allowRequestForPurchaseAccess,
+        allowRequestForPurchaseAdd,
+        allowRequestForPurchaseEdit,
+        allowRequestForPurchaseCancel,
+        allowRequestForPurchasePost,
+        allowRequestForPurchaseSendEmail,
+        allowFixedAssetAccess,
+        allowFixedAssetAdd,
+        allowFixedAssetEdit,
+        allowFixedAssetCancel,
+        allowFixedAssetPost,
+        allowFixedAssetSendEmail,
+        allowUMAccess,
+        allowUMAdd,
+        allowUMEdit,
+        allowLibrariesAccess,
+        allowLibrariesAdd,
+        allowLibrariesEdit,
+        allowLibrariesDelete,
       },
     });
 
     await prisma.accountLogs.create({
       data: {
-        activity: `Updated role from ${role?.name} to ${name}`,
+        activity: `Updated role from ${uniqueRole?.role} to ${role}`,
         updatedRole: {
           connect: { id: roleId },
         },
@@ -121,10 +179,13 @@ export async function PUT(
     });
 
     return NextResponse.json({ updatedRole, changes });
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Update role error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to update role' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to update role',
+      },
       { status: 500 }
     );
   }
@@ -158,10 +219,13 @@ export async function DELETE(
       success: true,
       message: 'Role deleted successfully',
     });
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Delete role error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to delete Role' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to delete Role',
+      },
       { status: 500 }
     );
   }

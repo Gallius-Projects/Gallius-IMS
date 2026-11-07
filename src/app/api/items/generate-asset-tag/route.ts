@@ -38,7 +38,7 @@ export async function GET(req: Request) {
       },
     });
 
-    const lastRelatedItem = lastLog?.inventoryItem;
+    const lastRelatedItem = lastLog?.updatedItem;
 
     const office = await prisma.offices.findUnique({
       where: { id: parseInt(officeId) },

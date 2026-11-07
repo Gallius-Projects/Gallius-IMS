@@ -1,9 +1,10 @@
+import { InventoryItem } from '@/types/items';
 import { Info, X } from 'lucide-react';
 
 interface ViewItemsModalProps {
   isDetailOpen: boolean;
   setIsDetailOpen: (isDetailOpen: boolean) => void;
-  viewingDetails: any;
+  viewingDetails: InventoryItem;
 }
 
 export default function ViewItemsModal({
@@ -14,8 +15,6 @@ export default function ViewItemsModal({
   if (!isDetailOpen) {
     return null;
   }
-
-  console.log(viewingDetails);
 
   return (
     <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
@@ -58,7 +57,7 @@ export default function ViewItemsModal({
             </div>
             <div>
               <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                Asset Tag
+                Old Asset Tag
               </span>
               <span className="font-montserrat text-xs font-semibold text-slate-800 dark:text-slate-200">
                 {viewingDetails?.oldAssetTag || '—'}
@@ -157,7 +156,7 @@ export default function ViewItemsModal({
                 Asset Classification (New/Old)
               </span>
               <span className="font-montserrat text-xs font-semibold text-slate-800 dark:text-slate-200">
-                {viewingDetails.isNew ? 'New' : 'Old'}
+                {viewingDetails.isNew}
               </span>
             </div>
             <div>

@@ -18,7 +18,10 @@ export async function GET(req: Request) {
     const name = searchParams.get('name') || '';
 
     // Build Prisma query filters
-    const whereClause: any = {};
+    const whereClause: {
+      name?: string;
+      OR?: { name: { contains: string } }[];
+    } = {};
 
     if (name) {
       whereClause.name = name;
@@ -60,10 +63,13 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json(officesWithLatestLog);
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Fetch offices error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch offices' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to fetch offices',
+      },
       { status: 500 }
     );
   }
@@ -109,10 +115,13 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(newOffice, { status: 201 });
-  } catch (error: any) {
+  } catch (error: { message: string } | unknown) {
     console.error('Create office error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to create office' },
+      {
+        error:
+          (error as { message: string }).message || 'Failed to create office',
+      },
       { status: 500 }
     );
   }
